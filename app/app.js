@@ -28,6 +28,7 @@
     wordIdx: 0,
     ruleIdx: 0,
     showHindi: true,
+    player: { playing: false, started: false, line: 0, rate: 0.9 },
     quiz: null,
     speak: { idx: 0, heard: '', listening: false, error: '' },
     write: { text: [], checked: false },
@@ -42,13 +43,56 @@
   const stepsFor = (day) => data.steps[day] || (data.steps[day] = {});
   const isDayDone = (day) => data.completedDays.includes(day);
 
-  function say(text) {
-    if (!('speechSynthesis' in window)) return;
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'en-IN';
-    u.rate = 0.9;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(u);
+  // ---------- speech ----------
+  // One utterance at a time. The button that started it shows the speaking animation
+  // until the utterance ends; a watchdog finishes it if the browser never fires onend.
+  let speakToken = 0;
+  let speakingEl = null;
+  const hasTTS = 'speechSynthesis' in window;
+  function stopSpeaking() {
+    speakToken++;
+    if (hasTTS) window.speechSynthesis.cancel();
+    if (speakingEl) { speakingEl.classList.remove('speaking'); speakingEl = null; }
+  }
+  function voiceFor(lang) {
+    try {
+      const voices = window.speechSynthesis.getVoices();
+      const want = lang === 'hi' ? 'hi' : 'en-in';
+      return voices.find((v) => v.lang.replace('_', '-').toLowerCase().startsWith(want)) || null;
+    } catch (e) { return null; }
+  }
+  function say(text, opts = {}) {
+    const lang = opts.lang || 'en';
+    const rate = opts.rate || 0.9;
+    stopSpeaking();
+    const token = speakToken;
+    if (opts.el) { opts.el.classList.add('speaking'); speakingEl = opts.el; }
+    let finished = false;
+    const done = () => {
+      if (finished || token !== speakToken) return;
+      finished = true;
+      if (speakingEl === opts.el && opts.el) { opts.el.classList.remove('speaking'); speakingEl = null; }
+      if (opts.onEnd) opts.onEnd();
+    };
+    // If the voice fails or "ends" impossibly fast, keep going at reading pace instead of
+    // skipping ahead, so the highlight and animation still follow the text.
+    const speakMs = (text.length / 13 / rate) * 1000;
+    const started = Date.now();
+    if (hasTTS) {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = lang === 'hi' ? 'hi-IN' : 'en-IN';
+      const v = voiceFor(lang);
+      if (v) u.voice = v;
+      u.rate = rate;
+      u.onend = () => { if (Date.now() - started >= speakMs * 0.3) done(); };
+      window.speechSynthesis.speak(u);
+    }
+    const estimate = speakMs + 1200;
+    const check = () => {
+      if (finished || token !== speakToken) return;
+      if (hasTTS && window.speechSynthesis.speaking) setTimeout(check, 400); else done();
+    };
+    setTimeout(check, estimate);
   }
 
   const I = {
@@ -67,7 +111,13 @@
     okCircle: '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path d="M7 12.5l3.5 3.5L17 9" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     noCircle: '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path d="M8.5 8.5l7 7M15.5 8.5l-7 7" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"/></svg>',
     todo: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--track)" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10.5"/></svg>',
-    speaker: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>',
+    speaker: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4z"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>',
+    speakerSm: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4z"/><path class="w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="w2" d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>',
+    pause: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>',
+    prevLine: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 19L9 12l10-7z"/><rect x="5" y="5" width="2.5" height="14" rx="1"/></svg>',
+    nextLine: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 5l10 7-10 7z"/><rect x="16.5" y="5" width="2.5" height="14" rx="1"/></svg>',
+    pin: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>',
+    parts: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="5" height="10" rx="1.5"/><rect x="10" y="7" width="4" height="10" rx="1.5"/><rect x="16" y="7" width="5" height="10" rx="1.5"/></svg>',
     play: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>',
     lines: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h11M4 18h7"/></svg>',
     chat: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.8 7L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>',
@@ -294,23 +344,39 @@
 
     reading() {
       const r = lesson.reading;
+      const pl = ui.player;
+      const n = r.lines.length;
       const words = (list) => list.map((w) => esc(w).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
       const g = new RegExp('\\b(' + words(r.grammarWords) + ')\\b', 'gi');
       const v = new RegExp('\\b(' + words(r.vocabWords) + ')\\b', 'gi');
-      const lines = r.lines.map((l) => {
+      const lines = r.lines.map((l, i) => {
         const en = esc(l.en).replace(g, '<strong>$1</strong>').replace(v, '<u>$1</u>');
-        return `<div><p>${en}</p>${ui.showHindi ? `<p class="hi">${esc(l.hi)}</p>` : ''}</div>`;
+        const cur = pl.started && i === pl.line;
+        return `<button class="line ${cur ? 'current' : ''} ${cur && pl.playing ? 'live' : ''}" data-act="player-line" data-arg="${i}">
+          <span class="line-text">${en}</span>${ui.showHindi ? `<span class="hi">${esc(l.hi)}</span>` : ''}</button>`;
       }).join('');
       const wordCount = r.lines.map((l) => l.en).join(' ').split(/\s+/).length;
       const secs = Math.round(wordCount / 2.2);
       const length = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
-      const bars = [8, 14, 20, 12, 24, 18, 10, 22, 16, 26, 12, 8, 18, 24, 14, 20, 10, 16, 22, 12, 8, 18, 14, 10, 20, 12, 8, 14].map((h) => `<i style="height: ${h}px"></i>`).join('');
+      const heights = [8, 14, 20, 12, 24, 18, 10, 22, 16, 26, 12, 8, 18, 24, 14, 20, 10, 16, 22, 12, 8, 18, 14, 10, 20, 12, 8, 14];
+      const played = pl.started ? Math.round(((pl.line + (pl.playing ? 0.5 : 1)) / n) * heights.length) : 0;
+      const bars = heights.map((h, i) => `<i class="${i < played ? 'on' : ''}" style="height: ${h}px; animation-delay: ${(i % 7) * 0.09}s"></i>`).join('');
       const qs = r.questions.map((q) => `<details class="qa"><summary>${esc(q.q)}</summary><p>${esc(q.a)}</p></details>`).join('');
       return `<main class="screen white">
         ${topbar('task', 'Day ' + DAY, '1 / 5 · Reading')}
         <h1 class="large-title" tabindex="-1">${esc(r.title)}</h1>
-        <div class="player"><button class="play" data-act="say-passage" aria-label="Passage suno">${I.play}</button><div class="wave" aria-hidden="true">${bars}</div><span class="counter">${length}</span></div>
+        <div class="player ${pl.playing ? 'live' : ''}">
+          <div class="wave-row"><div class="wave" aria-hidden="true">${bars}</div><span class="counter">${length}</span></div>
+          <div class="controls">
+            <button class="ctl" data-act="player-prev" aria-label="Pichhli line" ${pl.line === 0 ? 'disabled' : ''}>${I.prevLine}</button>
+            <button class="play" data-act="player-toggle" aria-label="${pl.playing ? 'Roko' : 'Suno'}">${pl.playing ? I.pause : I.play}</button>
+            <button class="ctl" data-act="player-next" aria-label="Agli line" ${pl.line === n - 1 ? 'disabled' : ''}>${I.nextLine}</button>
+            <span class="counter" role="status">Line ${pl.line + 1} / ${n}</span>
+            <button class="rate" data-act="player-rate" aria-label="Bolne ki speed badlo">${pl.rate < 0.8 ? 'Dheere' : 'Normal'}</button>
+          </div>
+        </div>
         <div class="switch-row"><span id="hl">Hindi meaning dikhao</span><button class="switch" role="switch" aria-checked="${ui.showHindi}" aria-labelledby="hl" data-act="toggle-hindi"></button></div>
+        <p class="muted" style="margin: -6px 0 0; font-size: 13px">Kisi bhi line pe tap karo, wahin se sunna shuru hoga.</p>
         <div class="passage">${lines}</div>
         <div class="legend"><span><i style="width: 10px; height: 10px; border-radius: 3px; background: var(--accent-text)"></i>Aaj ka grammar</span><span><i style="width: 14px; border-bottom: 2px dotted var(--indigo)"></i>Aaj ke words</span></div>
         <h2 class="title-2" style="margin-top: 8px">Samjha? Check karo</h2>
@@ -325,6 +391,30 @@
       const w = list[ui.wordIdx];
       const last = ui.wordIdx === list.length - 1;
       const segs = list.map((_, i) => `<span class="${i <= ui.wordIdx ? 'on' : ''}"></span>`).join('');
+      const sayBtn = (text, label, lang) => `<button class="say-btn" data-act="say" data-arg="${esc(text)}" ${lang ? `data-lang="${lang}"` : ''} aria-label="${esc(label)}">${I.speakerSm}</button>`;
+      const markWord = (text) => {
+        const re = new RegExp('(' + esc(w.word).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[a-z]*)', 'i');
+        return esc(text).replace(re, '<mark>$1</mark>');
+      };
+      const parts = w.use.parts ? `
+          <div class="breakdown">
+            <p class="eyebrow" style="display: flex; align-items: center; gap: 6px">${I.parts}Sentence ko todkar samjho</p>
+            <div class="parts">${w.use.parts.map((p) => `<div class="part ${p.key ? 'key' : ''}"><b>${esc(p.en)}</b><span>${esc(p.hi)}</span></div>`).join('')}</div>
+            <ul class="part-why">${w.use.parts.filter((p) => p.why).map((p) => `<li><b>${esc(p.en)}</b><span>${rich(p.why)}</span></li>`).join('')}</ul>
+          </div>` : '';
+      const scene = w.scene ? `
+        <div class="card stack">
+          <div class="row-between"><div class="verdict" style="color: var(--accent-text)">${I.pin}KIS SITUATION MEIN · ${esc(w.scene.where).toUpperCase()}</div>${sayBtn(w.scene.a.text + ' ' + w.scene.b.text, 'Baat-cheet suno')}</div>
+          <div class="chat">
+            <div class="bubble them"><small>${esc(w.scene.a.who)}</small>${esc(w.scene.a.text)}</div>
+            <div class="bubble me"><small>${esc(w.scene.b.who)}</small>${markWord(w.scene.b.text)}</div>
+          </div>
+        </div>` : '';
+      const more = w.more ? `
+        <div class="card stack">
+          <p class="eyebrow">Aur examples</p>
+          ${w.more.map((m) => `<div class="say-row"><div><p class="sentence" style="font-size: 16px">${markWord(m.en)}</p><p class="muted" style="margin: 2px 0 0; font-size: 14px">${esc(m.hi)}</p></div>${sayBtn(m.en, 'Example suno')}</div>`).join('')}
+        </div>` : '';
       return `<main class="screen" style="gap: 14px">
         ${topbar('task', 'Day ' + DAY, `Word ${ui.wordIdx + 1} / ${list.length}`)}
         <div class="segments thin" style="grid-template-columns: repeat(${list.length}, minmax(0, 1fr))" aria-hidden="true">${segs}</div>
@@ -332,18 +422,25 @@
           <div style="display: flex; flex-direction: column; gap: 2px"><h1 class="word-big" tabindex="-1" style="margin: 0">${esc(w.word)}</h1><span class="muted" style="font-size: 15px">${esc(w.ipa)} · ${esc(w.say)}</span></div>
           <button class="speaker" data-act="say" data-arg="${esc(w.word)}" aria-label="${esc(w.word)} ka uchcharan suno">${I.speaker}</button>
         </div>
-        <p class="meaning">${w.hindi ? `<span class="hindi" lang="hi">${esc(w.hindi)}</span>` : ''}<span>${esc(w.meaning)}</span></p>
+        <div class="say-row" style="align-items: center">
+          <p class="meaning">${w.hindi ? `<span class="hindi" lang="hi">${esc(w.hindi)}</span>` : ''}<span>${esc(w.meaning)}</span></p>
+          ${w.hindi ? sayBtn(w.hindi, 'Hindi meaning suno', 'hi') : ''}
+        </div>
         <div class="card stack">
           <div class="verdict ok">${I.okCircleLg}KAB USE KAREIN</div>
-          <p class="sentence">${esc(w.use.ex)}</p>
-          ${kyunRow(w.use.why)}
+          <div class="say-row"><div><p class="sentence">${markWord(w.use.ex)}</p>${w.use.hi ? `<p class="muted" style="margin: 2px 0 0; font-size: 14px">${esc(w.use.hi)}</p>` : ''}</div>${sayBtn(w.use.ex, 'Sentence suno')}</div>
+          ${kyun(w.use.why)}
+          ${parts}
         </div>
+        ${scene}
         <div class="card stack">
           <div class="verdict no">${I.noCircleLg}KAB NAHI</div>
           <p class="strike">${esc(w.dont.wrong)}</p>
-          <p class="sentence">${markFix(w.dont.wrong, w.dont.right)}</p>
-          ${kyunRow(w.dont.why)}
+          <div class="say-row"><p class="sentence">${markFix(w.dont.wrong, w.dont.right)}</p>${sayBtn(w.dont.right, 'Sahi sentence suno')}</div>
+          ${kyun(w.dont.why)}
         </div>
+        ${more}
+        ${w.tip ? `<div class="note tip"><span style="color: var(--accent-text); display: flex">${I.bulb}</span><span><b>Yaad rakho:</b> ${rich(w.tip)}</span></div>` : ''}
         ${w.note ? `<div class="note"><span style="color: var(--accent-text); display: flex">${I.bulb}</span><span>${rich(w.note)}</span></div>` : ''}
         <div class="tags">${w.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join('')}</div>
         <div class="spacer"></div>
@@ -601,10 +698,36 @@
   }
 
   function go(screen) {
+    stopSpeaking();
+    ui.player.playing = false;
+    if (screen === 'reading') ui.player = { playing: false, started: false, line: 0, rate: ui.player.rate };
     if (screen === 'speak-task') { speakFromTask = true; ui.speak = { idx: 0, heard: '', listening: false, error: '' }; screen = 'speak'; }
     else if (screen === 'speak') { speakFromTask = false; ui.speak = { idx: 0, heard: '', listening: false, error: '' }; }
     ui.screen = screen;
     render();
+  }
+
+  // Reading player: speaks one line at a time, highlights it, and moves on.
+  function playLine() {
+    const pl = ui.player;
+    const lines = lesson.reading.lines;
+    say(lines[pl.line].en, {
+      rate: pl.rate,
+      onEnd: () => {
+        if (!pl.playing || ui.screen !== 'reading') return;
+        if (pl.line < lines.length - 1) { pl.line++; render(); playLine(); }
+        else { pl.playing = false; pl.ended = true; render(); }
+      }
+    });
+    const cur = app.querySelector('.line.current');
+    if (cur) cur.scrollIntoView({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  }
+  function moveLine(d) {
+    const pl = ui.player;
+    pl.line = Math.min(Math.max(pl.line + d, 0), lesson.reading.lines.length - 1);
+    pl.started = true; pl.ended = false;
+    render();
+    if (pl.playing) playLine();
   }
 
   let recognizer = null;
@@ -641,9 +764,32 @@
     },
     'finish-step'(id) { markStep(id); go('task'); },
     'toggle-hindi'() { ui.showHindi = !ui.showHindi; render(); },
-    'say-passage'() { say(lesson.reading.lines.map((l) => l.en).join(' ')); },
-    say(text) { say(text); },
-    word(d) { ui.wordIdx = Math.min(Math.max(ui.wordIdx + Number(d), 0), lesson.words.length - 1); render(); window.scrollTo(0, 0); },
+    say(text, el) { say(text, { lang: el.dataset.lang || 'en', el }); },
+    'player-toggle'() {
+      const pl = ui.player;
+      if (pl.playing) { pl.playing = false; stopSpeaking(); render(); return; }
+      if (pl.started && pl.line === lesson.reading.lines.length - 1 && pl.ended) pl.line = 0;
+      pl.playing = true; pl.started = true; pl.ended = false;
+      render(); playLine();
+    },
+    'player-prev'() { moveLine(-1); },
+    'player-next'() { moveLine(1); },
+    'player-line'(i) {
+      const pl = ui.player;
+      pl.line = Number(i); pl.playing = true; pl.started = true; pl.ended = false;
+      render(); playLine();
+    },
+    'player-rate'() {
+      ui.player.rate = ui.player.rate < 0.8 ? 0.9 : 0.7;
+      render();
+      if (ui.player.playing) playLine();
+    },
+    word(d) {
+      stopSpeaking();
+      ui.wordIdx = Math.min(Math.max(ui.wordIdx + Number(d), 0), lesson.words.length - 1);
+      render();
+      window.scrollTo(0, 0);
+    },
     rule(d) { ui.ruleIdx = Math.min(Math.max(ui.ruleIdx + Number(d), 0), lesson.grammar.rules.length - 1); render(); window.scrollTo(0, 0); },
     'start-quiz'() {
       // shuffle options so the right answer is not always in the same place
@@ -707,7 +853,7 @@
     const el = e.target.closest('[data-act]');
     if (!el || el.disabled) return;
     const fn = actions[el.dataset.act];
-    if (fn) fn(el.dataset.arg);
+    if (fn) fn(el.dataset.arg, el);
   });
 
   app.addEventListener('input', (e) => {
