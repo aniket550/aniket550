@@ -22,7 +22,7 @@ Mic se bolne wala check (speech recognition) Chrome mein kaam karta hai, khaas k
 | 2 | 15 Words | Har word: meaning, uchcharan, ✅ kab use, ❌ kab nahi, **kyun** |
 | 3 | Grammar | Kya hota hai, Hindi ↔ English mapping, formula, har rule ka **kyun** |
 | 4 | Models | Asli situations (phone, dukaan, class, ghar) aur har sentence ka **kyun** |
-| 5 | Practice | 10 sawaal (galat jawab pe reason dikhta hai) + bolne ki practice |
+| 5 | Practice | 10 sawaal (galat jawab pe reason dikhta hai) + bolne ki practice + 3 sentence likhna (app check karta hai) |
 
 Quiz mein **70%** aane par hi din poora hota hai. Practice tab tak band rehta hai jab tak pehle 4 hisse poore na hon.
 
@@ -34,6 +34,7 @@ app/
   styles.css            Apple-style design tokens, light + dark mode
   app.js                screens, navigation, quiz logic, progress (localStorage)
   content/day02.js      Day 2 (Is / Am / Are) ka poora content
+  content/syllabus.js   45 din ka syllabus (Safar screen ke liye)
   manifest.webmanifest
   icon.svg
 ```

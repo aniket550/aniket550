@@ -29,26 +29,26 @@ window.LESSONS[2] = {
   words: [
     {
       word: 'happy', ipa: '/ˈhæpi/', say: 'हैपी', meaning: 'khush',
-      use: { ex: 'I am happy today.', why: 'Khushi ek feeling (haalat) hai, isliye “am + happy”.' },
+      use: { ex: 'I am happy today.', why: 'Khushi ek feeling (**haalat**) hai, isliye “am + happy”.' },
       dont: { wrong: 'I am happy for meet you.', right: 'I am happy to meet you.', why: 'Kisi kaam ki khushi ho to “to + verb” lagta hai. “for” ke baad insaan ya cheez aati hai (happy for you).' },
       tags: ['Pehli mulaqaat', 'Ghar']
     },
     {
       word: 'tired', ipa: '/ˈtaɪərd/', say: 'टायर्ड', meaning: 'thaka hua',
-      use: { ex: 'I am tired after work.', why: 'Thakaan aapki haalat hai, isliye “am + tired”.' },
+      use: { ex: 'I am tired after work.', why: 'Thakaan aapki **haalat** hai, isliye “am + tired”.' },
       dont: { wrong: 'I am tiring.', right: 'I am tired.', why: '“-ed” batata hai ki aap kaisa feel kar rahe ho. “-ing” batata hai ki koi cheez doosron ko kaisa feel karati hai: “The work is tiring” = kaam thakane wala hai.' },
       tags: ['Office', 'Ghar']
     },
     {
       word: 'busy', ipa: '/ˈbɪzi/', say: 'बिज़ी', meaning: 'vyast, kaam mein laga hua',
-      use: { ex: 'I am busy right now.', why: 'Aap kaam mein lage ho. Yeh aapki haalat hai, isliye “am + busy”.' },
-      dont: { wrong: 'I am busy in work.', right: 'I am busy with work.', why: '“in” jagah batata hai (in the office), kaam nahi. Kaam batane ke liye “with + cheez” ya “verb + ing” (busy doing homework).' },
+      use: { ex: 'I am busy right now.', why: 'Aap kaam mein lage ho. Yeh aapki **haalat** hai, isliye “am + busy”.' },
+      dont: { wrong: 'I am busy in work.', right: 'I am busy with work.', why: '“in” **jagah** batata hai (in the office), kaam nahi. Kaam batane ke liye “with + cheez” ya “verb + ing” (busy doing homework).' },
       tags: ['Office', 'Phone call']
     },
     {
       word: 'free', ipa: '/friː/', say: 'फ्री', meaning: 'khaali (time) / muft',
       use: { ex: 'Are you free today?', why: 'Yahan baat time ki ho rahi hai, isliye free = khaali.' },
-      dont: { wrong: 'I am free in Sunday.', right: 'I am free on Sunday.', why: 'Dinon ke saath “on” lagta hai (on Monday). “in” mahine aur saal ke saath aata hai (in May).' },
+      dont: { wrong: 'I am free in Sunday.', right: 'I am free on Sunday.', why: 'Dinon ke saath **“on”** lagta hai (on Monday). “in” mahine aur saal ke saath aata hai (in May).' },
       note: 'Dukaan pe “Is it free?” ka matlab hai “kya yeh muft hai?”, kyunki wahan baat paise ki hoti hai. Situation se matlab badalta hai.',
       tags: ['Dost', 'Dukaan']
     },
@@ -60,44 +60,44 @@ window.LESSONS[2] = {
     },
     {
       word: 'hungry', ipa: '/ˈhʌŋɡri/', say: 'हंग्री', meaning: 'bhookha',
-      use: { ex: 'Mom, I am hungry!', why: 'Bhookh aapki haalat hai, isliye “am + hungry”.' },
-      dont: { wrong: 'I have hunger.', right: 'I am hungry.', why: 'Hindi ke “mujhe bhookh lagi hai” se log “have hunger” bana dete hain. English mein bhookh ko haalat ki tarah bolte hain.' },
+      use: { ex: 'Mom, I am hungry!', why: 'Bhookh aapki **haalat** hai, isliye “am + hungry”.' },
+      dont: { wrong: 'I have hunger.', right: 'I am hungry.', why: 'Hindi ke “mujhe bhookh lagi hai” se log “have hunger” bana dete hain. English mein bhookh ko **haalat** ki tarah bolte hain.' },
       tags: ['Ghar', 'Restaurant']
     },
     {
       word: 'angry', ipa: '/ˈæŋɡri/', say: 'ऐंग्री', meaning: 'gussa',
-      use: { ex: 'He is angry with me.', why: 'Gussa haalat hai. Kisi insaan pe gussa ho to “angry with”.' },
-      dont: { wrong: 'He is angry on me.', right: 'He is angry with me.', why: '“on” kisi cheez ke upar hona batata hai (on the table). Insaan ke liye “with”, kisi baat ke liye “about”.' },
+      use: { ex: 'He is angry with me.', why: 'Gussa **haalat** hai. Kisi insaan pe gussa ho to “angry with”.' },
+      dont: { wrong: 'He is angry on me.', right: 'He is angry with me.', why: '“on” kisi cheez ke **upar** hona batata hai (on the table). Insaan ke liye “with”, kisi baat ke liye “about”.' },
       tags: ['Ghar', 'Dost']
     },
     {
       word: 'late', ipa: '/leɪt/', say: 'लेट', meaning: 'der se',
-      use: { ex: 'Sorry, I am late.', why: 'Der se pahunchna abhi aapki haalat hai, isliye “am late”.' },
+      use: { ex: 'Sorry, I am late.', why: 'Der se pahunchna abhi aapki **haalat** hai, isliye “am late”.' },
       dont: { wrong: 'I am late since 10 minutes.', right: 'I am 10 minutes late.', why: 'Kitni der hui, woh “late” se pehle aata hai. “since” ek time point ke saath lagta hai (since 10 o’clock).' },
       tags: ['Class', 'Office']
     },
     {
       word: 'sick', ipa: '/sɪk/', say: 'सिक', meaning: 'beemar',
-      use: { ex: 'She is sick today.', why: 'Beemari haalat hai, isliye “is + sick”.' },
+      use: { ex: 'She is sick today.', why: 'Beemari **haalat** hai, isliye “is + sick”.' },
       dont: { wrong: 'My sister is sick of fever.', right: 'My sister has a fever.', why: '“sick of” ka matlab hai “kisi cheez se ub jaana” (I am sick of traffic). Bukhaar ke liye “have a fever” bolte hain.' },
       tags: ['Doctor', 'Class']
     },
     {
       word: 'fine', ipa: '/faɪn/', say: 'फाइन', meaning: 'theek',
-      use: { ex: 'I am fine, thank you.', why: 'Koi haal poochhe to theek hona aapki haalat hai, isliye “am fine”.' },
+      use: { ex: 'I am fine, thank you.', why: 'Koi haal poochhe to theek hona aapki **haalat** hai, isliye “am fine”.' },
       dont: { wrong: 'I am very much fine.', right: 'I am fine. / I am very well.', why: '“very much” kaam (verb) ke saath lagta hai (I like it very much), “fine” ke saath nahi.' },
       tags: ['Pehli mulaqaat', 'Phone call']
     },
     {
       word: 'ready', ipa: '/ˈredi/', say: 'रेडी', meaning: 'taiyaar',
-      use: { ex: 'I am ready for the exam.', why: 'Taiyaar hona haalat hai. Kisi cheez ke liye taiyaar ho to “ready for + cheez”.' },
-      dont: { wrong: 'I am ready for go.', right: 'I am ready to go.', why: 'Kaam (verb) se pehle “to” lagta hai. “for” ke baad cheez aati hai, kaam nahi.' },
+      use: { ex: 'I am ready for the exam.', why: 'Taiyaar hona **haalat** hai. Kisi cheez ke liye taiyaar ho to “ready for + cheez”.' },
+      dont: { wrong: 'I am ready for go.', right: 'I am ready to go.', why: 'Kaam (verb) se pehle **“to”** lagta hai. “for” ke baad cheez aati hai, kaam nahi.' },
       tags: ['Ghar', 'Class']
     },
     {
       word: 'nervous', ipa: '/ˈnɜːrvəs/', say: 'नर्वस', meaning: 'ghabraaya hua',
-      use: { ex: 'I am nervous about the interview.', why: 'Ghabrahat haalat hai. Kis baat ki ghabrahat ho to “about”.' },
-      dont: { wrong: 'I am nervousing.', right: 'I am nervous.', why: '“nervous” ek haalat (adjective) hai, kaam (verb) nahi. Isliye ismein “-ing” nahi lagta.' },
+      use: { ex: 'I am nervous about the interview.', why: 'Ghabrahat **haalat** hai. Kis baat ki ghabrahat ho to “about”.' },
+      dont: { wrong: 'I am nervousing.', right: 'I am nervous.', why: '“nervous” ek **haalat** (adjective) hai, kaam (verb) nahi. Isliye ismein “-ing” nahi lagta.' },
       tags: ['Interview', 'Exam']
     },
     {
@@ -108,7 +108,7 @@ window.LESSONS[2] = {
     },
     {
       word: 'present', ipa: '/ˈprezənt/', say: 'प्रेज़ेंट', meaning: 'haazir',
-      use: { ex: 'Sir, I am present.', why: 'Class mein abhi haazir hona aapki haalat hai, isliye “am present”.' },
+      use: { ex: 'Sir, I am present.', why: 'Class mein abhi haazir hona aapki **haalat** hai, isliye “am present”.' },
       dont: { wrong: 'Rahul is present in yesterday’s class.', right: 'Rahul was present in yesterday’s class.', why: 'Kal ki baat hai, isliye “is” nahi, “was” lagega. Past tense Day 5 mein aayega.' },
       note: '“present” ka ek aur matlab hai tohfa (a birthday present).',
       tags: ['Class', 'Office']
@@ -122,7 +122,7 @@ window.LESSONS[2] = {
   ],
 
   grammar: {
-    what: 'Yeh Hindi ke “hai / hoon / ho / hain” hain. Inse batate hain ki koi kaun hai, kaisa hai, kahan hai.',
+    what: 'Yeh Hindi ke **hai / hoon / ho / hain** hain. Inse batate hain ki koi kaun hai, kaisa hai, kahan hai.',
     formula: ['Subject', 'am / is / are', 'baaki baat'],
     pairs: [
       { hi: 'Main', hiVerb: 'hoon', en: 'I', enVerb: 'am' },
@@ -144,13 +144,13 @@ window.LESSONS[2] = {
       {
         title: 'Kaam (action) ke saath am / is / are nahi',
         wrong: 'I am go to school.', right: ['I go to school.'],
-        why: '“go” khud kaam (verb) hai. Simple sentence mein ek hi main verb chahiye, isliye “am” extra ho gaya. Hindi ke “jaata hoon” wala “hoon” Hindi tense ka hissa hai.',
+        why: '“go” khud kaam (verb) hai. Simple sentence mein **ek hi main verb** chahiye, isliye “am” extra ho gaya. Hindi ke “jaata hoon” wala “hoon” Hindi tense ka hissa hai.',
         tip: '“am” kaam ke saath tab lagta hai jab verb mein -ing ho: “I am going” = main abhi ja raha hoon (Day 7).'
       },
       {
         title: '“I am agree” galat hai',
         wrong: 'I am agree.', right: ['I agree.'],
-        why: 'Hindi mein “main sehmat hoon” mein “sehmat” ek haalat hai, isliye “hoon” lagta hai. English mein “agree” ek kaam (verb) hai, jaise “go” ya “eat”, isliye uske saath “am” nahi lagta.'
+        why: 'Hindi mein “main sehmat hoon” mein “sehmat” ek **haalat** hai, isliye “hoon” lagta hai. English mein “agree” ek kaam (verb) hai, jaise “go” ya “eat”, isliye uske saath “am” nahi lagta.'
       },
       {
         title: 'Negative: “not” am / is / are ke baad',
@@ -170,7 +170,7 @@ window.LESSONS[2] = {
     { situation: 'Phone pe', en: 'Sorry, I am busy. I am in a meeting.', why: 'Akela “I am busy” rude lagta hai. “Sorry” se pata chalta hai ki aap baat karna chahte the par abhi nahi kar sakte.' },
     { situation: 'Dukaan pe', en: 'How much is it? / How much are they?', why: 'Ek cheez ho to “is”, do ya zyada cheezein hon to “are”.' },
     { situation: 'Class mein', en: 'Sir, Rahul is absent today.', why: 'Rahul ek insaan hai (he), isliye “is”.' },
-    { situation: 'Ghar pe', en: 'Mom, I am hungry!', why: 'Bhookh aapki haalat hai, koi kaam nahi, isliye “am”.' }
+    { situation: 'Ghar pe', en: 'Mom, I am hungry!', why: 'Bhookh aapki **haalat** hai, koi kaam nahi, isliye “am”.' }
   ],
 
   quiz: {
@@ -180,8 +180,8 @@ window.LESSONS[2] = {
       { prompt: 'Sahi shabd chuno', q: 'We ___ late.', options: ['am', 'is', 'are'], answer: 'are', why: '“We” = hum, yaani bahut log. Hindi mein “hum hain”, isliye ARE.' },
       { prompt: 'Sahi shabd chuno', q: 'I ___ ready.', options: ['am', 'is', 'are'], answer: 'am', why: '“I” ke saath hamesha AM, jaise “main hoon”.' },
       { prompt: 'Sahi shabd chuno', q: 'They ___ in Delhi.', options: ['am', 'is', 'are'], answer: 'are', why: '“They” = bahut log (plural). Hindi mein bhi “ve hain” bolte ho, “ve hai” nahi. Isliye ARE.' },
-      { prompt: 'Sahi shabd chuno', q: 'You ___ my best friend.', options: ['am', 'is', 'are'], answer: 'are', why: '“You” ke saath hamesha ARE, chahe ek hi insaan ho. Hindi mein bhi “aap ho” bolte hain.' },
-      { prompt: 'Kaunsa sentence sahi hai?', q: '', options: ['I am go to school.', 'I go to school.'], answer: 'I go to school.', why: '“go” khud kaam (verb) hai. Ek simple sentence mein ek hi main verb, isliye “am” nahi lagega.' },
+      { prompt: 'Sahi shabd chuno', q: 'You ___ my best friend.', options: ['am', 'is', 'are'], answer: 'are', why: '“You” ke saath **hamesha ARE**, chahe ek hi insaan ho. Hindi mein bhi “aap ho” bolte hain.' },
+      { prompt: 'Kaunsa sentence sahi hai?', q: '', options: ['I am go to school.', 'I go to school.'], answer: 'I go to school.', why: '“go” khud kaam (verb) hai. Ek simple sentence mein **ek hi main verb**, isliye “am” nahi lagega.' },
       { prompt: 'Kaunsa sentence sahi hai?', q: '', options: ['I am agree.', 'I agree.'], answer: 'I agree.', why: '“agree” English mein verb hai, Hindi ke “sehmat” jaisa adjective nahi. Verb ke saath “am” nahi lagta.' },
       { prompt: 'Sawaal kaise banega?', q: '', options: ['He is happy?', 'Is he happy?'], answer: 'Is he happy?', why: '“Is” Hindi ke “kya” jaisa kaam karta hai, isliye sawaal mein woh shuru mein aata hai.' },
       { prompt: 'Negative kaise banega?', q: '', options: ['He not is happy.', 'He is not happy.'], answer: 'He is not happy.', why: '“not” hamesha “is” ke baad aata hai. Hindi mein “nahi” pehle aata hai, isliye yeh galti hoti hai.' },

@@ -6,11 +6,14 @@
   const KEY = 'english30:v1';
 
   // ---------- storage (per-device convenience; the app works without it) ----------
-  const defaults = () => ({ name: '', streak: 0, lastDone: null, completedDays: [], steps: {}, bestScore: {} });
+  // Day 1 counts as done: the shipped lesson starts on Day 2.
+  const defaults = () => ({ name: '', streak: 0, lastDone: null, completedDays: [1], steps: {}, bestScore: {}, quizLast: {}, startedAt: {}, minutes: {} });
   function load() {
     try {
       const raw = localStorage.getItem(KEY);
-      return raw ? Object.assign(defaults(), JSON.parse(raw)) : defaults();
+      const d = raw ? Object.assign(defaults(), JSON.parse(raw)) : defaults();
+      if (!d.completedDays.includes(1)) d.completedDays.unshift(1);
+      return d;
     } catch (e) {
       return defaults();
     }
@@ -27,7 +30,11 @@
     ruleIdx: 0,
     showHindi: true,
     quiz: null,
-    speak: { idx: 0, heard: '', listening: false, error: '' }
+    speak: { idx: 0, heard: '', listening: false, error: '' },
+    write: { text: [], checked: false },
+    welcomeNote: '',
+    lockNote: false,
+    confirmReset: false
   };
 
   // ---------- helpers ----------
@@ -69,17 +76,27 @@
     home: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>',
     person: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
     arrow: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16M14 6l6 6-6 6"/></svg>',
+    route: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h8a3.5 3.5 0 0 0 0-7H8a3.5 3.5 0 0 1 0-7h8"/></svg>',
+    lockMid: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+    lockSmall: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+    unlockSmall: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/></svg>',
+    okCircleLg: '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path d="M7 12.5l3.5 3.5L17 9" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    noCircleLg: '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path d="M8.5 8.5l7 7M15.5 8.5l-7 7" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"/></svg>',
+    okCircleXl: '<svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path d="M7 12.5l3.5 3.5L17 9" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    noCircleXl: '<svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path d="M8.5 8.5l7 7M15.5 8.5l-7 7" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"/></svg>',
+    flameLg: '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c1 4 5 5.5 5 10a5 5 0 0 1-10 0c0-2.5 1.5-4 2.5-5 .3 1.7 1.2 2.6 2 3 .3-2.8-.5-5.5.5-8z"/></svg>',
     clock: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-text)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'
   };
 
   const STEPS = [
-    { id: 'reading', title: 'Reading', sub: lesson.reading.title + ' · 5 min', color: '#0066CC', icon: I.book },
-    { id: 'words', title: '15 Words', sub: 'Kab use · kab nahi · kyun', color: '#5856D6', icon: 'Aa' },
-    { id: 'grammar', title: 'Grammar', sub: lesson.grammar.rules.length + ' rules, har ek ka reason', color: '#C93400', icon: I.lines },
-    { id: 'models', title: 'Models', sub: 'Phone, dukaan, class, ghar', color: '#8944AB', icon: I.chat },
-    { id: 'practice', title: 'Practice', sub: lesson.quiz.questions.length + ' sawaal · bolo', color: '#248A3D', icon: I.target }
+    { id: 'reading', title: 'Reading', sub: lesson.reading.title + ' · 5 min', min: 5, color: '#0066CC', icon: I.book },
+    { id: 'words', title: '15 Words', sub: 'Kab use · kab nahi · kyun', min: 8, color: '#5856D6', icon: 'Aa' },
+    { id: 'grammar', title: 'Grammar', sub: lesson.grammar.rules.length + ' rules, har ek ka reason', min: 7, color: '#C93400', icon: I.lines },
+    { id: 'models', title: 'Models', sub: 'Phone, dukaan, class, ghar', min: 5, color: '#8944AB', icon: I.chat },
+    { id: 'practice', title: 'Practice', sub: lesson.quiz.questions.length + ' sawaal · bolo · likho', min: 5, color: '#248A3D', icon: I.target }
   ];
   const doneCount = () => STEPS.filter((s) => stepsFor(DAY)[s.id]).length;
+  const minutesLeft = () => STEPS.filter((s) => !stepsFor(DAY)[s.id]).reduce((n, s) => n + s.min, 0);
   const learnDone = () => STEPS.slice(0, 4).every((s) => stepsFor(DAY)[s.id]);
 
   function markStep(id) {
@@ -87,47 +104,56 @@
     save();
   }
 
-  function completeDay(score) {
-    data.bestScore[DAY] = Math.max(data.bestScore[DAY] || 0, score);
+  function completeDay() {
     if (!isDayDone(DAY)) {
       data.completedDays.push(DAY);
       const t = today();
       const y = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
       if (data.lastDone !== t) data.streak = data.lastDone === y ? data.streak + 1 : 1;
       data.lastDone = t;
+      const started = data.startedAt[DAY] || Date.now();
+      data.minutes[DAY] = Math.max(1, Math.round((Date.now() - started) / 60000));
     }
     save();
   }
 
   // ---------- shared pieces ----------
+  // **word** in lesson text marks the key idea; it renders bold.
+  const rich = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   const topbar = (backTo, backLabel, right) =>
     `<div class="topbar"><button class="back" data-act="go" data-arg="${backTo}">${I.back}${esc(backLabel)}</button>${right ? `<span class="counter">${right}</span>` : ''}</div>`;
-  const kyun = (text) => `<div class="kyun"><b>Kyun?</b><span>${esc(text)}</span></div>`;
+  const kyun = (text) => `<div class="kyun"><b>Kyun?</b><span>${rich(text)}</span></div>`;
+  const kyunRow = (text) => `<div class="kyun row"><b>Kyun?</b><span>${rich(text)}</span></div>`;
+  // words of the right sentence that the wrong one lacked, shown green
+  function markFix(wrong, right) {
+    const had = new Set(norm(wrong));
+    return esc(right).split(/(\s+)/).map((t) => (/\S/.test(t) && !had.has(norm(t)[0]) && norm(t).length ? `<span class="fix">${t}</span>` : t)).join('');
+  }
+  const tab = (id, icon, label, active) =>
+    `<button class="${active === id ? 'active' : ''}" data-act="go" data-arg="${id}" ${active === id ? 'aria-current="page"' : ''}>${icon}<span>${label}</span></button>`;
   const tabbar = (active) => `
-    <nav class="tabbar" aria-label="Main">
-      <button class="${active === 'home' ? 'active' : ''}" data-act="go" data-arg="home" ${active === 'home' ? 'aria-current="page"' : ''}>${I.home}<span>Home</span></button>
-      <button class="${active === 'speak' ? 'active' : ''}" data-act="go" data-arg="speak" ${active === 'speak' ? 'aria-current="page"' : ''}>${I.mic}<span>Bolo</span></button>
-      <button class="${active === 'profile' ? 'active' : ''}" data-act="go" data-arg="profile" ${active === 'profile' ? 'aria-current="page"' : ''}>${I.person}<span>Profile</span></button>
-    </nav>`;
+    <nav class="tabbar" aria-label="Main">${tab('home', I.home, 'Home', active)}${tab('safar', I.route, 'Safar', active)}${tab('speak', I.mic, 'Bolo', active)}${tab('profile', I.person, 'Profile', active)}</nav>`;
 
   // ---------- screens ----------
   const screens = {
     welcome() {
-      return `<main class="screen white" style="padding-top: calc(env(safe-area-inset-top) + 56px)">
+      return `<main class="screen white" style="padding-top: calc(env(safe-area-inset-top) + 64px)">
         <div class="app-icon" aria-hidden="true">Aa</div>
-        <p class="eyebrow" style="margin-top: 12px">English 30</p>
+        <p class="eyebrow" style="margin-top: 12px; font-size: 15px">English 30</p>
         <h1 class="hero-title" tabindex="-1">30 din mein English bolna shuru karo.</h1>
-        <p class="body muted" style="font-size: 17px">Roz ek chhota task. Har rule ke saath uska “kyun” bhi, taaki ratna na pade, samajh aaye.</p>
-        <div class="stack" style="gap: 22px; margin-top: 18px">
+        <p class="body muted" style="font-size: 17px; line-height: 1.45">Roz ek chhota task. Har rule ke saath uska “kyun” bhi, taaki ratna na pade, samajh aaye.</p>
+        <div class="stack" style="gap: 22px; margin-top: 28px">
           <div class="feature"><div class="ic">${I.book}</div><div><b>Roz ek task</b><span>Reading, 15 words, grammar aur practice</span></div></div>
           <div class="feature"><div class="ic">${I.bulb}</div><div><b>Har rule ka “kyun”</b><span>Hindi se tulna karke samjhaate hain</span></div></div>
-          <div class="feature"><div class="ic">${I.mic}</div><div><b>Bolo aur seekho</b><span>Apni awaaz se practice, galti turant pakdo</span></div></div>
+          <div class="feature"><div class="ic">${I.mic}</div><div><b>Bolo aur seekho</b><span>Apni awaaz record karo, galti turant pakdo</span></div></div>
         </div>
         <div class="spacer"></div>
         <form class="stack" data-form="name">
           <div class="field"><label for="name">Aapka naam</label><input id="name" name="name" autocomplete="given-name" placeholder="Jaise: Ravi" required maxlength="30"></div>
           <button class="btn" type="submit">Shuru karein</button>
         </form>
+        ${ui.welcomeNote ? `<p class="body muted center" role="status" style="font-size: 14px">${esc(ui.welcomeNote)}</p>` : ''}
+        <button class="btn plain" style="margin-top: -6px; min-height: 48px" data-act="have-account">Mera account pehle se hai</button>
       </main>`;
     },
 
@@ -137,76 +163,110 @@
       const circ = 2 * Math.PI * 27;
       const dash = (steps / STEPS.length) * circ;
       const date = new Date().toLocaleDateString('en-IN', { weekday: 'long' }).toUpperCase();
+      const weekDone = data.completedDays.filter((d) => d <= 7).length;
+      const basicPct = Math.round((data.completedDays.filter((d) => d <= 30).length / 30) * 100);
       const days = [1, 2, 3, 4, 5, 6, 7].map((n) => {
-        if (n === DAY && dayDone) return `<div class="day done"><span>${n}</span><div class="dot">${I.check}</div></div>`;
-        if (n === DAY) return `<div class="day today"><span>${n}</span><div class="dot"><i></i></div></div>`;
+        if (isDayDone(n)) return `<div class="day done"><span>${n}</span><div class="dot" role="img" aria-label="Day ${n} poora">${I.check}</div></div>`;
+        if (n === DAY) return `<div class="day today"><span>${n}</span><div class="dot" role="img" aria-label="Day ${n} aaj"><i></i></div></div>`;
         return `<div class="day"><span>${n}</span><div class="dot" role="img" aria-label="Day ${n} abhi band hai">${I.lock}</div></div>`;
       }).join('');
       const hero = dayDone
-        ? `<div class="card stack" style="gap: 14px">
+        ? `<div class="card stack hero" style="gap: 14px">
             <div class="row-between" style="justify-content: flex-start; gap: 14px">
               <div class="tile" style="width: 52px; height: 52px; border-radius: 26px; background: var(--green)">${I.check}</div>
-              <div><p class="eyebrow">Aaj ka task poora</p><p class="title-2">${esc(lesson.title)}</p><p class="body muted" style="font-size: 14px">Quiz best: ${data.bestScore[DAY] || 0}% · Day ${lesson.next.day} jald aa raha hai</p></div>
+              <div><p class="eyebrow">Aaj ka task poora</p><p class="title-2">${esc(lesson.title)}</p><p class="body muted" style="font-size: 14px">Quiz: ${data.bestScore[DAY] || 0}% · Day ${lesson.next.day} jald aa raha hai</p></div>
             </div>
             <button class="btn secondary" data-act="go" data-arg="task">Dobara revise karo</button>
           </div>`
-        : `<div class="card stack" style="gap: 18px; padding: 22px">
+        : `<div class="card stack hero" style="gap: 18px; padding: 22px">
             <div class="row-between" style="justify-content: flex-start; gap: 16px">
               <div class="ring" role="img" aria-label="${steps} of ${STEPS.length} hisse poore">
                 <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="var(--fill-2)" stroke-width="7"/><circle cx="32" cy="32" r="27" fill="none" stroke="var(--accent)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${dash} ${circ}" transform="rotate(-90 32 32)"/></svg>
                 <span>${steps}/${STEPS.length}</span>
               </div>
-              <div style="min-width: 0"><p class="eyebrow">Aaj ka task</p><p class="title-2" style="font-size: 22px">${esc(lesson.title)}</p><p class="body muted" style="font-size: 14px">${esc(lesson.subtitle)} · ${lesson.minutes} min</p></div>
+              <div style="min-width: 0; display: flex; flex-direction: column; gap: 3px"><p class="eyebrow">Aaj ka task</p><p class="title-2" style="font-size: 22px">${esc(lesson.title)}</p><p class="body muted" style="font-size: 14px">${esc(lesson.subtitle)} · ${lesson.minutes} min</p></div>
             </div>
-            <button class="btn" data-act="go" data-arg="task">${steps ? 'Task jaari rakhein' : 'Aaj ka task shuru karein'}${I.next}</button>
+            <button class="btn" style="min-height: 52px; border-radius: 14px" data-act="go" data-arg="task">${steps ? 'Task jaari rakhein' : 'Aaj ka task shuru karein'}${I.next}</button>
           </div>`;
-      return `<main class="screen with-tabbar">
-        <div class="row-between" style="align-items: flex-end; margin-top: 28px">
-          <div><p class="eyebrow">${esc(date)} · Day ${DAY} of 30</p><h1 class="large-title" tabindex="-1">Namaste, ${esc(data.name || 'dost')}</h1></div>
+      return `<main class="screen with-tabbar" style="gap: 22px">
+        <div class="row-between" style="align-items: flex-end; margin-top: 40px">
+          <div style="display: flex; flex-direction: column; gap: 4px"><p class="eyebrow" style="font-size: 14px">${esc(date)} · Day ${DAY} of 30</p><h1 class="large-title" tabindex="-1">Namaste, ${esc(data.name || 'dost')}</h1></div>
           <span class="pill" role="img" aria-label="${data.streak} din ka streak">${I.flame}${data.streak}</span>
         </div>
         ${hero}
         <section class="stack">
-          <div class="row-between" style="padding: 0 4px"><h2 class="title-2">Week 1 · Neev</h2><span class="muted" style="font-size: 14px">${data.completedDays.length} / 7 poore</span></div>
+          <div class="row-between" style="padding: 0 4px; align-items: baseline"><h2 class="title-2">Week 1 · Neev</h2><span class="muted" style="font-size: 14px">${weekDone} / 7 poore</span></div>
           <div class="list week">${days}</div>
         </section>
         <section class="stack">
           <h2 class="title-2" style="padding: 0 4px">Aage ka safar</h2>
           <div class="list">
-            <div class="list-row"><div class="tile" style="background: #5856D6; font-size: 13px">30</div><div class="text"><span class="t">Basic English</span><span class="s">Day 1–30 · Tenses se Final Test tak</span></div></div>
-            <div class="list-row"><div class="tile neutral">${I.lock}</div><div class="text"><span class="t">Advanced English</span><span class="s">Day 31–45 · Day 30 ka test pass karke khulega</span></div></div>
+            <button class="list-row" data-act="go" data-arg="safar"><div class="tile big" style="background: #5856D6; font-size: 13px">30</div><div class="text"><span class="t">Basic English</span><span class="s">Day 1–30 · Tenses se Final Test tak</span></div><span class="muted" style="font-size: 15px; font-weight: 600">${basicPct}%</span></button>
+            <button class="list-row" data-act="go" data-arg="safar"><div class="tile big neutral">${I.lockMid}</div><div class="text"><span class="t">Advanced English</span><span class="s">Day 31–45 · Day 30 ka test pass karke khulega</span></div></button>
           </div>
         </section>
         ${tabbar('home')}
       </main>`;
     },
 
+    safar() {
+      const row = (d) => {
+        const done = isDayDone(d.day);
+        const today = !done && d.day === DAY;
+        const tile = done
+          ? `<div class="tile" style="background: var(--green)" role="img" aria-label="Poora">${I.check}</div>`
+          : today ? `<div class="tile" style="background: var(--accent)">${d.day}</div>`
+          : `<div class="tile locked" role="img" aria-label="Band">${d.day}</div>`;
+        const right = today ? '<span class="chip-go">Aaj</span>' : done ? '' : `<span class="muted">${I.lock}</span>`;
+        const tag = today ? 'button' : 'div';
+        return `<${tag} class="list-row" ${today ? 'data-act="go" data-arg="task"' : ''}>${tile}<div class="text"><span class="t">${esc(d.focus)}</span><span class="s">Day ${d.day} · ${esc(d.learn)}</span></div>${right}</${tag}>`;
+      };
+      const basic = window.SYLLABUS.filter((d) => d.day <= 30).map(row).join('');
+      const adv = window.SYLLABUS.filter((d) => d.day > 30).map(row).join('');
+      return `<main class="screen with-tabbar" style="gap: 22px">
+        <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 40px"><p class="eyebrow" style="font-size: 14px">45 din ka raasta</p><h1 class="large-title" tabindex="-1">Safar</h1></div>
+        <section class="stack">
+          <div class="row-between" style="padding: 0 4px; align-items: baseline"><h2 class="title-2">Basic English</h2><span class="muted" style="font-size: 14px">Day 1–30</span></div>
+          <div class="list">${basic}</div>
+        </section>
+        <section class="stack">
+          <div class="row-between" style="padding: 0 4px; align-items: baseline"><h2 class="title-2">Advanced English</h2><span class="muted" style="font-size: 14px">Day 31–45</span></div>
+          <div class="card" style="display: flex; gap: 12px; align-items: center; padding: 14px 16px">
+            <span class="info-dot">${I.lockSmall}</span>
+            <p class="body" style="font-size: 14px">Day 30 ka <b>Final Test</b> pass karke yeh hissa khulega.</p>
+          </div>
+          <div class="list">${adv}</div>
+        </section>
+        ${tabbar('safar')}
+      </main>`;
+    },
+
     task() {
       const s = stepsFor(DAY);
-      const segs = STEPS.map((st, i) => {
-        const firstOpen = STEPS.findIndex((x) => !s[x.id]);
-        return `<span class="${s[st.id] ? 'done' : i === firstOpen ? 'on' : ''}"></span>`;
-      }).join('');
       const firstOpen = STEPS.findIndex((x) => !s[x.id]);
+      const segs = STEPS.map((st, i) => `<span class="${s[st.id] ? 'done' : i === firstOpen ? 'on' : ''}"></span>`).join('');
       const rows = STEPS.map((st, i) => {
         const locked = st.id === 'practice' && !learnDone();
         const right = s[st.id]
-          ? `<span style="color: var(--green)" role="img" aria-label="Poora">${I.okCircle}</span>`
+          ? `<span style="color: var(--green); display: flex" role="img" aria-label="Poora">${I.okCircleLg}</span>`
           : i === firstOpen && !locked ? '<span class="chip-go">Shuru</span>'
-          : locked ? `<span class="muted" role="img" aria-label="Band">${I.lock}</span>` : `<span role="img" aria-label="Baaki">${I.todo}</span>`;
-        return `<button class="list-row" data-act="open-step" data-arg="${st.id}" ${locked ? 'disabled aria-disabled="true"' : ''}>
+          : locked ? `<span class="muted" style="display: flex" role="img" aria-label="Band: pehle upar ke 4 hisse poore karo">${I.lock}</span>`
+          : `<span style="display: flex" role="img" aria-label="Baaki">${I.todo}</span>`;
+        return `<button class="list-row" data-act="open-step" data-arg="${st.id}" ${locked ? 'aria-disabled="true"' : ''}>
           <div class="tile" style="background: ${st.color}">${st.icon}</div>
-          <div class="text"><span class="t">${st.title}</span><span class="s">${locked ? 'Pehle upar ke 4 hisse poore karo' : st.sub}</span></div>${right}</button>`;
+          <div class="text"><span class="t">${st.title}</span><span class="s">${st.sub}</span></div>${right}</button>`;
       }).join('');
-      return `<main class="screen">
+      const left = minutesLeft();
+      return `<main class="screen" style="gap: 20px">
         ${topbar('home', 'Home')}
-        <div><p class="eyebrow">Day ${DAY} · Week ${lesson.week}</p><h1 class="large-title" tabindex="-1">${esc(lesson.title)}</h1></div>
-        <div class="stack" style="gap: 8px"><div class="segments" style="grid-template-columns: repeat(${STEPS.length}, minmax(0, 1fr))">${segs}</div>
-          <span class="muted" style="font-size: 14px">${doneCount()} of ${STEPS.length} poore</span></div>
+        <div style="display: flex; flex-direction: column; gap: 4px; margin-top: -8px"><p class="eyebrow" style="font-size: 14px">Day ${DAY} · Week ${lesson.week}</p><h1 class="large-title" tabindex="-1">${esc(lesson.title)}</h1></div>
+        <div class="stack" style="gap: 8px"><div class="segments tall" style="grid-template-columns: repeat(${STEPS.length}, minmax(0, 1fr))">${segs}</div>
+          <span class="muted" style="font-size: 14px">${doneCount()} of ${STEPS.length} poore${left ? ` · lagbhag ${left} min baaki` : ' · sab ho gaya'}</span></div>
         <div class="list">${rows}</div>
+        ${ui.lockNote ? `<p class="note" role="status" style="margin: 0">${I.lock}<span>Practice tab khulega jab Reading, Words, Grammar aur Models poore ho jayenge.</span></p>` : ''}
         <div class="card" style="display: flex; gap: 12px; align-items: flex-start">
-          <span style="color: var(--accent-text); flex-shrink: 0">${I.unlock}</span>
-          <p class="body" style="font-size: 14px">Paanchon hisse poore karo aur quiz mein <b>${lesson.quiz.passPercent}%</b> lao, tab <b>Day ${lesson.next.day}: ${esc(lesson.next.title)}</b> khulega.</p>
+          <span class="info-dot">${I.unlockSmall}</span>
+          <p class="body" style="font-size: 14px; line-height: 1.45">Paanchon hisse poore karo aur quiz mein <b>${lesson.quiz.passPercent}%</b> lao, tab <b>Day ${lesson.next.day}: ${esc(lesson.next.title)}</b> khulega.</p>
         </div>
       </main>`;
     },
@@ -219,12 +279,15 @@
         const en = esc(l.en).replace(g, '<strong>$1</strong>').replace(v, '<u>$1</u>');
         return `<div><p>${en}</p>${ui.showHindi ? `<p class="hi">${esc(l.hi)}</p>` : ''}</div>`;
       }).join('');
-      const bars = [8, 14, 20, 12, 24, 18, 10, 22, 16, 26, 12, 8, 18, 24, 14, 20, 10, 16, 22, 12, 8, 18, 14, 10].map((h) => `<i style="height: ${h}px"></i>`).join('');
+      const words = r.lines.map((l) => l.en).join(' ').split(/\s+/).length;
+      const secs = Math.round(words / 2.2);
+      const length = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
+      const bars = [8, 14, 20, 12, 24, 18, 10, 22, 16, 26, 12, 8, 18, 24, 14, 20, 10, 16, 22, 12, 8, 18, 14, 10, 20, 12, 8, 14].map((h) => `<i style="height: ${h}px"></i>`).join('');
       const qs = r.questions.map((q) => `<details class="qa"><summary>${esc(q.q)}</summary><p>${esc(q.a)}</p></details>`).join('');
       return `<main class="screen white">
         ${topbar('task', 'Day ' + DAY, '1 / 5 · Reading')}
         <h1 class="large-title" tabindex="-1">${esc(r.title)}</h1>
-        <div class="player"><button class="play" data-act="say-passage" aria-label="Passage suno">${I.play}</button><div class="wave" aria-hidden="true">${bars}</div></div>
+        <div class="player"><button class="play" data-act="say-passage" aria-label="Passage suno">${I.play}</button><div class="wave" aria-hidden="true">${bars}</div><span class="counter">${length}</span></div>
         <div class="switch-row"><span id="hl">Hindi meaning dikhao</span><button class="switch" role="switch" aria-checked="${ui.showHindi}" aria-labelledby="hl" data-act="toggle-hindi"></button></div>
         <div class="passage">${lines}</div>
         <div class="legend"><span><i style="width: 10px; height: 10px; border-radius: 3px; background: var(--accent-text)"></i>Aaj ka grammar</span><span><i style="width: 14px; border-bottom: 2px dotted var(--indigo)"></i>Aaj ke words</span></div>
@@ -240,30 +303,30 @@
       const w = list[ui.wordIdx];
       const last = ui.wordIdx === list.length - 1;
       const segs = list.map((_, i) => `<span class="${i <= ui.wordIdx ? 'on' : ''}"></span>`).join('');
-      return `<main class="screen">
+      return `<main class="screen" style="gap: 14px">
         ${topbar('task', 'Day ' + DAY, `Word ${ui.wordIdx + 1} / ${list.length}`)}
-        <div class="segments" style="grid-template-columns: repeat(${list.length}, minmax(0, 1fr))" aria-hidden="true">${segs}</div>
+        <div class="segments thin" style="grid-template-columns: repeat(${list.length}, minmax(0, 1fr))" aria-hidden="true">${segs}</div>
         <div class="word-head">
-          <div><h1 class="word-big" tabindex="-1" style="margin: 0">${esc(w.word)}</h1><span class="muted" style="font-size: 15px">${esc(w.ipa)} · ${esc(w.say)}</span></div>
+          <div style="display: flex; flex-direction: column; gap: 2px"><h1 class="word-big" tabindex="-1" style="margin: 0">${esc(w.word)}</h1><span class="muted" style="font-size: 15px">${esc(w.ipa)} · ${esc(w.say)}</span></div>
           <button class="speaker" data-act="say" data-arg="${esc(w.word)}" aria-label="${esc(w.word)} ka uchcharan suno">${I.speaker}</button>
         </div>
         <p style="margin: 0; font-size: 17px; font-weight: 500">${esc(w.meaning)}</p>
         <div class="card stack">
-          <div class="verdict ok">${I.okCircle}KAB USE KAREIN</div>
+          <div class="verdict ok">${I.okCircleLg}KAB USE KAREIN</div>
           <p class="sentence">${esc(w.use.ex)}</p>
-          ${kyun(w.use.why)}
+          ${kyunRow(w.use.why)}
         </div>
         <div class="card stack">
-          <div class="verdict no">${I.noCircle}KAB NAHI</div>
+          <div class="verdict no">${I.noCircleLg}KAB NAHI</div>
           <p class="strike">${esc(w.dont.wrong)}</p>
-          <p class="sentence">${esc(w.dont.right)}</p>
-          ${kyun(w.dont.why)}
+          <p class="sentence">${markFix(w.dont.wrong, w.dont.right)}</p>
+          ${kyunRow(w.dont.why)}
         </div>
-        ${w.note ? `<div class="note"><span style="color: var(--accent-text)">${I.bulb}</span><span>${esc(w.note)}</span></div>` : ''}
+        ${w.note ? `<div class="note"><span style="color: var(--accent-text); display: flex">${I.bulb}</span><span>${rich(w.note)}</span></div>` : ''}
         <div class="tags">${w.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join('')}</div>
         <div class="spacer"></div>
         <div class="btn-row">
-          <button class="btn secondary" data-act="word" data-arg="-1" ${ui.wordIdx === 0 ? 'disabled style="opacity: .5"' : ''}>Pichhla</button>
+          <button class="btn secondary" data-act="word" data-arg="-1" ${ui.wordIdx === 0 ? 'disabled' : ''}>Pichhla</button>
           ${last ? '<button class="btn green" data-act="finish-step" data-arg="words">Words poore</button>' : '<button class="btn" data-act="word" data-arg="1">Agla word</button>'}
         </div>
       </main>`;
@@ -274,25 +337,28 @@
       const r = g.rules[ui.ruleIdx];
       const last = ui.ruleIdx === g.rules.length - 1;
       const intro = ui.ruleIdx === 0
-        ? `<div class="card" style="padding: 6px 16px">${g.pairs.map((p) => `<div class="map-row"><span>${esc(p.hi)} <b>${esc(p.hiVerb)}</b></span><span class="arrow">${I.arrow}</span><span class="en">${esc(p.en)} <b>${esc(p.enVerb)}</b></span></div>`).join('')}</div>
+        ? `<div class="card" style="padding: 6px 16px">
+             <div class="map-row head"><span>HINDI</span><span></span><span class="en">ENGLISH</span></div>
+             ${g.pairs.map((p) => `<div class="map-row"><span>${esc(p.hi)} <b>${esc(p.hiVerb)}</b></span><span class="arrow">${I.arrow}</span><span class="en">${esc(p.en)} <b>${esc(p.enVerb)}</b></span></div>`).join('')}
+           </div>
            <div class="formula"><span>${esc(g.formula[0])}</span><em>+</em><span class="key">${esc(g.formula[1])}</span><em>+</em><span>${esc(g.formula[2])}</span></div>`
         : '';
-      return `<main class="screen">
+      return `<main class="screen" style="gap: 14px">
         ${topbar('task', 'Day ' + DAY, `Rule ${ui.ruleIdx + 1} / ${g.rules.length}`)}
-        <div class="stack" style="gap: 6px"><h1 class="large-title" tabindex="-1">${esc(lesson.title)}</h1>${ui.ruleIdx === 0 ? `<p class="body">${esc(g.what)}</p>` : ''}</div>
+        <div class="stack" style="gap: 6px; margin-top: -4px"><h1 class="large-title" tabindex="-1">${esc(lesson.title)}</h1>${ui.ruleIdx === 0 ? `<p class="body" style="line-height: 1.45">${rich(g.what)}</p>` : ''}</div>
         ${intro}
         <div class="card stack">
-          <p class="eyebrow">Rule ${ui.ruleIdx + 1} · ${esc(r.title)}</p>
-          ${r.wrong ? `<div class="mark"><span style="color: var(--red)" role="img" aria-label="Galat">${I.noCircle}</span><p class="strike" style="font-size: 17px">${esc(r.wrong)}</p></div>` : ''}
-          ${r.right.map((s) => `<div class="mark"><span style="color: var(--green)" role="img" aria-label="Sahi">${I.okCircle}</span><p class="sentence" style="font-size: 17px">${esc(s)}</p></div>`).join('')}
+          <p class="eyebrow">Rule · ${esc(r.title)}</p>
+          ${r.wrong ? `<div class="mark"><span style="color: var(--red); display: flex" role="img" aria-label="Galat">${I.noCircleLg}</span><p class="strike" style="font-size: 17px">${esc(r.wrong)}</p></div>` : ''}
+          ${r.right.map((s) => `<div class="mark"><span style="color: var(--green); display: flex" role="img" aria-label="Sahi">${I.okCircleLg}</span><p class="sentence" style="font-size: 17px">${esc(s)}</p></div>`).join('')}
           ${kyun(r.why)}
-          ${r.tip ? `<div class="note"><span style="color: var(--accent-text)">${I.bulb}</span><span>${esc(r.tip)}</span></div>` : ''}
+          ${r.tip ? `<div class="note"><span style="color: var(--accent-text); display: flex">${I.bulb}</span><span>${rich(r.tip)}</span></div>` : ''}
         </div>
         <div class="spacer"></div>
-        <div class="btn-row">
-          <button class="btn secondary" data-act="rule" data-arg="-1" ${ui.ruleIdx === 0 ? 'disabled style="opacity: .5"' : ''}>Pichhla</button>
-          ${last ? '<button class="btn green" data-act="finish-step" data-arg="grammar">Grammar poora</button>' : '<button class="btn" data-act="rule" data-arg="1">Agla rule</button>'}
-        </div>
+        ${last
+          ? '<button class="btn green" data-act="finish-step" data-arg="grammar">Samajh gaya, grammar poora</button>'
+          : '<button class="btn" data-act="rule" data-arg="1">Samajh gaya, agla rule</button>'}
+        ${ui.ruleIdx > 0 ? '<button class="btn plain" style="margin-top: -8px" data-act="rule" data-arg="-1">Pichhla rule</button>' : ''}
       </main>`;
     },
 
@@ -329,19 +395,19 @@
       }).join('');
       const sheet = picked ? `
         <div class="sheet" role="status">
-          <h3 class="${right ? 'ok' : 'no'}">${right ? I.okCircle : I.noCircle}${right ? 'Bilkul sahi!' : 'Oops, galat'}</h3>
+          <h3 class="${right ? 'ok' : 'no'}">${right ? I.okCircleXl : I.noCircleXl}${right ? 'Bilkul sahi!' : 'Oops, galat'}</h3>
           ${right ? '' : `<p style="margin: 0; font-size: 16px">Sahi answer: <b>${esc(q.answer)}</b></p>`}
           ${kyun(q.why)}
           <button class="btn ${right ? 'green' : 'red'}" data-act="next-q">${qz.idx === total - 1 ? 'Result dekho' : right ? 'Aage chalo' : 'Samajh gaya, aage chalo'}</button>
         </div>` : '';
-      return `<main class="screen" style="padding-bottom: 340px">
+      return `<main class="screen" style="padding-bottom: 360px; gap: 22px">
         <div class="topbar" style="gap: 14px">
           <button class="icon-btn" style="margin-left: -10px" data-act="go" data-arg="task" aria-label="Quiz band karo">${I.close}</button>
           <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${qz.idx + 1}"><span style="width: ${((qz.idx + 1) / total) * 100}%"></span></div>
           <span class="counter">${qz.idx + 1} / ${total}</span>
         </div>
-        <div class="stack" style="gap: 8px; margin-top: 8px"><p class="muted" style="margin: 0; font-size: 14px; font-weight: 600">${esc(q.prompt)}</p>${qText}</div>
-        <h1 class="visually-hidden" tabindex="-1" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Sawaal ${qz.idx + 1}</h1>
+        <div class="stack" style="gap: 8px"><p class="muted" style="margin: 0; font-size: 14px; font-weight: 600">${esc(q.prompt)}</p>${qText}</div>
+        <h1 tabindex="-1" class="sr-only">Sawaal ${qz.idx + 1}</h1>
         <div class="stack" style="gap: 12px">${opts}</div>
         ${sheet}
       </main>`;
@@ -352,17 +418,24 @@
       const total = lesson.quiz.questions.length;
       const pct = Math.round((qz.correct / total) * 100);
       const pass = pct >= lesson.quiz.passPercent;
-      const wrongs = qz.wrong.map((i) => {
-        const q = lesson.quiz.questions[i];
-        return `<div class="card stack"><p class="sentence" style="font-size: 16px">${esc(q.q || q.prompt)}</p><p style="margin: 0">Sahi: <b>${esc(q.answer)}</b></p>${kyun(q.why)}</div>`;
-      }).join('');
       return `<main class="screen white">
         <div class="medal" style="${pass ? '' : 'background: var(--red-bg)'}"><div style="${pass ? '' : 'background: var(--red); box-shadow: none'}">${pass ? I.checkBig : `<span style="font-size: 34px; font-weight: 800">${pct}%</span>`}</div></div>
         <div class="center stack" style="gap: 6px"><h1 class="large-title" tabindex="-1">${pass ? 'Quiz pass!' : 'Thoda aur practice'}</h1>
           <p class="body muted center">${qz.correct} / ${total} sahi · ${pct}%${pass ? '' : ` · pass ke liye ${lesson.quiz.passPercent}% chahiye`}</p></div>
-        ${wrongs ? `<h2 class="title-2" style="margin-top: 8px">Galat wale, reason ke saath</h2>${wrongs}` : ''}
+        ${qz.wrong.length ? `<h2 class="title-2" style="margin-top: 8px">Galat wale, reason ke saath</h2>${wrongCards(qz.wrong)}` : ''}
         <div class="spacer"></div>
-        ${pass ? '<button class="btn" data-act="go" data-arg="speak-task">Aakhri step: bolo</button>' : '<button class="btn" data-act="start-quiz">Dobara try karo</button><button class="btn plain" data-act="go" data-arg="task">Pehle grammar dobara padho</button>'}
+        ${pass ? '<button class="btn" data-act="go" data-arg="speak-task">Agla step: bolo</button>' : '<button class="btn" data-act="start-quiz">Dobara try karo</button><button class="btn plain" data-act="go" data-arg="task">Pehle grammar dobara padho</button>'}
+      </main>`;
+    },
+
+    review() {
+      const last = data.quizLast[DAY] || { wrong: [] };
+      return `<main class="screen">
+        ${topbar('complete', 'Wapas')}
+        <div class="stack" style="gap: 6px"><h1 class="large-title" tabindex="-1">Galat sawaal</h1><p class="body">Har galti ke saath uska reason. Ek baar padh lo, kal yeh galti nahi hogi.</p></div>
+        ${wrongCards(last.wrong)}
+        <div class="spacer"></div>
+        <button class="btn" data-act="go" data-arg="complete">Samajh gaya</button>
       </main>`;
     },
 
@@ -391,27 +464,55 @@
         ${sp.error ? `<div class="note"><span>${esc(sp.error)}</span></div>` : ''}
         ${heard}
         <div class="spacer"></div>
-        ${last && fromTask ? '<button class="btn green" data-act="finish-day">Day poora karo</button>' : `<button class="btn" data-act="next-speak" data-arg="${fromTask ? 1 : 0}">Agla sentence</button>`}
+        ${last && fromTask ? '<button class="btn" data-act="go" data-arg="write">Aakhri step: likho</button>' : `<button class="btn" data-act="next-speak">Agla sentence</button>`}
         ${fromTask ? '' : tabbar('speak')}
       </main>`;
     },
 
+    write() {
+      const wr = ui.write;
+      const items = WRITE.map((p, i) => {
+        const res = wr.checked ? checkWrite(p, wr.text[i] || '') : null;
+        return `<div class="card stack">
+          <label class="eyebrow" for="w${i}">${esc(p.label)}</label>
+          <input class="write-input ${res ? (res.ok ? 'ok' : 'no') : ''}" id="w${i}" data-write="${i}" value="${esc(wr.text[i] || '')}" placeholder="${esc(p.placeholder)}" autocomplete="off" autocapitalize="sentences">
+          ${res ? `<div class="mark" style="align-items: flex-start"><span style="color: ${res.ok ? 'var(--green)' : 'var(--red)'}; display: flex">${res.ok ? I.okCircleLg : I.noCircleLg}</span><span style="font-size: 14px; line-height: 1.45; color: var(--label-2)">${rich(res.msg)}</span></div>` : ''}
+        </div>`;
+      }).join('');
+      const allOk = wr.checked && WRITE.every((p, i) => checkWrite(p, wr.text[i] || '').ok);
+      return `<main class="screen">
+        ${topbar('task', 'Day ' + DAY, 'Likho · 3 sentence')}
+        <div class="stack" style="gap: 6px"><h1 class="large-title" tabindex="-1">Apne baare mein likho</h1><p class="body">Aaj ke grammar se apni family ke baare mein 3 sentence likho.</p></div>
+        ${items}
+        <div class="spacer"></div>
+        ${allOk
+          ? '<button class="btn green" data-act="finish-day">Day poora karo</button>'
+          : `<button class="btn" data-act="check-write">${wr.checked ? 'Sudhar kar dobara check karo' : 'Check karo'}</button>
+             ${wr.checked ? '<button class="btn plain" style="margin-top: -8px" data-act="finish-day">Baad mein sudharunga, day poora karo</button>' : ''}`}
+      </main>`;
+    },
+
     complete() {
-      return `<main class="screen white">
-        <div class="medal"><div>${I.checkBig}</div></div>
-        <div class="center stack" style="gap: 6px"><h1 class="large-title" tabindex="-1">Day ${DAY} complete!</h1>
-          <p class="body muted center">Quiz best: <b style="color: var(--green-text)">${data.bestScore[DAY] || 0}%</b></p></div>
-        <div class="stats">
-          <div class="stat"><span style="color: var(--orange)">${I.flame}</span><b>${data.streak}</b><span>din ka streak</span></div>
-          <div class="stat"><span style="color: var(--indigo); font-size: 15px; font-weight: 800">Aa</span><b>${lesson.words.length}</b><span>words seekhe</span></div>
-          <div class="stat">${I.clock}<b>${lesson.grammar.rules.length}</b><span>grammar rules</span></div>
+      const q = data.quizLast[DAY] || { correct: 0, total: lesson.quiz.questions.length, wrong: [] };
+      const pct = Math.round((q.correct / q.total) * 100);
+      const wordsLearned = data.completedDays.length * lesson.words.length;
+      const wrongN = q.wrong.length;
+      return `<main class="screen white" style="padding-top: calc(env(safe-area-inset-top) + 72px); align-items: stretch; gap: 18px">
+        <div class="medal" style="margin-top: 0"><div>${I.checkBig}</div></div>
+        <div class="center stack" style="gap: 8px"><h1 class="large-title" tabindex="-1">Day ${DAY} complete!</h1>
+          <p class="body muted center" style="font-size: 17px">Quiz mein ${q.correct} / ${q.total} · <b style="color: var(--green-text)">${pct}%</b></p></div>
+        <div class="stats" style="margin-top: 8px">
+          <div class="stat"><span style="color: var(--orange); display: flex">${I.flameLg}</span><b>${data.streak}</b><span>din ka streak</span></div>
+          <div class="stat"><span style="color: var(--indigo); font-size: 15px; font-weight: 800; height: 22px; display: flex; align-items: center">Aa</span><b>${wordsLearned}</b><span>words seekhe</span></div>
+          <div class="stat">${I.clock}<b>${data.minutes[DAY] || 1}</b><span>minute</span></div>
         </div>
         <div class="card" style="display: flex; gap: 14px; align-items: center; box-shadow: none; border: 1px solid var(--separator)">
           <div class="tile" style="width: 44px; height: 44px; border-radius: 12px; background: var(--accent)">${I.unlock}</div>
-          <div><p class="eyebrow">Agla task</p><p style="margin: 0; font-size: 17px; font-weight: 700">Day ${lesson.next.day} · ${esc(lesson.next.title)}</p></div>
+          <div style="display: flex; flex-direction: column; gap: 2px"><p class="eyebrow">Kal ka task khul gaya</p><p style="margin: 0; font-size: 17px; font-weight: 700">Day ${lesson.next.day} · ${esc(lesson.next.title)}</p></div>
         </div>
         <div class="spacer"></div>
         <button class="btn" data-act="go" data-arg="home">Home pe jao</button>
+        ${wrongN ? `<button class="btn plain" style="margin-top: -6px" data-act="go" data-arg="review">${wrongN} galat sawaal dobara dekho</button>` : ''}
       </main>`;
     },
 
@@ -425,11 +526,34 @@
           <div class="stat" style="background: var(--card)"><b>${data.bestScore[DAY] || 0}%</b><span>best quiz</span></div>
         </div>
         <p class="body muted" style="font-size: 14px">Progress sirf isi phone/browser mein save hota hai.</p>
-        <button class="btn secondary" style="color: var(--red-text)" data-act="reset">Progress reset karo</button>
+        ${ui.confirmReset
+          ? `<div class="card stack"><p class="body" style="font-size: 15px">Saara progress mit jayega. Pakka?</p>
+               <div class="btn-row"><button class="btn secondary" data-act="cancel-reset">Nahi</button><button class="btn red" data-act="reset">Haan, mitao</button></div></div>`
+          : '<button class="btn secondary" style="color: var(--red-text)" data-act="ask-reset">Progress reset karo</button>'}
         ${tabbar('profile')}
       </main>`;
     }
   };
+
+  function wrongCards(idxs) {
+    return idxs.map((i) => {
+      const q = lesson.quiz.questions[i];
+      return `<div class="card stack"><p class="sentence" style="font-size: 16px">${esc(q.q || q.prompt)}</p><p style="margin: 0">Sahi: <b>${esc(q.answer)}</b></p>${kyun(q.why)}</div>`;
+    }).join('');
+  }
+
+  // Writing practice: each line must use the right form of be for its subject.
+  const WRITE = [
+    { label: 'I am …', placeholder: 'Jaise: I am a student.', verb: 'am', subject: 'I', ok: '“I” ke saath **am**, bilkul sahi.', fix: '“I” ke saath hamesha **am** lagta hai, jaise “main hoon”. Likho: I am …' },
+    { label: 'My father is …', placeholder: 'Jaise: My father is a farmer.', verb: 'is', subject: 'my father', ok: '“My father” ek insaan hai, isliye **is**. Sahi!', fix: '“My father” ek insaan hai (he), isliye **is** lagega, jaise “woh hai”. Likho: My father is …' },
+    { label: 'My friends are …', placeholder: 'Jaise: My friends are kind.', verb: 'are', subject: 'my friends', ok: '“My friends” bahut log hain, isliye **are**. Sahi!', fix: '“My friends” bahut log hain (they), isliye **are** lagega, jaise “ve hain”. Likho: My friends are …' }
+  ];
+  function checkWrite(p, text) {
+    const t = ' ' + norm(text).join(' ') + ' ';
+    if (norm(text).length < 3) return { ok: false, msg: 'Kam se kam 3 shabd ka poora sentence likho.' };
+    const ok = t.includes(' ' + p.subject.toLowerCase() + ' ' + p.verb + ' ');
+    return { ok, msg: ok ? p.ok : p.fix };
+  }
 
   function norm(s) {
     return s.toLowerCase().replace(/[^a-z' ]/g, ' ').split(/\s+/).filter(Boolean);
@@ -483,7 +607,12 @@
   const actions = {
     go,
     'open-step'(id) {
-      if (id === 'practice') { if (learnDone()) actions['start-quiz'](); return; }
+      if (!data.startedAt[DAY]) { data.startedAt[DAY] = Date.now(); save(); }
+      if (id === 'practice') {
+        if (learnDone()) { ui.lockNote = false; actions['start-quiz'](); } else { ui.lockNote = true; render(); }
+        return;
+      }
+      ui.lockNote = false;
       if (id === 'words') ui.wordIdx = 0;
       if (id === 'grammar') ui.ruleIdx = 0;
       go(id);
@@ -507,6 +636,7 @@
       if (qz.idx === lesson.quiz.questions.length - 1) {
         const pct = Math.round((qz.correct / lesson.quiz.questions.length) * 100);
         data.bestScore[DAY] = Math.max(data.bestScore[DAY] || 0, pct);
+        if (pct >= lesson.quiz.passPercent) data.quizLast[DAY] = { correct: qz.correct, total: lesson.quiz.questions.length, wrong: qz.wrong.slice() };
         save();
         go('result');
         return;
@@ -517,15 +647,23 @@
       window.scrollTo(0, 0);
     },
     listen,
+    'have-account'() {
+      if (data.name) { go('home'); return; }
+      ui.welcomeNote = 'Is phone pe pehle ka koi account nahi mila. Upar naam likh kar shuru karein.';
+      render();
+    },
+    'check-write'() { ui.write.checked = true; render(); },
+    'ask-reset'() { ui.confirmReset = true; render(); },
+    'cancel-reset'() { ui.confirmReset = false; render(); },
     'next-speak'() {
       ui.speak.idx = (ui.speak.idx + 1) % lesson.speak.length;
       ui.speak.heard = '';
       ui.speak.error = '';
       render();
     },
-    'finish-day'() { markStep('practice'); completeDay(data.bestScore[DAY] || 0); go('complete'); },
+    'finish-day'() { markStep('practice'); completeDay(); go('complete'); },
     reset() {
-      if (!window.confirm('Saara progress mit jayega. Pakka?')) return;
+      ui.confirmReset = false;
       data = defaults();
       save();
       go('welcome');
@@ -537,6 +675,13 @@
     if (!el || el.disabled) return;
     const fn = actions[el.dataset.act];
     if (fn) fn(el.dataset.arg);
+  });
+
+  app.addEventListener('input', (e) => {
+    const i = e.target.dataset && e.target.dataset.write;
+    if (i === undefined) return;
+    ui.write.text[Number(i)] = e.target.value;
+    ui.write.checked = false;
   });
 
   app.addEventListener('submit', (e) => {
