@@ -28,91 +28,91 @@ window.LESSONS[4] = {
 
   words: [
     {
-      word: 'live', ipa: '/lɪv/', say: 'लिव', meaning: 'rehna',
+      word: 'live', ipa: '/lɪv/', say: 'लिव', hindi: 'रहना', meaning: 'rehna',
       use: { ex: 'I live in Patna.', why: 'Kahan rehte ho, yeh **pakki baat** hai, isliye simple present.' },
       dont: { wrong: 'Where you live?', right: 'Where do you live?', why: 'Sawaal mein **“do”** lagta hai. Bina “do” ke sentence adhoora hai.' },
       tags: ['Pehli mulaqaat']
     },
     {
-      word: 'like', ipa: '/laɪk/', say: 'लाइक', meaning: 'pasand hona',
+      word: 'like', ipa: '/laɪk/', say: 'लाइक', hindi: 'पसंद करना', meaning: 'pasand hona',
       use: { ex: 'I like mangoes.', why: 'Pasand ek **pakki baat** hai, roz badalti nahi.' },
       dont: { wrong: 'I am liking this song.', right: 'I like this song.', why: 'Like, love, know, want jaise **mann ke verbs** ke saath -ing nahi lagate.' },
       tags: ['Dost', 'Khana']
     },
     {
-      word: 'want', ipa: '/wɑːnt/', say: 'वॉन्ट', meaning: 'chahna',
+      word: 'want', ipa: '/wɑːnt/', say: 'वॉन्ट', hindi: 'चाहना', meaning: 'chahna',
       use: { ex: 'I want a glass of water.', why: 'Abhi ki **ichha** bhi simple present mein: I want.' },
       dont: { wrong: 'She want a new phone.', right: 'She wants a new phone.', why: '“She” ke saath verb + **s**: wants.' },
       tags: ['Dukaan', 'Ghar']
     },
     {
-      word: 'need', ipa: '/niːd/', say: 'नीड', meaning: 'zaroorat hona',
+      word: 'need', ipa: '/niːd/', say: 'नीड', hindi: 'ज़रूरत होना', meaning: 'zaroorat hona',
       use: { ex: 'I need your help.', why: 'Zaroorat batane ke liye **need + cheez**.' },
       dont: { wrong: 'I don\'t need of money.', right: 'I don\'t need money.', why: '“need” ke baad **“of” nahi**. Hindi “paise **ki** zaroorat” se “of” aa jaata hai.' },
       tags: ['Office', 'Dukaan']
     },
     {
-      word: 'know', ipa: '/noʊ/', say: 'नो', meaning: 'jaanna',
+      word: 'know', ipa: '/noʊ/', say: 'नो', hindi: 'जानना', meaning: 'jaanna',
       use: { ex: 'I know him.', why: 'Jaanna ek **haalat** hai, isliye simple present.' },
       dont: { wrong: 'Do you know to swim?', right: 'Do you know how to swim?', why: 'Koi kaam **karna aata hai**, yeh batane ke liye “know **how to**”.' },
       tags: ['Dost']
     },
     {
-      word: 'understand', ipa: '/ˌʌndərˈstænd/', say: 'अंडरस्टैंड', meaning: 'samajhna',
+      word: 'understand', ipa: '/ˌʌndərˈstænd/', say: 'अंडरस्टैंड', hindi: 'समझना', meaning: 'samajhna',
       use: { ex: 'I understand English.', why: 'Samajhna bhi **mann ka verb** hai: simple present.' },
       dont: { wrong: 'I am not understanding.', right: 'I don\'t understand.', why: 'Mann ka verb, isliye **-ing nahi**. “Nahi” ke liye **don\'t**.' },
       tags: ['Class', 'Office']
     },
     {
-      word: 'speak', ipa: '/spiːk/', say: 'स्पीक', meaning: 'bolna (bhasha)',
+      word: 'speak', ipa: '/spiːk/', say: 'स्पीक', hindi: 'बोलना', meaning: 'bolna (bhasha)',
       use: { ex: 'She speaks three languages.', why: '“She” ke saath verb + **s**: speaks.' },
       dont: { wrong: 'He speaks English very good.', right: 'He speaks English very well.', why: 'Kaam **kaisa** hua, woh **“well”** batata hai. “Good” cheez ke saath: a good book.' },
       tags: ['Interview', 'Class']
     },
     {
-      word: 'drink', ipa: '/drɪŋk/', say: 'ड्रिंक', meaning: 'peena',
+      word: 'drink', ipa: '/drɪŋk/', say: 'ड्रिंक', hindi: 'पीना', meaning: 'peena',
       use: { ex: 'I drink tea every morning.', why: 'Roz ki aadat: simple present.' },
       dont: { wrong: 'He doesn\'t drinks tea.', right: 'He doesn\'t drink tea.', why: '**does** mein pehle se “s” hai, isliye verb **saada** rehta hai.' },
       tags: ['Ghar', 'Restaurant']
     },
     {
-      word: 'eat', ipa: '/iːt/', say: 'ईट', meaning: 'khaana',
+      word: 'eat', ipa: '/iːt/', say: 'ईट', hindi: 'खाना', meaning: 'khaana',
       use: { ex: 'We eat dinner at 9.', why: '“We” ke saath verb saada.' },
       dont: { wrong: 'Do she eat meat?', right: 'Does she eat meat?', why: 'He / she ke sawaal mein **“Does”**.' },
       tags: ['Khana', 'Restaurant']
     },
     {
-      word: 'buy', ipa: '/baɪ/', say: 'बाय', meaning: 'khareedna',
+      word: 'buy', ipa: '/baɪ/', say: 'बाय', hindi: 'ख़रीदना', meaning: 'khareedna',
       use: { ex: 'I buy vegetables on Sunday.', why: 'Har hafte ka kaam: simple present.' },
       dont: { wrong: 'I buy it in 100 rupees.', right: 'I buy it for 100 rupees.', why: 'Daam (kitne mein) ke saath **“for”** lagta hai.' },
       tags: ['Dukaan']
     },
     {
-      word: 'pay', ipa: '/peɪ/', say: 'पे', meaning: 'paise dena',
+      word: 'pay', ipa: '/peɪ/', say: 'पे', hindi: 'भुगतान करना', meaning: 'paise dena',
       use: { ex: 'I pay the bill online.', why: 'Pay + **kya** (the bill) ya pay + **kisko**.' },
       dont: { wrong: 'I pay to him.', right: 'I pay him.', why: '“pay” ke baad insaan **seedha** aata hai, “to” nahi.' },
       tags: ['Dukaan', 'Office']
     },
     {
-      word: 'open', ipa: '/ˈoʊpən/', say: 'ओपन', meaning: 'kholna / khulna',
+      word: 'open', ipa: '/ˈoʊpən/', say: 'ओपन', hindi: 'खोलना', meaning: 'kholna / khulna',
       use: { ex: 'The shop opens at 9.', why: '“The shop” = it, isliye **opens**.' },
       dont: { wrong: 'Please open the light.', right: 'Please turn on the light.', why: 'Light, fan, TV **“turn on”** kiye jaate hain. Hindi “light khol do” se yeh galti hoti hai.' },
       tags: ['Ghar', 'Dukaan']
     },
     {
-      word: 'close', ipa: '/kloʊz/', say: 'क्लोज़', meaning: 'band karna',
+      word: 'close', ipa: '/kloʊz/', say: 'क्लोज़', hindi: 'बंद करना', meaning: 'band karna',
       use: { ex: 'Please close the door.', why: 'Darwaza, khidki, kitaab **close** hoti hai.' },
       dont: { wrong: 'Close the fan.', right: 'Turn off the fan.', why: 'Machine ya light band karne ke liye **“turn off”**.' },
       tags: ['Ghar', 'Office']
     },
     {
-      word: 'help', ipa: '/help/', say: 'हेल्प', meaning: 'madad karna',
+      word: 'help', ipa: '/help/', say: 'हेल्प', hindi: 'मदद करना', meaning: 'madad karna',
       use: { ex: 'My brother helps me with maths.', why: '“My brother” = he: **helps**. Kis kaam mein → **with**.' },
       dont: { wrong: 'Help me in my homework.', right: 'Help me with my homework.', why: 'Kisi kaam mein madad = **help with**, “in” nahi.' },
       tags: ['Ghar', 'Padhai']
     },
     {
-      word: 'watch', ipa: '/wɑːtʃ/', say: 'वॉच', meaning: 'dhyan se dekhna',
+      word: 'watch', ipa: '/wɑːtʃ/', say: 'वॉच', hindi: 'ध्यान से देखना', meaning: 'dhyan se dekhna',
       use: { ex: 'We watch TV at night.', why: 'TV, match, movie **dhyan se** dekhte hain: watch.' },
       dont: { wrong: 'I see TV every night.', right: 'I watch TV every night.', why: '“see” = bas aankh se dikh jaana. Dhyan se dekhna = **“watch”**.' },
       tags: ['Ghar', 'Dost']

@@ -28,92 +28,92 @@ window.LESSONS[6] = {
 
   words: [
     {
-      word: 'last night', ipa: '/læst naɪt/', say: 'लास्ट नाइट', meaning: 'kal raat',
+      word: 'last night', ipa: '/læst naɪt/', say: 'लास्ट नाइट', hindi: 'कल रात', meaning: 'kal raat',
       use: { ex: 'I slept late last night.', why: 'Beeti hui raat ke liye **last night**.' },
       dont: { wrong: 'Yesterday night I slept late.', right: 'Last night I slept late.', why: '“Yesterday night” nahi bolte. **Kal raat = last night**. (Kal subah = yesterday morning.)' },
       tags: ['Ghar', 'Dost']
     },
     {
-      word: 'last week', ipa: '/læst wiːk/', say: 'लास्ट वीक', meaning: 'pichhla hafta',
+      word: 'last week', ipa: '/læst wiːk/', say: 'लास्ट वीक', hindi: 'पिछला हफ़्ता', meaning: 'pichhla hafta',
       use: { ex: 'I met her last week.', why: 'Beeta hua hafta, isliye past verb (met).' },
       dont: { wrong: 'I met her before one week.', right: 'I met her a week ago.', why: 'Hindi “ek hafta pehle” = **a week ago**. “ago” time ke baad aata hai.' },
       tags: ['Dost', 'Office']
     },
     {
-      word: 'on Monday', ipa: '/ɑːn ˈmʌndeɪ/', say: 'ऑन मंडे', meaning: 'Somvaar ko',
+      word: 'on Monday', ipa: '/ɑːn ˈmʌndeɪ/', say: 'ऑन मंडे', hindi: 'सोमवार को', meaning: 'Somvaar ko',
       use: { ex: 'I joined on Monday.', why: 'Hafte ke **dinon** ke saath **on**.' },
       dont: { wrong: 'I joined in Monday.', right: 'I joined on Monday.', why: 'Din ke saath **on**, mahine ke saath in (in May), time ke saath at (at 5).' },
       tags: ['Office', 'Class']
     },
     {
-      word: 'then', ipa: '/ðen/', say: 'देन', meaning: 'phir',
+      word: 'then', ipa: '/ðen/', say: 'देन', hindi: 'फिर', meaning: 'phir',
       use: { ex: 'I had breakfast, then I left.', why: 'Ek kaam ke **baad** doosra kaam.' },
       dont: { wrong: 'Then after that I left.', right: 'After that, I left.', why: '“then” aur “after that” ka matlab **ek hi** hai. Dono saath mat lagao.' },
       tags: ['Kahani']
     },
     {
-      word: 'before', ipa: '/bɪˈfɔːr/', say: 'बिफ़ोर', meaning: 'se pehle',
+      word: 'before', ipa: '/bɪˈfɔːr/', say: 'बिफ़ोर', hindi: 'से पहले', meaning: 'se pehle',
       use: { ex: 'I washed my hands before dinner.', why: 'Kisi **ghatna se pehle**: before + cheez.' },
       dont: { wrong: 'I came before two days.', right: 'I came two days ago.', why: 'Aaj se kitna pehle → **ago**. “before” kisi ghatna se pehle (before dinner).' },
       tags: ['Kahani', 'Ghar']
     },
     {
-      word: 'did', ipa: '/dɪd/', say: 'डिड', meaning: 'past ka helper (kya … kiya?)',
+      word: 'did', ipa: '/dɪd/', say: 'डिड', hindi: '(भूतकाल का सहायक)', meaning: 'past ka helper (kya … kiya?)',
       use: { ex: 'Did you eat?', why: 'Past ka sawaal: **Did** + subject + saada verb.' },
       dont: { wrong: 'Did you went?', right: 'Did you go?', why: '“did” ne past bata diya, isliye verb **saada** (go).' },
       tags: ['Dost', 'Ghar']
     },
     {
-      word: 'didn\'t', ipa: '/ˈdɪdnt/', say: 'डिडन्ट', meaning: 'nahi kiya',
+      word: 'didn\'t', ipa: '/ˈdɪdnt/', say: 'डिडन्ट', hindi: 'नहीं किया', meaning: 'nahi kiya',
       use: { ex: 'I didn\'t see him.', why: 'Past ka “nahi”: **didn\'t** + saada verb.' },
       dont: { wrong: 'I didn\'t saw him.', right: 'I didn\'t see him.', why: 'Past **ek hi baar** lagta hai. didn\'t ne le liya, isliye see.' },
       tags: ['Office', 'Dost']
     },
     {
-      word: 'made', ipa: '/meɪd/', say: 'मेड', meaning: 'banaya · make ka past',
+      word: 'made', ipa: '/meɪd/', say: 'मेड', hindi: 'बनाया', meaning: 'banaya · make ka past',
       use: { ex: 'She made tea for us.', why: '“make” ka past **made**.' },
       dont: { wrong: 'I did a mistake.', right: 'I made a mistake.', why: 'Galti **“make”** hoti hai, “do” nahi. (Aisi jodiyan Day 26 mein.)' },
       tags: ['Ghar', 'Office']
     },
     {
-      word: 'had', ipa: '/hæd/', say: 'हैड', meaning: 'tha / khaaya · have ka past',
+      word: 'had', ipa: '/hæd/', say: 'हैड', hindi: 'था / खाया', meaning: 'tha / khaaya · have ka past',
       use: { ex: 'We had lunch at 2.', why: '“have” ka past **had**: khana, bimari, cheez sab ke liye.' },
       dont: { wrong: 'I was having a car.', right: 'I had a car.', why: 'Kisi cheez ka **paas hona** simple past mein: I had.' },
       tags: ['Khana', 'Doctor']
     },
     {
-      word: 'took', ipa: '/tʊk/', say: 'टुक', meaning: 'liya · take ka past',
+      word: 'took', ipa: '/tʊk/', say: 'टुक', hindi: 'लिया', meaning: 'liya · take ka past',
       use: { ex: 'I took a taxi to the station.', why: '“take” ka past **took**.' },
       dont: { wrong: 'I taked a taxi.', right: 'I took a taxi.', why: 'Irregular verb: **take → took**.' },
       tags: ['Travel']
     },
     {
-      word: 'got', ipa: '/ɡɑːt/', say: 'गॉट', meaning: 'mila / pahuncha · get ka past',
+      word: 'got', ipa: '/ɡɑːt/', say: 'गॉट', hindi: 'मिला', meaning: 'mila / pahuncha · get ka past',
       use: { ex: 'I got a message from her.', why: '“get” ka past **got**.' },
       dont: { wrong: 'I getted a message.', right: 'I got a message.', why: 'Irregular verb: **get → got**.' },
       tags: ['Phone', 'Office']
     },
     {
-      word: 'felt', ipa: '/felt/', say: 'फ़ेल्ट', meaning: 'mehsoos kiya · feel ka past',
+      word: 'felt', ipa: '/felt/', say: 'फ़ेल्ट', hindi: 'महसूस किया', meaning: 'mehsoos kiya · feel ka past',
       use: { ex: 'I felt happy.', why: '“feel” ke baad **haalat** (happy, tired) aati hai.' },
       dont: { wrong: 'I felt very happily.', right: 'I felt very happy.', why: '“feel” ke baad **adjective** (happy), “happily” nahi.' },
       tags: ['Dost', 'Doctor']
     },
     {
-      word: 'thought', ipa: '/θɔːt/', say: 'थॉट', meaning: 'socha · think ka past',
+      word: 'thought', ipa: '/θɔːt/', say: 'थॉट', hindi: 'सोचा', meaning: 'socha · think ka past',
       use: { ex: 'I thought you were busy.', why: '“think” ka past **thought**.' },
       dont: { wrong: 'I thinked about it.', right: 'I thought about it.', why: 'Irregular verb: **think → thought**.' },
       tags: ['Dost', 'Office']
     },
     {
-      word: 'lost', ipa: '/lɔːst/', say: 'लॉस्ट', meaning: 'kho diya / haar gaye · lose ka past',
+      word: 'lost', ipa: '/lɔːst/', say: 'लॉस्ट', hindi: 'खो दिया / हार गए', meaning: 'kho diya / haar gaye · lose ka past',
       use: { ex: 'I lost my keys.', why: '“lose” ka past **lost**.' },
       dont: { wrong: 'We loosed the match.', right: 'We lost the match.', why: 'Irregular verb: **lose → lost**.' },
       note: '**lose** (लूज़) = khona. **loose** (लूस) = dheela. Dono alag shabd hain.',
       tags: ['Khel', 'Ghar']
     },
     {
-      word: 'spent', ipa: '/spent/', say: 'स्पेंट', meaning: 'kharch kiya / bitaya · spend ka past',
+      word: 'spent', ipa: '/spent/', say: 'स्पेंट', hindi: 'ख़र्च किया / बिताया', meaning: 'kharch kiya / bitaya · spend ka past',
       use: { ex: 'I spent 500 rupees on books.', why: 'Paise kis cheez par → **spend on**.' },
       dont: { wrong: 'I spended the whole day at home.', right: 'I spent the whole day at home.', why: 'Irregular verb: **spend → spent**.' },
       tags: ['Dukaan', 'Ghar']

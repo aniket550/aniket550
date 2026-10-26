@@ -78,7 +78,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--label);
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  font-family: Inter, "Noto Sans Devanagari", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
 }
@@ -255,6 +255,9 @@ details.qa summary { cursor: pointer; font-weight: 600; font-size: 15px; }
 details.qa p { margin: 8px 0 0; font-size: 15px; color: var(--label-2); }
 
 /* Word */
+.meaning { margin: 0; display: flex; flex-direction: column; gap: 2px; font-size: 17px; font-weight: 500; }
+.meaning .hindi { font-size: 22px; font-weight: 600; line-height: 1.4; }
+.meaning .hindi + span { font-size: 15px; font-weight: 400; color: var(--secondary); }
 .word-head { display: flex; align-items: flex-end; justify-content: space-between; margin-top: 4px; }
 .word-big { font-size: 52px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
 .speaker { width: 48px; height: 48px; border: 0; border-radius: 24px; background: var(--card); color: var(--accent-text); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); }

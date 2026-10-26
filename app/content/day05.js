@@ -28,92 +28,92 @@ window.LESSONS[5] = {
 
   words: [
     {
-      word: 'yesterday', ipa: '/ˈjestərdeɪ/', say: 'यस्टरडे', meaning: 'beeta hua kal',
+      word: 'yesterday', ipa: '/ˈjestərdeɪ/', say: 'यस्टरडे', hindi: 'बीता हुआ कल', meaning: 'beeta hua kal',
       use: { ex: 'I met Ravi yesterday.', why: 'Beeta hua kal, isliye verb ka **past roop**: met.' },
       dont: { wrong: 'Yesterday I go to the market.', right: 'Yesterday I went to the market.', why: '“yesterday” ke saath verb **zaroor past** mein badalta hai: go → went.' },
       tags: ['Dost', 'Ghar']
     },
     {
-      word: 'last', ipa: '/læst/', say: 'लास्ट', meaning: 'pichhla',
+      word: 'last', ipa: '/læst/', say: 'लास्ट', hindi: 'पिछला', meaning: 'pichhla',
       use: { ex: 'I visited Delhi last year.', why: 'Last week, last month, last year: **beeta hua** samay.' },
       dont: { wrong: 'I visited Delhi in last year.', right: 'I visited Delhi last year.', why: '“last” ke saath **in / on nahi** lagta.' },
       tags: ['Travel']
     },
     {
-      word: 'ago', ipa: '/əˈɡoʊ/', say: 'अगो', meaning: 'pehle (aaj se)',
+      word: 'ago', ipa: '/əˈɡoʊ/', say: 'अगो', hindi: 'पहले', meaning: 'pehle (aaj se)',
       use: { ex: 'I came here two years ago.', why: 'Aaj se **kitna pehle**: time + ago.' },
       dont: { wrong: 'I came here before two years.', right: 'I came here two years ago.', why: 'Hindi “do saal pehle” ka “pehle” English mein **time ke baad “ago”** banta hai.' },
       tags: ['Interview', 'Dost']
     },
     {
-      word: 'visit', ipa: '/ˈvɪzɪt/', say: 'विज़िट', meaning: 'milne jaana · past: visited',
+      word: 'visit', ipa: '/ˈvɪzɪt/', say: 'विज़िट', hindi: 'मिलने जाना', meaning: 'milne jaana · past: visited',
       use: { ex: 'We visited the Taj Mahal last month.', why: 'Regular verb: **+ ed**.' },
       dont: { wrong: 'I visited to my uncle.', right: 'I visited my uncle.', why: '“visit” ke baad **“to” nahi**, seedha insaan ya jagah.' },
       tags: ['Travel', 'Family']
     },
     {
-      word: 'went', ipa: '/went/', say: 'वेंट', meaning: 'gaya · go ka past',
+      word: 'went', ipa: '/went/', say: 'वेंट', hindi: 'गया', meaning: 'gaya · go ka past',
       use: { ex: 'I went to school by bus.', why: '“go” ka past **went** hai.' },
       dont: { wrong: 'I goed to school.', right: 'I went to school.', why: 'Kuch verbs ka past **-ed se nahi** banta. Inhe yaad karna padta hai.' },
       tags: ['Routine']
     },
     {
-      word: 'came', ipa: '/keɪm/', say: 'केम', meaning: 'aaya · come ka past',
+      word: 'came', ipa: '/keɪm/', say: 'केम', hindi: 'आया', meaning: 'aaya · come ka past',
       use: { ex: 'He came home late.', why: '“come” ka past **came**.' },
       dont: { wrong: 'He comed home late.', right: 'He came home late.', why: 'Irregular verb: **come → came**.' },
       tags: ['Ghar']
     },
     {
-      word: 'saw', ipa: '/sɔː/', say: 'सॉ', meaning: 'dekha · see ka past',
+      word: 'saw', ipa: '/sɔː/', say: 'सॉ', hindi: 'देखा', meaning: 'dekha · see ka past',
       use: { ex: 'I saw a tiger in the zoo.', why: '“see” ka past **saw**.' },
       dont: { wrong: 'I seen a tiger.', right: 'I saw a tiger.', why: '“seen” **akela nahi** aata (have seen). Simple past mein **saw**.' },
       tags: ['Travel', 'Dost']
     },
     {
-      word: 'ate', ipa: '/eɪt/', say: 'एट', meaning: 'khaaya · eat ka past',
+      word: 'ate', ipa: '/eɪt/', say: 'एट', hindi: 'खाया', meaning: 'khaaya · eat ka past',
       use: { ex: 'We ate pizza last night.', why: '“eat” ka past **ate**.' },
       dont: { wrong: 'We eated pizza.', right: 'We ate pizza.', why: 'Irregular verb: **eat → ate**.' },
       tags: ['Khana']
     },
     {
-      word: 'bought', ipa: '/bɔːt/', say: 'बॉट', meaning: 'khareeda · buy ka past',
+      word: 'bought', ipa: '/bɔːt/', say: 'बॉट', hindi: 'ख़रीदा', meaning: 'khareeda · buy ka past',
       use: { ex: 'I bought a new phone.', why: '“buy” ka past **bought**.' },
       dont: { wrong: 'I buyed a new phone.', right: 'I bought a new phone.', why: 'Irregular verb: **buy → bought**.' },
       tags: ['Dukaan']
     },
     {
-      word: 'met', ipa: '/met/', say: 'मेट', meaning: 'mila · meet ka past',
+      word: 'met', ipa: '/met/', say: 'मेट', hindi: 'मिला', meaning: 'mila · meet ka past',
       use: { ex: 'I met my old friend yesterday.', why: '“meet” ka past **met**.' },
       dont: { wrong: 'I meeted him.', right: 'I met him.', why: 'Irregular verb: **meet → met**.' },
       tags: ['Dost']
     },
     {
-      word: 'told', ipa: '/toʊld/', say: 'टोल्ड', meaning: 'bataya · tell ka past',
+      word: 'told', ipa: '/toʊld/', say: 'टोल्ड', hindi: 'बताया', meaning: 'bataya · tell ka past',
       use: { ex: 'She told me a story.', why: '“tell” ke baad **insaan** (me, him) aata hai.' },
       dont: { wrong: 'He told to me.', right: 'He told me.', why: '“tell / told” ke baad insaan **seedha**, “to” nahi.' },
       tags: ['Dost', 'Office']
     },
     {
-      word: 'said', ipa: '/sed/', say: 'सेड', meaning: 'kaha · say ka past',
+      word: 'said', ipa: '/sed/', say: 'सेड', hindi: 'कहा', meaning: 'kaha · say ka past',
       use: { ex: 'He said, "I am busy."', why: '“said” ke baad **seedha baat** aati hai.' },
       dont: { wrong: 'He said me to wait.', right: 'He told me to wait.', why: 'Insaan (me) ke saath **“told”**. “said” ke baad insaan nahi aata.' },
       note: 'Uchcharan: said = **“sed”**, “seid” nahi.',
       tags: ['Office', 'Dost']
     },
     {
-      word: 'forgot', ipa: '/fərˈɡɑːt/', say: 'फ़र्गॉट', meaning: 'bhool gaya · forget ka past',
+      word: 'forgot', ipa: '/fərˈɡɑːt/', say: 'फ़र्गॉट', hindi: 'भूल गया', meaning: 'bhool gaya · forget ka past',
       use: { ex: 'I forgot my bag at home.', why: '“forget” ka past **forgot**.' },
       dont: { wrong: 'I forgot my bag in home.', right: 'I forgot my bag at home.', why: '“Ghar pe” = **at home**. Yeh fixed jodi hai.' },
       tags: ['Class', 'Office']
     },
     {
-      word: 'started', ipa: '/ˈstɑːrtɪd/', say: 'स्टार्टिड', meaning: 'shuru hua / kiya',
+      word: 'started', ipa: '/ˈstɑːrtɪd/', say: 'स्टार्टिड', hindi: 'शुरू किया', meaning: 'shuru hua / kiya',
       use: { ex: 'The class started at 10.', why: 'Regular verb + ed. **t / d** pe khatam verb mein -ed ko **“id”** bolte hain.' },
       dont: { wrong: 'The class was started at 10.', right: 'The class started at 10.', why: 'Hindi “shuru hui **thi**” se “was” jud jaata hai. Simple past mein **ek hi verb** kaafi hai.' },
       tags: ['Class', 'Office']
     },
     {
-      word: 'finished', ipa: '/ˈfɪnɪʃt/', say: 'फ़िनिश्ट', meaning: 'khatam kiya',
+      word: 'finished', ipa: '/ˈfɪnɪʃt/', say: 'फ़िनिश्ट', hindi: 'ख़त्म किया', meaning: 'khatam kiya',
       use: { ex: 'I finished my homework.', why: 'Regular verb + ed. Yahan -ed ki awaaz **“t”** hai.' },
       dont: { wrong: 'Did you finished?', right: 'Did you finish?', why: '**did** ke baad verb saada. Poora rule kal (Day 6).' },
       tags: ['Padhai', 'Office']

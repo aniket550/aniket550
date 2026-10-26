@@ -28,91 +28,91 @@ window.LESSONS[7] = {
 
   words: [
     {
-      word: 'now', ipa: '/naʊ/', say: 'नाउ', meaning: 'abhi',
+      word: 'now', ipa: '/naʊ/', say: 'नाउ', hindi: 'अभी', meaning: 'abhi',
       use: { ex: 'I am eating now.', why: 'Abhi chal raha kaam: **am + verb-ing**.' },
       dont: { wrong: 'I eat now.', right: 'I am eating now.', why: '“Abhi kha raha hoon” ke matlab mein **continuous** chahiye. “I eat” roz ki aadat hai.' },
       tags: ['Phone call', 'Ghar']
     },
     {
-      word: 'at the moment', ipa: '/æt ðə ˈmoʊmənt/', say: 'ऐट द मोमेंट', meaning: 'is waqt',
+      word: 'at the moment', ipa: '/æt ðə ˈmoʊmənt/', say: 'ऐट द मोमेंट', hindi: 'इस समय', meaning: 'is waqt',
       use: { ex: 'She is sleeping at the moment.', why: '**Is waqt** ho raha kaam.' },
       dont: { wrong: 'She sleeps at the moment.', right: 'She is sleeping at the moment.', why: '“at the moment” ke saath **is + sleeping**.' },
       tags: ['Office', 'Phone call']
     },
     {
-      word: 'these days', ipa: '/ðiːz deɪz/', say: 'दीज़ डेज़', meaning: 'aajkal',
+      word: 'these days', ipa: '/ðiːz deɪz/', say: 'दीज़ डेज़', hindi: 'आजकल', meaning: 'aajkal',
       use: { ex: 'I am learning English these days.', why: 'Kuch dino se **chal raha** kaam, abhi khatam nahi hua.' },
       dont: { wrong: 'These days I am go to the gym.', right: 'These days I am going to the gym.', why: '“am” ke saath verb mein **-ing zaroori** hai.' },
       tags: ['Dost', 'Interview']
     },
     {
-      word: 'look', ipa: '/lʊk/', say: 'लुक', meaning: 'dekho',
+      word: 'look', ipa: '/lʊk/', say: 'लुक', hindi: 'देखो', meaning: 'dekho',
       use: { ex: 'Look! It is raining.', why: 'Kisi cheez ki taraf **dhyan dilana**. Uske baad aksar continuous aata hai.' },
       dont: { wrong: 'Look this.', right: 'Look at this.', why: 'Kisi cheez ko dekhna = **look at**.' },
       tags: ['Bahar', 'Dost']
     },
     {
-      word: 'listen', ipa: '/ˈlɪsən/', say: 'लिसन', meaning: 'suno',
+      word: 'listen', ipa: '/ˈlɪsən/', say: 'लिसन', hindi: 'सुनो', meaning: 'suno',
       use: { ex: 'Listen! Someone is singing.', why: 'Kisi **awaaz** ki taraf dhyan dilana.' },
       dont: { wrong: 'Listen me.', right: 'Listen to me.', why: 'Kisi ko sunna = **listen to**.' },
       tags: ['Class', 'Ghar']
     },
     {
-      word: 'wait', ipa: '/weɪt/', say: 'वेट', meaning: 'intezaar karna',
+      word: 'wait', ipa: '/weɪt/', say: 'वेट', hindi: 'इंतज़ार करना', meaning: 'intezaar karna',
       use: { ex: 'I am waiting for the bus.', why: 'Abhi chal raha kaam: **am waiting**.' },
       dont: { wrong: 'I am waiting the bus.', right: 'I am waiting for the bus.', why: 'Kisi ka intezaar = **wait for**.' },
       tags: ['Bahar', 'Phone call']
     },
     {
-      word: 'wear', ipa: '/wer/', say: 'वेयर', meaning: 'pehne hue hona',
+      word: 'wear', ipa: '/wer/', say: 'वेयर', hindi: 'पहनना', meaning: 'pehne hue hona',
       use: { ex: 'She is wearing a red saree.', why: 'Abhi pehne hue hai: **is wearing**.' },
       dont: { wrong: 'She is putting a red saree.', right: 'She is wearing a red saree.', why: 'Pehne hue hona = **wear**. “Put on” pehenne ka kaam hai (put on your shoes).' },
       tags: ['Shaadi', 'Dost']
     },
     {
-      word: 'sit', ipa: '/sɪt/', say: 'सिट', meaning: 'baithna',
+      word: 'sit', ipa: '/sɪt/', say: 'सिट', hindi: 'बैठना', meaning: 'baithna',
       use: { ex: 'He is sitting next to me.', why: 'sit → **sitting** (t double).' },
       dont: { wrong: 'He is siting.', right: 'He is sitting.', why: 'Chhote verb jo **consonant-vowel-consonant** pe khatam hon (s-i-t), unka aakhri akshar double hota hai.' },
       tags: ['Class', 'Office']
     },
     {
-      word: 'run', ipa: '/rʌn/', say: 'रन', meaning: 'daudna',
+      word: 'run', ipa: '/rʌn/', say: 'रन', hindi: 'दौड़ना', meaning: 'daudna',
       use: { ex: 'The children are running in the park.', why: '“children” = bahut log: **are running**.' },
       dont: { wrong: 'They are runing.', right: 'They are running.', why: 'r-u-n: consonant-vowel-consonant, isliye **n double**.' },
       tags: ['Bahar', 'Khel']
     },
     {
-      word: 'write', ipa: '/raɪt/', say: 'राइट', meaning: 'likhna',
+      word: 'write', ipa: '/raɪt/', say: 'राइट', hindi: 'लिखना', meaning: 'likhna',
       use: { ex: 'I am writing a letter.', why: 'write → **writing** (e hata ke -ing).' },
       dont: { wrong: 'I am writeing.', right: 'I am writing.', why: 'Aakhir ka **chup “e”** hata ke -ing lagta hai: make → making, come → coming.' },
       tags: ['Padhai', 'Office']
     },
     {
-      word: 'rain', ipa: '/reɪn/', say: 'रेन', meaning: 'baarish hona',
+      word: 'rain', ipa: '/reɪn/', say: 'रेन', hindi: 'बारिश होना', meaning: 'baarish hona',
       use: { ex: 'It is raining outside.', why: 'Mausam ke liye **“It”** se shuru karte hain.' },
       dont: { wrong: 'Rain is coming.', right: 'It is raining.', why: '“Baarish aa rahi hai” ka seedha translation galat hai. English mein **“It is raining”**.' },
       tags: ['Bahar', 'Mausam']
     },
     {
-      word: 'talk', ipa: '/tɔːk/', say: 'टॉक', meaning: 'baat karna',
+      word: 'talk', ipa: '/tɔːk/', say: 'टॉक', hindi: 'बात करना', meaning: 'baat karna',
       use: { ex: 'I am talking to my friend.', why: 'Kisi se baat = **talk to**.' },
       dont: { wrong: 'He is talking on phone.', right: 'He is talking on the phone.', why: '**“on the phone”** ek fixed jodi hai, “the” zaroori.' },
       tags: ['Phone call', 'Office']
     },
     {
-      word: 'study', ipa: '/ˈstʌdi/', say: 'स्टडी', meaning: 'padhna',
+      word: 'study', ipa: '/ˈstʌdi/', say: 'स्टडी', hindi: 'पढ़ाई करना', meaning: 'padhna',
       use: { ex: 'She is studying for her exam.', why: 'y wale verb mein y **rehta hai**: studying.' },
       dont: { wrong: 'She is studing.', right: 'She is studying.', why: '-ing lagate waqt **y nahi hatta**. (Sirf -s mein y → ies hota hai.)' },
       tags: ['Padhai']
     },
     {
-      word: 'stay', ipa: '/steɪ/', say: 'स्टे', meaning: 'rukna / thehrna',
+      word: 'stay', ipa: '/steɪ/', say: 'स्टे', hindi: 'ठहरना', meaning: 'rukna / thehrna',
       use: { ex: 'I am staying with my uncle this week.', why: 'Kuch **samay ke liye** rukna: continuous.' },
       dont: { wrong: 'I am staying in my uncle home.', right: 'I am staying at my uncle\'s house.', why: 'Kisi ke ghar pe = **at + naam\'s house**.' },
       tags: ['Travel', 'Family']
     },
     {
-      word: 'love', ipa: '/lʌv/', say: 'लव', meaning: 'bahut pasand hona',
+      word: 'love', ipa: '/lʌv/', say: 'लव', hindi: 'बहुत पसंद करना', meaning: 'bahut pasand hona',
       use: { ex: 'I love this song.', why: 'Mann ka verb hai, isliye **simple present**.' },
       dont: { wrong: 'I am loving this song.', right: 'I love this song.', why: 'Love, like, know, want jaise **mann ke verbs** ke saath -ing nahi lagta. (Ads mein “I\'m loving it” hota hai, par roz ki English mein “I love it”.)' },
       tags: ['Dost', 'Music']

@@ -29,92 +29,92 @@ window.LESSONS[2] = {
 
   words: [
     {
-      word: 'available', ipa: '/əˈveɪləbl/', say: 'अवेलेबल', meaning: 'milne / baat karne ke liye khaali',
+      word: 'available', ipa: '/əˈveɪləbl/', say: 'अवेलेबल', hindi: 'उपलब्ध', meaning: 'milne / baat karne ke liye khaali',
       use: { ex: 'Is Mr Sharma available?', why: 'Office aur phone pe kisi se baat karne ka **polite** tareeka.' },
       dont: { wrong: 'Sir is out of station.', right: 'He\'s travelling this week.', why: '“Out of station” Indian English hai. India ke **bahar** log ise nahi samajhte.' },
       tags: ['Office', 'Phone call']
     },
     {
-      word: 'busy', ipa: '/ˈbɪzi/', say: 'बिज़ी', meaning: 'vyast',
+      word: 'busy', ipa: '/ˈbɪzi/', say: 'बिज़ी', hindi: 'व्यस्त', meaning: 'vyast',
       use: { ex: 'I\'m a bit busy right now. Can I call you back?', why: '“A bit busy” + **call back** = mana karne ka polite tareeka.' },
       dont: { wrong: 'I am busy in a meeting.', right: 'I\'m in a meeting.', why: '“Busy in” galat hai. Aur **“I\'m in a meeting”** khud bata deta hai ki aap vyast ho.' },
       tags: ['Office', 'Phone call']
     },
     {
-      word: 'sure', ipa: '/ʃʊr/', say: 'श्योर', meaning: 'pakka',
+      word: 'sure', ipa: '/ʃʊr/', say: 'श्योर', hindi: 'पक्का, निश्चित', meaning: 'pakka',
       use: { ex: 'Are you sure about the date?', why: 'Kisi **cheez** ke baare mein pakka hona: sure about + cheez.' },
       dont: { wrong: 'I am not sure about that he is coming.', right: 'I\'m not sure he\'s coming.', why: '**“about” ke baad cheez** aati hai (about the time). Poore sentence se pehle “about” nahi.' },
       tags: ['Office', 'Dost']
     },
     {
-      word: 'confused', ipa: '/kənˈfjuːzd/', say: 'कन्फ़्यूज़्ड', meaning: 'uljhan mein',
+      word: 'confused', ipa: '/kənˈfjuːzd/', say: 'कन्फ़्यूज़्ड', hindi: 'उलझन में', meaning: 'uljhan mein',
       use: { ex: 'I\'m confused about the new rules.', why: '**-ed** = aap kaisa **mehsoos** kar rahe ho.' },
       dont: { wrong: 'I am confusing.', right: 'I\'m confused.', why: '**-ing** = cheez doosron ko kaisa karti hai. “I am confusing” = **main logon ko uljhata hoon**!' },
       tags: ['Office', 'Class']
     },
     {
-      word: 'bored', ipa: '/bɔːrd/', say: 'बोर्ड', meaning: 'bore ho raha',
+      word: 'bored', ipa: '/bɔːrd/', say: 'बोर्ड', hindi: 'ऊबा हुआ', meaning: 'bore ho raha',
       use: { ex: 'I\'m bored at home.', why: 'Aapko kaisa lag raha hai: **-ed**.' },
       dont: { wrong: 'I am boring.', right: 'I\'m bored.', why: '“I am boring” ka matlab hai **“main ek bore insaan hoon”**. Yeh bahut aam aur mazedaar galti hai.' },
       tags: ['Dost', 'Ghar']
     },
     {
-      word: 'excited', ipa: '/ɪkˈsaɪtɪd/', say: 'एक्साइटिड', meaning: 'utsaahit',
+      word: 'excited', ipa: '/ɪkˈsaɪtɪd/', say: 'एक्साइटिड', hindi: 'उत्साहित', meaning: 'utsaahit',
       use: { ex: 'I\'m excited about the trip.', why: 'Feeling: **-ed**, kis baat ki: **about**.' },
       dont: { wrong: 'I am exciting for the trip.', right: 'I\'m excited about the trip.', why: 'Feeling ke liye **-ed**. “The trip is exciting” = trip utsaah deti hai.' },
       tags: ['Dost', 'Travel']
     },
     {
-      word: 'upset', ipa: '/ʌpˈset/', say: 'अपसेट', meaning: 'naraz / dukhi',
+      word: 'upset', ipa: '/ʌpˈset/', say: 'अपसेट', hindi: 'नाराज़, परेशान', meaning: 'naraz / dukhi',
       use: { ex: 'She\'s upset with me.', why: 'Insaan se naraz: **upset with**. Baat se: **upset about**.' },
       dont: { wrong: 'She is upset on me.', right: 'She\'s upset with me.', why: 'Hindi “mujh **par** naraz” se “on” aa jaata hai. English mein **with**.' },
       tags: ['Dost', 'Ghar']
     },
     {
-      word: 'worried', ipa: '/ˈwɜːrid/', say: 'वरीड', meaning: 'chintit',
+      word: 'worried', ipa: '/ˈwɜːrid/', say: 'वरीड', hindi: 'चिंतित', meaning: 'chintit',
       use: { ex: 'My parents are worried about my exams.', why: 'Chinta kis baat ki: **worried about**.' },
       dont: { wrong: 'Don\'t take tension.', right: 'Don\'t worry.', why: '**“Take tension”** Indian English hai. Duniya bhar mein **“Don\'t worry”** bolte hain.' },
       tags: ['Ghar', 'Dost']
     },
     {
-      word: 'embarrassed', ipa: '/ɪmˈbærəst/', say: 'एम्बैरेस्ट', meaning: 'sharminda',
+      word: 'embarrassed', ipa: '/ɪmˈbærəst/', say: 'एम्बैरेस्ट', hindi: 'शर्मिंदा', meaning: 'sharminda',
       use: { ex: 'I was so embarrassed when I forgot his name.', why: 'Chhoti galti pe **sharm** aana.' },
       dont: { wrong: 'I am very shame.', right: 'I\'m really embarrassed.', why: '**“Shame”** cheez (noun) hai. “am” ke baad haalat chahiye: **embarrassed**.' },
       tags: ['Dost', 'Office']
     },
     {
-      word: 'comfortable', ipa: '/ˈkʌmftərbl/', say: 'कम्फ़्टेबल', meaning: 'sahaj, theek',
+      word: 'comfortable', ipa: '/ˈkʌmftərbl/', say: 'कम्फ़्टेबल', hindi: 'सहज', meaning: 'sahaj, theek',
       use: { ex: 'Are you comfortable with the plan?', why: 'Kisi ki **raay** poochhne ka naram tareeka.' },
       dont: { wrong: 'I am not comfort with this.', right: 'I\'m not comfortable with this.', why: '“Comfort” **cheez** hai. “am” ke baad **comfortable**.' },
       note: 'Uchcharan: **“kumf-ter-bul”**, “kum-for-table” nahi.',
       tags: ['Office']
     },
     {
-      word: 'convenient', ipa: '/kənˈviːniənt/', say: 'कन्वीनिएंट', meaning: 'suvidhajanak',
+      word: 'convenient', ipa: '/kənˈviːniənt/', say: 'कन्वीनिएंट', hindi: 'सुविधाजनक', meaning: 'suvidhajanak',
       use: { ex: 'Is 4 p.m. convenient for you?', why: 'Kisi ke liye **time theek hai** ya nahi, yeh polite tareeke se poochhna.' },
       dont: { wrong: 'Are you convenient at 4?', right: 'Is 4 convenient for you?', why: '**Time ya cheez** convenient hoti hai, insaan nahi.' },
       tags: ['Office', 'Phone call']
     },
     {
-      word: 'aware', ipa: '/əˈwer/', say: 'अवेयर', meaning: 'jaankari hona',
+      word: 'aware', ipa: '/əˈwer/', say: 'अवेयर', hindi: 'अवगत, जानकार', meaning: 'jaankari hona',
       use: { ex: 'Are you aware of the new policy?', why: 'Kisi cheez ki **khabar** hai ya nahi.' },
       dont: { wrong: 'I am aware about it.', right: 'I\'m aware of it.', why: '**“aware of”** fixed jodi hai.' },
       tags: ['Office']
     },
     {
-      word: 'possible', ipa: '/ˈpɑːsəbl/', say: 'पॉसिबल', meaning: 'mumkin',
+      word: 'possible', ipa: '/ˈpɑːsəbl/', say: 'पॉसिबल', hindi: 'संभव', meaning: 'mumkin',
       use: { ex: 'Is it possible to change the date?', why: 'Kuch maangne ka **polite** sawaal: Is it possible to + verb?' },
       dont: { wrong: 'Is it possible for change the date?', right: 'Is it possible to change the date?', why: '“possible” ke baad kaam ho to **to + verb**.' },
       tags: ['Office', 'Bank']
     },
     {
-      word: 'familiar', ipa: '/fəˈmɪliər/', say: 'फ़मिलियर', meaning: 'jaana-pehchaana, aata hai',
+      word: 'familiar', ipa: '/fəˈmɪliər/', say: 'फ़मिलियर', hindi: 'परिचित', meaning: 'jaana-pehchaana, aata hai',
       use: { ex: 'Are you familiar with Excel?', why: 'Kisi cheez ko **jaanna / use karna aana**. Job mein bahut poochha jaata hai.' },
       dont: { wrong: 'I am familiar to Excel.', right: 'I\'m familiar with Excel.', why: '**“familiar with”** fixed jodi hai.' },
       tags: ['Interview', 'Office']
     },
     {
-      word: 'elder', ipa: '/ˈeldər/', say: 'एल्डर', meaning: 'bada (family mein)',
+      word: 'elder', ipa: '/ˈeldər/', say: 'एल्डर', hindi: 'बड़ा (परिवार में)', meaning: 'bada (family mein)',
       use: { ex: 'This is my elder brother.', why: '**Sirf naam se pehle**: my elder brother, my elder sister.' },
       dont: { wrong: 'He is elder than me.', right: 'He is older than me.', why: '“than” ke saath tulna mein **older**. “Elder” tulna mein nahi lagta.' },
       tags: ['Family']

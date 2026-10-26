@@ -332,7 +332,7 @@
           <div style="display: flex; flex-direction: column; gap: 2px"><h1 class="word-big" tabindex="-1" style="margin: 0">${esc(w.word)}</h1><span class="muted" style="font-size: 15px">${esc(w.ipa)} · ${esc(w.say)}</span></div>
           <button class="speaker" data-act="say" data-arg="${esc(w.word)}" aria-label="${esc(w.word)} ka uchcharan suno">${I.speaker}</button>
         </div>
-        <p style="margin: 0; font-size: 17px; font-weight: 500">${esc(w.meaning)}</p>
+        <p class="meaning">${w.hindi ? `<span class="hindi" lang="hi">${esc(w.hindi)}</span>` : ''}<span>${esc(w.meaning)}</span></p>
         <div class="card stack">
           <div class="verdict ok">${I.okCircleLg}KAB USE KAREIN</div>
           <p class="sentence">${esc(w.use.ex)}</p>
@@ -409,7 +409,7 @@
       const qText = q.q
         ? `<p class="q-text">${esc(q.q).replace('___', `<span class="blank ${blankCls}">${picked ? esc(picked) : '&nbsp;'}</span>`)}</p>`
         : '';
-      const opts = q.options.map((o) => {
+      const opts = qz.orders[qz.idx].map((o) => {
         let cls = '', tag = '';
         if (picked && o === q.answer) { cls = 'ok'; tag = 'Sahi'; }
         if (picked === o && !right) { cls = 'no'; tag = 'Aapka jawab'; }
@@ -645,7 +645,16 @@
     say(text) { say(text); },
     word(d) { ui.wordIdx = Math.min(Math.max(ui.wordIdx + Number(d), 0), lesson.words.length - 1); render(); window.scrollTo(0, 0); },
     rule(d) { ui.ruleIdx = Math.min(Math.max(ui.ruleIdx + Number(d), 0), lesson.grammar.rules.length - 1); render(); window.scrollTo(0, 0); },
-    'start-quiz'() { ui.quiz = { idx: 0, picked: null, correct: 0, wrong: [] }; go('quiz'); },
+    'start-quiz'() {
+      // shuffle options so the right answer is not always in the same place
+      const orders = lesson.quiz.questions.map((q) => {
+        const o = q.options.slice();
+        for (let i = o.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [o[i], o[j]] = [o[j], o[i]]; }
+        return o;
+      });
+      ui.quiz = { idx: 0, picked: null, correct: 0, wrong: [], orders };
+      go('quiz');
+    },
     pick(opt) {
       const qz = ui.quiz;
       if (qz.picked) return;
