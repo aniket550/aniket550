@@ -398,3 +398,14 @@ mark { background: none; color: var(--accent-text); font-weight: 700; }
 .when { margin: 0; display: flex; align-items: flex-start; gap: 8px; font-size: 14px; line-height: 1.4; color: var(--label-2); }
 .when strong { color: var(--label); }
 .when .num { width: 20px; height: 20px; flex-shrink: 0; border-radius: 10px; background: var(--accent-tint); color: var(--accent-text); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+
+/* rule + sentence frames */
+.rule { margin: 0; font-size: 17px; line-height: 1.5; font-weight: 500; }
+.rule strong { color: var(--accent-text); }
+.pattern { display: flex; flex-direction: column; gap: 10px; padding-top: 12px; border-top: 1px solid var(--separator); }
+.formula-line { margin: 0; align-self: flex-start; padding: 6px 12px; border-radius: 10px; background: var(--accent-tint); color: var(--accent-text); font-size: 15px; font-weight: 700; }
+.formula-line .gap { color: var(--green-text); }
+.slot { padding: 0 2px; border-radius: 5px; background: var(--green-bg); color: var(--green-text); font-weight: 600; }
+.mistake { display: flex; flex-direction: column; gap: 6px; }
+.mistake.sep { padding-top: 12px; border-top: 1px solid var(--separator); }
+.note strong, .rule strong { white-space: nowrap; }

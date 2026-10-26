@@ -162,13 +162,27 @@ window.LESSONS[3] = {
     ]
   },
 
-  models: [
-    { situation: 'Dost ko routine', en: 'I wake up at 6 and go for a walk.', why: 'Roz ka kaam, isliye **simple present**: wake, go.' },
-    { situation: 'Interview mein', en: 'I usually reach the office at 9.', why: '**“usually”** se aadat pata chalti hai, aur verb se pehle aata hai.' },
-    { situation: 'Ghar ke baare mein', en: 'My father goes to work at 8.', why: '“My father” = he, isliye **goes**.' },
-    { situation: 'Weekend plan', en: 'We play cricket every Sunday.', why: '“We” ke saath **-s nahi**. “every Sunday” = har hafte ki aadat.' },
-    { situation: 'Phone pe', en: 'Sorry, I sleep early. Please call me tomorrow.', why: 'Apni **aadat** batana: sleep (simple present).' }
-  ],
+  modal: {
+    verb: 'should', ipa: '/ʃʊd/', say: 'शुड', hindi: 'चाहिए', meaning: 'karna chahiye',
+    uses: [
+      { rule: 'Jab kisi ko **salah (advice)** deni ho', form: 'Subject + should + verb', ex: [
+        { en: 'You should [revise every week].', hi: 'Tumhe har hafte revise karna chahiye.' },
+        { en: 'You should [start the assignment early].', hi: 'Tumhe assignment jaldi shuru karna chahiye.' }
+      ] },
+      { rule: 'Jab khud **salah maangni** ho', form: 'Should I + verb …?', ex: [
+        { en: 'Should I [take two courses or three]?', hi: 'Kya mujhe do course lene chahiye ya teen?' },
+        { en: 'Should I [email the support team]?', hi: 'Kya mujhe support team ko email karna chahiye?' }
+      ] },
+      { rule: 'Jab batana ho ki **kya nahi karna chahiye**', form: 'Subject + shouldn\'t + verb', ex: [
+        { en: 'You shouldn\'t [copy from others].', hi: 'Tumhe doosron se copy nahi karna chahiye.' },
+        { en: 'We shouldn\'t [wait till the last day].', hi: 'Humein aakhri din tak intezaar nahi karna chahiye.' }
+      ] }
+    ],
+    dont: [
+      { wrong: 'You should to revise.', right: 'You should revise.', why: 'Modal ke baad **“to” nahi**.' },
+      { wrong: 'You should must go.', right: 'You should go.', why: 'Do modal **ek saath nahi** lagte.' }
+    ]
+  },
 
   quiz: {
     passPercent: 70,

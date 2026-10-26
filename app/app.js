@@ -143,7 +143,7 @@
       { id: 'reading', title: 'Reading', sub: lesson.reading.title + ' · 5 min', min: 5, color: '#0066CC', icon: I.book },
       { id: 'words', title: '15 Words', sub: 'Kab use · kab nahi · kyun', min: 8, color: '#5856D6', icon: 'Aa' },
       { id: 'grammar', title: 'Grammar', sub: lesson.grammar.rules.length + ' rules, har ek ka reason', min: 7, color: '#C93400', icon: I.lines },
-      { id: 'models', title: 'Models', sub: 'Phone, dukaan, class, ghar', min: 5, color: '#8944AB', icon: I.chat },
+      { id: 'models', title: 'Modal Verb', sub: `“${lesson.modal.verb}” · kab use, kab nahi`, min: 5, color: '#8944AB', icon: I.chat },
       { id: 'practice', title: 'Practice', sub: lesson.quiz.questions.length + ' sawaal · bolo · likho', min: 5, color: '#248A3D', icon: I.target }
     ];
   }
@@ -192,6 +192,35 @@
     `<div class="topbar"><button class="back" data-act="go" data-arg="${backTo}">${I.back}${esc(backLabel)}</button>${right ? `<span class="counter">${right}</span>` : ''}</div>`;
   const kyun = (text) => `<div class="kyun"><b>Kyun?</b><span>${rich(text)}</span></div>`;
   const kyunRow = (text) => `<div class="kyun row"><b>Kyun?</b><span>${rich(text)}</span></div>`;
+  // Example sentences mark the slot the learner swaps with [brackets].
+  const plain = (s) => s.replace(/[[\]]/g, '');
+  const escRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  function slotted(text, marks) {
+    let html = esc(text);
+    (marks || []).forEach((m) => {
+      html = html.replace(new RegExp('(' + escRe(esc(m)) + '[a-z]*)', 'i'), '<mark>$1</mark>');
+    });
+    return html.replace(/\[(.+?)\]/g, '<span class="slot">$1</span>');
+  }
+  const sayBtnFor = (text, label, lang) => `<button class="say-btn" data-act="say" data-arg="${esc(text)}" ${lang ? `data-lang="${lang}"` : ''} aria-label="${esc(label)}">${I.speakerSm}</button>`;
+  function patternBlock(form, ex, marks) {
+    const formHtml = esc(form).replace(/___/g, '<span class="gap">___</span>');
+    return `<div class="pattern">
+      <p class="formula-line">${formHtml}</p>
+      ${ex.map((e) => `<div class="say-row"><div><p class="sentence" style="font-size: 17px">${slotted(e.en, marks)}</p><p class="muted" style="margin: 2px 0 0; font-size: 14px">${esc(e.hi)}</p></div>${sayBtnFor(plain(e.en), 'Sentence suno')}</div>`).join('')}
+    </div>`;
+  }
+  function mistakeCard(list, title) {
+    return `<div class="card stack">
+      <div class="verdict no">${I.noCircleLg}${title || 'GALTI MAT KARNA'}</div>
+      ${list.map((d, i) => `<div class="mistake ${i ? 'sep' : ''}">
+        <p class="strike">${esc(d.wrong)}</p>
+        <div class="say-row"><p class="sentence">${markFix(d.wrong, d.right)}</p>${sayBtnFor(d.right, 'Sahi sentence suno')}</div>
+        <p class="body" style="font-size: 14px">${rich(d.why)}</p>
+      </div>`).join('')}
+    </div>`;
+  }
+
   // words of the right sentence that the wrong one lacked, shown green
   function markFix(wrong, right) {
     const had = new Set(norm(wrong));
@@ -432,24 +461,20 @@
           <button class="btn secondary" data-act="word" data-arg="-1" ${ui.wordIdx === 0 ? 'disabled' : ''}>Pichhla</button>
           ${last ? '<button class="btn green" data-act="finish-step" data-arg="words">Words poore</button>' : '<button class="btn" data-act="word" data-arg="1">Agla word</button>'}
         </div>`;
-      // Simple card: "jab aisi situation ho → yeh bolo", then one common mistake.
-      if (w.uses) {
+      // Rule card: when to use the word, then sentence frames the learner fills in.
+      if (w.rule) {
         return `<main class="screen" style="gap: 14px">
         ${head}
         <div class="card stack">
-          <div class="verdict ok">${I.okCircleLg}KAB BOLEIN</div>
-          ${w.uses.map((u, i) => `
-            <div class="use-item">
-              <p class="when"><span class="num">${i + 1}</span><span>${rich(u.when)}</span></p>
-              <div class="say-row"><div><p class="sentence">${markWord(u.en)}</p><p class="muted" style="margin: 2px 0 0; font-size: 14px">${esc(u.hi)}</p></div>${sayBtn(u.en, 'Sentence suno')}</div>
-            </div>`).join('')}
+          <div class="verdict ok">${I.okCircleLg}KAB USE KARTE HAIN</div>
+          <p class="rule">${rich(w.rule)}</p>
         </div>
         <div class="card stack">
-          <div class="verdict no">${I.noCircleLg}GALTI MAT KARNA</div>
-          <p class="strike">${esc(w.dont.wrong)}</p>
-          <div class="say-row"><p class="sentence">${markFix(w.dont.wrong, w.dont.right)}</p>${sayBtn(w.dont.right, 'Sahi sentence suno')}</div>
-          <p class="body" style="font-size: 14px">${rich(w.dont.why)}</p>
+          <div class="verdict" style="color: var(--accent-text)">${I.parts}KHUD SENTENCE BANAO</div>
+          <p class="muted" style="margin: 0; font-size: 14px">Saancha yaad rakho. <span class="slot">Hare</span> hisse ki jagah apni baat daalo, naya sentence ban jaayega.</p>
+          ${w.patterns.map((pt) => patternBlock(pt.form, pt.ex, [w.word])).join('')}
         </div>
+        ${mistakeCard([w.dont])}
         ${nav}
       </main>`;
       }
@@ -520,17 +545,29 @@
     },
 
     models() {
-      const cards = lesson.models.map((m) => `
+      const m = lesson.modal;
+      const marks = m.marks || [m.verb];
+      return `<main class="screen" style="gap: 14px">
+        ${topbar('task', 'Day ' + DAY, '4 / 5 · Modal Verb')}
+        <p class="eyebrow" style="margin-top: -4px">Aaj ka modal verb</p>
+        <div class="word-head" style="margin-top: -8px">
+          <div style="display: flex; flex-direction: column; gap: 2px"><h1 class="word-big" tabindex="-1" style="margin: 0">${esc(m.verb)}</h1><span class="muted" style="font-size: 15px">${esc(m.ipa)} · ${esc(m.say)}</span></div>
+          <button class="speaker" data-act="say" data-arg="${esc(m.verb)}" aria-label="${esc(m.verb)} ka uchcharan suno">${I.speaker}</button>
+        </div>
+        <div class="say-row" style="align-items: center">
+          <p class="meaning"><span class="hindi" lang="hi">${esc(m.hindi)}</span><span>${esc(m.meaning)}</span></p>
+          ${sayBtnFor(m.hindi, 'Hindi meaning suno', 'hi')}
+        </div>
+        <div class="note"><span style="color: var(--accent-text); display: flex">${I.bulb}</span><span>Har modal verb ka ek niyam: uske baad verb hamesha <strong>saada</strong> aata hai. Na <strong>to</strong>, na <strong>-s</strong>, na <strong>-ing</strong>.</span></div>
+        ${m.uses.map((u, i) => `
         <div class="card stack">
-          <div class="row-between"><span class="eyebrow">${esc(m.situation)}</span><button class="icon-btn" style="color: var(--accent-text)" data-act="say" data-arg="${esc(m.en)}" aria-label="Suno">${I.speaker}</button></div>
-          <p class="sentence">${esc(m.en)}</p>
-          ${kyun(m.why)}
-        </div>`).join('');
-      return `<main class="screen">
-        ${topbar('task', 'Day ' + DAY, '4 / 5 · Models')}
-        <div class="stack" style="gap: 6px"><h1 class="large-title" tabindex="-1">Asli situations</h1><p class="body">Yahi grammar roz ki zindagi mein kaise bolte hain. Har sentence suno aur zor se bolo.</p></div>
-        ${cards}
-        <button class="btn" data-act="finish-step" data-arg="models">Ho gaya</button>
+          <div class="verdict ok">${I.okCircleLg}KAB USE KAREIN · ${i + 1}</div>
+          <p class="rule">${rich(u.rule)}</p>
+          ${patternBlock(u.form, u.ex, marks)}
+        </div>`).join('')}
+        ${mistakeCard(m.dont, 'KAB NAHI / GALTI MAT KARNA')}
+        <div class="spacer"></div>
+        <button class="btn" data-act="finish-step" data-arg="models">Samajh gaya</button>
       </main>`;
     },
 

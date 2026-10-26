@@ -157,13 +157,27 @@ window.LESSONS[7] = {
     ]
   },
 
-  models: [
-    { situation: 'Phone pe', en: 'I am driving. Can I call you later?', why: 'Abhi ka kaam: **am driving**.' },
-    { situation: 'Office mein', en: 'Sir, I am working on the report.', why: 'Is waqt chal raha kaam: **am working**.' },
-    { situation: 'Ghar pe', en: 'Mom, I am coming!', why: 'Abhi aa raha hoon: **am coming** (come → coming).' },
-    { situation: 'Dost se chat', en: 'What are you doing? I am watching TV.', why: 'Sawaal mein **are aage**, jawab mein am + ing.' },
-    { situation: 'Bahar', en: 'Look, it is raining!', why: 'Mausam: **It is raining**, “rain is coming” nahi.' }
-  ],
+  modal: {
+    verb: 'would', marks: ['would', "I'd"], ipa: '/wʊd/', say: 'वुड', hindi: 'चाहूँगा / होगा', meaning: 'polite chahat, kalpana',
+    uses: [
+      { rule: 'Jab **politely kuch chahiye** (“want” ka naram roop)', form: 'I\'d like + cheez / to + verb', ex: [
+        { en: 'I\'d like [to ask a question].', hi: 'Main ek sawaal poochhna chahunga.' },
+        { en: 'I\'d like [some help with Week 5].', hi: 'Mujhe Week 5 mein thodi madad chahiye.' }
+      ] },
+      { rule: 'Jab **bahut polite request** karni ho', form: 'Would you + verb …?', ex: [
+        { en: 'Would you [share the slides]?', hi: 'Kya aap slides share karenge?' },
+        { en: 'Would you [check my code, please]?', hi: 'Kya aap mera code check karenge, please?' }
+      ] },
+      { rule: 'Jab **kalpana ya “agar”** wali baat ho', form: 'I would + verb (if …)', ex: [
+        { en: 'I would [love to join your group].', hi: 'Mujhe tumhare group mein judna bahut achha lagega.' },
+        { en: 'If I had time, I would [learn Java].', hi: 'Agar mere paas samay hota, to main Java seekhta.' }
+      ] }
+    ],
+    dont: [
+      { wrong: 'I want the notes. (teacher se)', right: 'I\'d like the notes, please.', why: '“want” **seedha** lagta hai. Bade se **I\'d like** bolo.' },
+      { wrong: 'Would you please to send it?', right: 'Would you please send it?', why: 'Modal ke baad **“to” nahi**.' }
+    ]
+  },
 
   quiz: {
     passPercent: 70,

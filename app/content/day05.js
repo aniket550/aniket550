@@ -163,13 +163,27 @@ window.LESSONS[5] = {
     ]
   },
 
-  models: [
-    { situation: 'Dost se', en: 'I watched a movie yesterday.', why: 'Kal ki baat: watch + **ed**.' },
-    { situation: 'Office (late)', en: 'Sorry, I missed the bus.', why: 'Abhi abhi beeti baat: miss + **ed**.' },
-    { situation: 'Doctor ke paas', en: 'I had a fever last night.', why: '“have” ka past **had**.' },
-    { situation: 'Phone pe', en: 'I called you two times.', why: 'call + **ed**. “two times” ya “twice”.' },
-    { situation: 'Class mein', en: 'Sorry, ma\'am, I forgot my notebook at home.', why: 'forget → **forgot**, aur ghar pe = **at home**.' }
-  ],
+  modal: {
+    verb: 'have to', marks: ['have to', 'has to'], ipa: '/ˈhæv tə/', say: 'हैव टू', hindi: 'करना पड़ता है', meaning: 'majboori, karna hi padega',
+    uses: [
+      { rule: 'Jab **bahar ke niyam ya majboori** se kuch karna pade', form: 'Subject + have to / has to + verb', ex: [
+        { en: 'I have to [submit the form by Friday].', hi: 'Mujhe Friday tak form submit karna hai.' },
+        { en: 'She has to [attend the exam in person].', hi: 'Use exam mein khud jaana padega.' }
+      ] },
+      { rule: 'Jab poochhna ho ki **kya yeh zaroori hai**', form: 'Do I have to + verb …?', ex: [
+        { en: 'Do I have to [upload a PDF]?', hi: 'Kya mujhe PDF upload karni padegi?' },
+        { en: 'Do we have to [bring a calculator]?', hi: 'Kya humein calculator laana padega?' }
+      ] },
+      { rule: 'Jab batana ho ki **zaroori nahi hai**', form: 'Subject + don\'t have to + verb', ex: [
+        { en: 'You don\'t have to [attend every live session].', hi: 'Tumhe har live session attend karna zaroori nahi.' },
+        { en: 'We don\'t have to [pay again].', hi: 'Humein dobara paise nahi dene padenge.' }
+      ] }
+    ],
+    dont: [
+      { wrong: 'He have to go.', right: 'He has to go.', why: 'He / she ke saath **has to**.' },
+      { wrong: 'You mustn\'t come tomorrow. (matlab: zaroori nahi)', right: 'You don\'t have to come tomorrow.', why: '**mustn\'t = mana hai**. **don\'t have to = zaroori nahi**.' }
+    ]
+  },
 
   quiz: {
     passPercent: 70,

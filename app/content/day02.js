@@ -164,13 +164,27 @@ window.LESSONS[2] = {
     ]
   },
 
-  models: [
-    { situation: 'Office phone', en: 'Is Mr Sharma available? Sorry, he\'s in a meeting right now.', why: '**available** se poochho, **in a meeting** se jawab do.' },
-    { situation: 'Raasta poochhna', en: 'Excuse me, is there an ATM near here?', why: 'Kuch hai ya nahi: **is there**.' },
-    { situation: 'Meeting fix karna', en: 'Is 4 p.m. convenient for you?', why: '**Time** convenient hota hai, insaan nahi.' },
-    { situation: 'Kaam samajh na aaye', en: 'I\'m a bit confused about this task. Could you explain it again?', why: '**confused about** + polite request.' },
-    { situation: 'Chhoti baat-cheet', en: 'It\'s really hot today, isn\'t it?', why: 'Mausam: **It\'s**. Aakhir ka “isn\'t it?” baat aage badhata hai.' }
-  ],
+  modal: {
+    verb: 'could', ipa: '/kʊd/', say: 'कुड', hindi: 'सकना (विनम्र / भूतकाल)', meaning: 'kar sakte hain? / kar paata tha',
+    uses: [
+      { rule: 'Jab teacher, TA ya bade se **politely request** karni ho (can se zyada izzat)', form: 'Could you + verb …?', ex: [
+        { en: 'Could you [repeat the last point]?', hi: 'Kya aap aakhri point dobara bata sakte hain?' },
+        { en: 'Could you [check my submission]?', hi: 'Kya aap meri submission check kar sakte hain?' }
+      ] },
+      { rule: 'Jab batana ho ki **pehle kya kar paate the**', form: 'Subject + could + verb', ex: [
+        { en: 'In school, I could [solve maths problems fast].', hi: 'School mein main maths ke sawaal jaldi solve kar leta tha.' },
+        { en: 'Yesterday I couldn\'t [join the session].', hi: 'Kal main session join nahi kar paaya.' }
+      ] },
+      { rule: 'Jab koi **sujhaav (idea)** dena ho', form: 'We / You could + verb', ex: [
+        { en: 'We could [study together on Sunday].', hi: 'Hum Sunday ko saath padh sakte hain.' },
+        { en: 'You could [ask on the forum].', hi: 'Tum forum pe poochh sakte ho.' }
+      ] }
+    ],
+    dont: [
+      { wrong: 'Could you please to send the notes?', right: 'Could you please send the notes?', why: 'Modal ke baad **“to” nahi** lagta.' },
+      { wrong: 'Yesterday I can not attend the class.', right: 'Yesterday I couldn\'t attend the class.', why: 'Beete kal ke liye can ka past **could**.' }
+    ]
+  },
 
   quiz: {
     passPercent: 70,

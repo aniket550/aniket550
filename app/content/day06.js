@@ -163,13 +163,26 @@ window.LESSONS[6] = {
     ]
   },
 
-  models: [
-    { situation: 'Office mein', en: 'Sorry, I didn\'t see your message.', why: '**didn\'t + see**, “didn\'t saw” nahi.' },
-    { situation: 'Dost se', en: 'Did you watch the match last night?', why: 'Past ka sawaal: **Did** + you + watch.' },
-    { situation: 'Interview mein', en: 'I finished my graduation in 2023.', why: 'Beeta saal, isliye **simple past**.' },
-    { situation: 'Ghar pe', en: 'Mom, I didn\'t eat lunch today.', why: 'Lunch ka waqt beet gaya: **didn\'t eat**.' },
-    { situation: 'Doctor ke paas', en: 'I didn\'t sleep well last night.', why: '**last night** + didn\'t + saada verb.' }
-  ],
+  modal: {
+    verb: 'may', ipa: '/meɪ/', say: 'मे', hindi: 'शायद / अनुमति', meaning: 'ijaazat ya shayad',
+    uses: [
+      { rule: 'Jab **formal tareeke se ijaazat** maangni ho (can se zyada izzat)', form: 'May I + verb …?', ex: [
+        { en: 'May I [come in]?', hi: 'Kya main andar aa sakta hoon?' },
+        { en: 'May I [ask a question]?', hi: 'Kya main ek sawaal poochh sakta hoon?' }
+      ] },
+      { rule: 'Jab koi baat **shayad ho sakti hai** (pakka nahi)', form: 'Subject + may + verb', ex: [
+        { en: 'The results may [come next week].', hi: 'Result shayad agle hafte aaye.' },
+        { en: 'I may [be late today].', hi: 'Main aaj shayad late ho jaaun.' }
+      ] },
+      { rule: 'Jab email mein kisi ko **formal chhoot** deni ho', form: 'You may + verb', ex: [
+        { en: 'You may [contact me anytime].', hi: 'Aap mujhse kabhi bhi sampark kar sakte hain.' }
+      ] }
+    ],
+    dont: [
+      { wrong: 'May you help me?', right: 'Could you help me?', why: '“May” sirf **apne liye** ijaazat (May I). Doosre se request ke liye **could**.' },
+      { wrong: 'It may rains today.', right: 'It may rain today.', why: 'Modal ke baad verb **saada**.' }
+    ]
+  },
 
   quiz: {
     passPercent: 70,

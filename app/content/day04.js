@@ -162,13 +162,27 @@ window.LESSONS[4] = {
     ]
   },
 
-  models: [
-    { situation: 'Dukaan pe', en: 'Do you have this in blue?', why: '“have” kaam wala verb hai, isliye sawaal mein **Do**.' },
-    { situation: 'Pehli mulaqaat', en: 'Where do you live?', why: 'WH + **do** + you + verb.' },
-    { situation: 'Office mein', en: 'Sorry, I don\'t understand. Can you say that again?', why: 'Politely na samajhna: **I don\'t understand**, “I am not understanding” nahi.' },
-    { situation: 'Doctor ke paas', en: 'Does it hurt here?', why: '“it” = teesra, isliye **Does**.' },
-    { situation: 'Dost se', en: 'My brother doesn\'t like spicy food.', why: '“My brother” = he: **doesn\'t** + saada verb (like).' }
-  ],
+  modal: {
+    verb: 'must', ipa: '/mʌst/', say: 'मस्ट', hindi: 'ज़रूर / अवश्य', meaning: 'zaroor karna hai',
+    uses: [
+      { rule: 'Jab koi cheez aapki nazar mein **bahut zaroori** ho', form: 'Subject + must + verb', ex: [
+        { en: 'I must [finish this today].', hi: 'Mujhe yeh aaj hi poora karna hai.' },
+        { en: 'You must [watch this lecture].', hi: 'Tumhe yeh lecture zaroor dekhna chahiye.' }
+      ] },
+      { rule: 'Jab koi **niyam (rule)** batana ho', form: 'Students must + verb', ex: [
+        { en: 'Students must [submit before the deadline].', hi: 'Students ko deadline se pehle submit karna hoga.' },
+        { en: 'You must [carry your ID card].', hi: 'Tumhe apna ID card saath rakhna hoga.' }
+      ] },
+      { rule: 'Jab kisi baat ka **pakka andaaza** ho', form: 'Subject + must be + …', ex: [
+        { en: 'You must be [tired].', hi: 'Tum zaroor thak gaye hoge.' },
+        { en: 'He must be [in the session].', hi: 'Woh zaroor session mein hoga.' }
+      ] }
+    ],
+    dont: [
+      { wrong: 'You must to submit.', right: 'You must submit.', why: 'Modal ke baad **“to” nahi**.' },
+      { wrong: 'I must went yesterday.', right: 'I had to go yesterday.', why: '“must” ka past nahi hota. Beete kal ke liye **had to**.' }
+    ]
+  },
 
   quiz: {
     passPercent: 70,
