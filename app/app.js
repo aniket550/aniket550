@@ -396,7 +396,7 @@
         const re = new RegExp('(' + esc(w.word).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[a-z]*)', 'i');
         return esc(text).replace(re, '<mark>$1</mark>');
       };
-      const parts = w.use.parts ? `
+      const parts = w.use && w.use.parts ? `
           <div class="breakdown">
             <p class="eyebrow" style="display: flex; align-items: center; gap: 6px">${I.parts}Sentence ko todkar samjho</p>
             <div class="parts">${w.use.parts.map((p) => `<div class="part ${p.key ? 'key' : ''}"><b>${esc(p.en)}</b><span>${esc(p.hi)}</span></div>`).join('')}</div>
@@ -415,6 +415,44 @@
           <p class="eyebrow">Aur examples</p>
           ${w.more.map((m) => `<div class="say-row"><div><p class="sentence" style="font-size: 16px">${markWord(m.en)}</p><p class="muted" style="margin: 2px 0 0; font-size: 14px">${esc(m.hi)}</p></div>${sayBtn(m.en, 'Example suno')}</div>`).join('')}
         </div>` : '';
+      const head = `
+        ${topbar('task', 'Day ' + DAY, `Word ${ui.wordIdx + 1} / ${list.length}`)}
+        <div class="segments thin" style="grid-template-columns: repeat(${list.length}, minmax(0, 1fr))" aria-hidden="true">${segs}</div>
+        <div class="word-head">
+          <div style="display: flex; flex-direction: column; gap: 2px"><h1 class="word-big" tabindex="-1" style="margin: 0">${esc(w.word)}</h1><span class="muted" style="font-size: 15px">${esc(w.ipa)} · ${esc(w.say)}</span></div>
+          <button class="speaker" data-act="say" data-arg="${esc(w.word)}" aria-label="${esc(w.word)} ka uchcharan suno">${I.speaker}</button>
+        </div>
+        <div class="say-row" style="align-items: center">
+          <p class="meaning">${w.hindi ? `<span class="hindi" lang="hi">${esc(w.hindi)}</span>` : ''}<span>${esc(w.meaning)}</span></p>
+          ${w.hindi ? sayBtn(w.hindi, 'Hindi meaning suno', 'hi') : ''}
+        </div>`;
+      const nav = `
+        <div class="spacer"></div>
+        <div class="btn-row">
+          <button class="btn secondary" data-act="word" data-arg="-1" ${ui.wordIdx === 0 ? 'disabled' : ''}>Pichhla</button>
+          ${last ? '<button class="btn green" data-act="finish-step" data-arg="words">Words poore</button>' : '<button class="btn" data-act="word" data-arg="1">Agla word</button>'}
+        </div>`;
+      // Simple card: "jab aisi situation ho → yeh bolo", then one common mistake.
+      if (w.uses) {
+        return `<main class="screen" style="gap: 14px">
+        ${head}
+        <div class="card stack">
+          <div class="verdict ok">${I.okCircleLg}KAB BOLEIN</div>
+          ${w.uses.map((u, i) => `
+            <div class="use-item">
+              <p class="when"><span class="num">${i + 1}</span><span>${rich(u.when)}</span></p>
+              <div class="say-row"><div><p class="sentence">${markWord(u.en)}</p><p class="muted" style="margin: 2px 0 0; font-size: 14px">${esc(u.hi)}</p></div>${sayBtn(u.en, 'Sentence suno')}</div>
+            </div>`).join('')}
+        </div>
+        <div class="card stack">
+          <div class="verdict no">${I.noCircleLg}GALTI MAT KARNA</div>
+          <p class="strike">${esc(w.dont.wrong)}</p>
+          <div class="say-row"><p class="sentence">${markFix(w.dont.wrong, w.dont.right)}</p>${sayBtn(w.dont.right, 'Sahi sentence suno')}</div>
+          <p class="body" style="font-size: 14px">${rich(w.dont.why)}</p>
+        </div>
+        ${nav}
+      </main>`;
+      }
       return `<main class="screen" style="gap: 14px">
         ${topbar('task', 'Day ' + DAY, `Word ${ui.wordIdx + 1} / ${list.length}`)}
         <div class="segments thin" style="grid-template-columns: repeat(${list.length}, minmax(0, 1fr))" aria-hidden="true">${segs}</div>

@@ -391,3 +391,10 @@ mark { background: none; color: var(--accent-text); font-weight: 700; }
 @media (prefers-reduced-motion: reduce) {
   .speaking, .speaking .w1, .speaking .w2, .player.live .wave i, .player.live .play, .line.live { animation: none !important; }
 }
+
+/* simple word card: situation → sentence */
+.use-item { display: flex; flex-direction: column; gap: 6px; padding-top: 12px; border-top: 1px solid var(--separator); }
+.verdict + .use-item { padding-top: 0; border-top: 0; }
+.when { margin: 0; display: flex; align-items: flex-start; gap: 8px; font-size: 14px; line-height: 1.4; color: var(--label-2); }
+.when strong { color: var(--label); }
+.when .num { width: 20px; height: 20px; flex-shrink: 0; border-radius: 10px; background: var(--accent-tint); color: var(--accent-text); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
