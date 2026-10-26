@@ -617,7 +617,7 @@
     recognizer.interimResults = false;
     recognizer.maxAlternatives = 1;
     recognizer.onresult = (e) => { ui.speak.heard = e.results[0][0].transcript; };
-    recognizer.onerror = (e) => { ui.speak.error = e.error === 'not-allowed' ? 'Mic ki permission do, phir dobara try karo.' : 'Awaaz saaf nahi aayi, dobara bolo.'; };
+    recognizer.onerror = (e) => { ui.speak.error = e.error === 'not-allowed' ? 'Yahan mic ki ijaazat nahi mili. Sentence zor se bolo aur aage badho. (Chrome mein app khologe to mic se check bhi hoga.)' : 'Awaaz saaf nahi aayi, dobara bolo.'; };
     recognizer.onend = () => { ui.speak.listening = false; render(); };
     ui.speak.listening = true;
     ui.speak.error = '';
