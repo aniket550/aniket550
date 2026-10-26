@@ -214,6 +214,7 @@ button { cursor: pointer; }
 .ring { position: relative; width: 64px; height: 64px; flex-shrink: 0; }
 .ring span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; }
 .week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; padding: 18px 12px; }
+button.day { border: 0; background: none; padding: 0; font: inherit; cursor: pointer; }
 .day { display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--secondary); }
 .day .dot { width: 36px; height: 36px; border-radius: 18px; display: flex; align-items: center; justify-content: center; background: var(--fill); color: var(--secondary); }
 .day.done .dot { background: var(--green); color: #FFFFFF; }

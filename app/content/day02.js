@@ -193,5 +193,14 @@ window.LESSONS[2] = {
     'I am happy today.',
     'My father is busy with work.',
     'They are in Delhi.'
-  ]
+  ],
+
+  write: {
+    intro: 'Aaj ke grammar se apni family ke baare mein 3 sentence likho.',
+    items: [
+      { label: 'I am …', placeholder: 'Jaise: I am a student.', pattern: '\\bi am [a-z]+', ok: '“I” ke saath **am**, bilkul sahi.', fix: '“I” ke saath hamesha **am** lagta hai, jaise “main hoon”. Likho: I am …' },
+      { label: 'My father is …', placeholder: 'Jaise: My father is a farmer.', pattern: '\\bmy father is [a-z]+', ok: '“My father” ek insaan hai, isliye **is**. Sahi!', fix: '“My father” ek insaan hai (he), isliye **is** lagega, jaise “woh hai”. Likho: My father is …' },
+      { label: 'My friends are …', placeholder: 'Jaise: My friends are kind.', pattern: '\\bmy friends are [a-z]+', ok: '“My friends” bahut log hain, isliye **are**. Sahi!', fix: '“My friends” bahut log hain (they), isliye **are** lagega, jaise “ve hain”. Likho: My friends are …' }
+    ]
+  }
 };

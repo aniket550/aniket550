@@ -1,19 +1,18 @@
 (function () {
   'use strict';
 
-  const DAY = 2; // the only lesson shipped so far
-  const lesson = window.LESSONS[DAY];
-  const KEY = 'english30:v1';
+  // One lesson file per day; the learner moves through them in order.
+  const DAYS = Object.keys(window.LESSONS).map(Number).sort((a, b) => a - b);
+  let DAY = DAYS[0];
+  let lesson = window.LESSONS[DAY];
+  const KEY = 'english30:v2';
 
   // ---------- storage (per-device convenience; the app works without it) ----------
-  // Day 1 counts as done: the shipped lesson starts on Day 2.
-  const defaults = () => ({ name: '', streak: 0, lastDone: null, completedDays: [1], steps: {}, bestScore: {}, quizLast: {}, startedAt: {}, minutes: {} });
+  const defaults = () => ({ name: '', streak: 0, lastDone: null, completedDays: [], steps: {}, bestScore: {}, quizLast: {}, startedAt: {}, minutes: {} });
   function load() {
     try {
       const raw = localStorage.getItem(KEY);
-      const d = raw ? Object.assign(defaults(), JSON.parse(raw)) : defaults();
-      if (!d.completedDays.includes(1)) d.completedDays.unshift(1);
-      return d;
+      return raw ? Object.assign(defaults(), JSON.parse(raw)) : defaults();
     } catch (e) {
       return defaults();
     }
@@ -89,13 +88,31 @@
     clock: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-text)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'
   };
 
-  const STEPS = [
-    { id: 'reading', title: 'Reading', sub: lesson.reading.title + ' · 5 min', min: 5, color: '#0066CC', icon: I.book },
-    { id: 'words', title: '15 Words', sub: 'Kab use · kab nahi · kyun', min: 8, color: '#5856D6', icon: 'Aa' },
-    { id: 'grammar', title: 'Grammar', sub: lesson.grammar.rules.length + ' rules, har ek ka reason', min: 7, color: '#C93400', icon: I.lines },
-    { id: 'models', title: 'Models', sub: 'Phone, dukaan, class, ghar', min: 5, color: '#8944AB', icon: I.chat },
-    { id: 'practice', title: 'Practice', sub: lesson.quiz.questions.length + ' sawaal · bolo · likho', min: 5, color: '#248A3D', icon: I.target }
-  ];
+  function buildSteps() {
+    return [
+      { id: 'reading', title: 'Reading', sub: lesson.reading.title + ' · 5 min', min: 5, color: '#0066CC', icon: I.book },
+      { id: 'words', title: '15 Words', sub: 'Kab use · kab nahi · kyun', min: 8, color: '#5856D6', icon: 'Aa' },
+      { id: 'grammar', title: 'Grammar', sub: lesson.grammar.rules.length + ' rules, har ek ka reason', min: 7, color: '#C93400', icon: I.lines },
+      { id: 'models', title: 'Models', sub: 'Phone, dukaan, class, ghar', min: 5, color: '#8944AB', icon: I.chat },
+      { id: 'practice', title: 'Practice', sub: lesson.quiz.questions.length + ' sawaal · bolo · likho', min: 5, color: '#248A3D', icon: I.target }
+    ];
+  }
+  let STEPS = buildSteps();
+  // the first day not yet completed is today's task
+  const currentDay = () => DAYS.find((d) => !isDayDone(d)) ?? DAYS[DAYS.length - 1];
+  function useDay(n) {
+    if (n !== DAY) {
+      ui.wordIdx = 0;
+      ui.ruleIdx = 0;
+      ui.quiz = null;
+      ui.lockNote = false;
+      ui.write = { text: [], checked: false };
+    }
+    DAY = n;
+    lesson = window.LESSONS[n];
+    STEPS = buildSteps();
+  }
+  useDay(currentDay());
   const doneCount = () => STEPS.filter((s) => stepsFor(DAY)[s.id]).length;
   const minutesLeft = () => STEPS.filter((s) => !stepsFor(DAY)[s.id]).reduce((n, s) => n + s.min, 0);
   const learnDone = () => STEPS.slice(0, 4).every((s) => stepsFor(DAY)[s.id]);
@@ -159,25 +176,27 @@
     },
 
     home() {
+      useDay(currentDay());
       const steps = doneCount();
       const dayDone = isDayDone(DAY);
       const circ = 2 * Math.PI * 27;
       const dash = (steps / STEPS.length) * circ;
       const date = new Date().toLocaleDateString('en-IN', { weekday: 'long' }).toUpperCase();
       const weekDone = data.completedDays.filter((d) => d <= 7).length;
+      const weekName = lesson.week === 1 ? 'Neev' : '';
       const basicPct = Math.round((data.completedDays.filter((d) => d <= 30).length / 30) * 100);
       const days = [1, 2, 3, 4, 5, 6, 7].map((n) => {
-        if (isDayDone(n)) return `<div class="day done"><span>${n}</span><div class="dot" role="img" aria-label="Day ${n} poora">${I.check}</div></div>`;
-        if (n === DAY) return `<div class="day today"><span>${n}</span><div class="dot" role="img" aria-label="Day ${n} aaj"><i></i></div></div>`;
+        if (isDayDone(n)) return `<button class="day done" data-act="open-day" data-arg="${n}" aria-label="Day ${n} poora, dobara kholo"><span>${n}</span><div class="dot">${I.check}</div></button>`;
+        if (n === DAY) return `<button class="day today" data-act="open-day" data-arg="${n}" aria-label="Day ${n}, aaj ka task"><span>${n}</span><div class="dot"><i></i></div></button>`;
         return `<div class="day"><span>${n}</span><div class="dot" role="img" aria-label="Day ${n} abhi band hai">${I.lock}</div></div>`;
       }).join('');
       const hero = dayDone
         ? `<div class="card stack hero" style="gap: 14px">
             <div class="row-between" style="justify-content: flex-start; gap: 14px">
               <div class="tile" style="width: 52px; height: 52px; border-radius: 26px; background: var(--green)">${I.check}</div>
-              <div><p class="eyebrow">Aaj ka task poora</p><p class="title-2">${esc(lesson.title)}</p><p class="body muted" style="font-size: 14px">Quiz: ${data.bestScore[DAY] || 0}% · Day ${lesson.next.day} jald aa raha hai</p></div>
+              <div><p class="eyebrow">Week ${lesson.week} poora</p><p class="title-2">Shabash, ${esc(data.name || 'dost')}!</p><p class="body muted" style="font-size: 14px">Day ${lesson.next.day}: ${esc(lesson.next.title)} jald aa raha hai</p></div>
             </div>
-            <button class="btn secondary" data-act="go" data-arg="task">Dobara revise karo</button>
+            <button class="btn secondary" data-act="go" data-arg="safar">Safar mein revise karo</button>
           </div>`
         : `<div class="card stack hero" style="gap: 18px; padding: 22px">
             <div class="row-between" style="justify-content: flex-start; gap: 16px">
@@ -196,7 +215,7 @@
         </div>
         ${hero}
         <section class="stack">
-          <div class="row-between" style="padding: 0 4px; align-items: baseline"><h2 class="title-2">Week 1 · Neev</h2><span class="muted" style="font-size: 14px">${weekDone} / 7 poore</span></div>
+          <div class="row-between" style="padding: 0 4px; align-items: baseline"><h2 class="title-2">Week ${lesson.week}${weekName ? ' · ' + weekName : ''}</h2><span class="muted" style="font-size: 14px">${weekDone} / 7 poore</span></div>
           <div class="list week">${days}</div>
         </section>
         <section class="stack">
@@ -213,14 +232,15 @@
     safar() {
       const row = (d) => {
         const done = isDayDone(d.day);
-        const today = !done && d.day === DAY;
+        const today = !done && d.day === currentDay() && !!window.LESSONS[d.day];
         const tile = done
           ? `<div class="tile" style="background: var(--green)" role="img" aria-label="Poora">${I.check}</div>`
           : today ? `<div class="tile" style="background: var(--accent)">${d.day}</div>`
           : `<div class="tile locked" role="img" aria-label="Band">${d.day}</div>`;
         const right = today ? '<span class="chip-go">Aaj</span>' : done ? '' : `<span class="muted">${I.lock}</span>`;
-        const tag = today ? 'button' : 'div';
-        return `<${tag} class="list-row" ${today ? 'data-act="go" data-arg="task"' : ''}>${tile}<div class="text"><span class="t">${esc(d.focus)}</span><span class="s">Day ${d.day} · ${esc(d.learn)}</span></div>${right}</${tag}>`;
+        const open = today || (done && window.LESSONS[d.day]);
+        const tag = open ? 'button' : 'div';
+        return `<${tag} class="list-row" ${open ? `data-act="open-day" data-arg="${d.day}"` : ''}>${tile}<div class="text"><span class="t">${esc(d.focus)}</span><span class="s">Day ${d.day} · ${esc(d.learn)}</span></div>${right}</${tag}>`;
       };
       const basic = window.SYLLABUS.filter((d) => d.day <= 30).map(row).join('');
       const adv = window.SYLLABUS.filter((d) => d.day > 30).map(row).join('');
@@ -274,14 +294,15 @@
 
     reading() {
       const r = lesson.reading;
-      const g = new RegExp('\\b(' + r.grammarWords.join('|') + ')\\b', 'g');
-      const v = new RegExp('\\b(' + r.vocabWords.join('|') + ')\\b', 'gi');
+      const words = (list) => list.map((w) => esc(w).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+      const g = new RegExp('\\b(' + words(r.grammarWords) + ')\\b', 'gi');
+      const v = new RegExp('\\b(' + words(r.vocabWords) + ')\\b', 'gi');
       const lines = r.lines.map((l) => {
         const en = esc(l.en).replace(g, '<strong>$1</strong>').replace(v, '<u>$1</u>');
         return `<div><p>${en}</p>${ui.showHindi ? `<p class="hi">${esc(l.hi)}</p>` : ''}</div>`;
       }).join('');
-      const words = r.lines.map((l) => l.en).join(' ').split(/\s+/).length;
-      const secs = Math.round(words / 2.2);
+      const wordCount = r.lines.map((l) => l.en).join(' ').split(/\s+/).length;
+      const secs = Math.round(wordCount / 2.2);
       const length = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`;
       const bars = [8, 14, 20, 12, 24, 18, 10, 22, 16, 26, 12, 8, 18, 24, 14, 20, 10, 16, 22, 12, 8, 18, 14, 10, 20, 12, 8, 14].map((h) => `<i style="height: ${h}px"></i>`).join('');
       const qs = r.questions.map((q) => `<details class="qa"><summary>${esc(q.q)}</summary><p>${esc(q.a)}</p></details>`).join('');
@@ -472,7 +493,7 @@
 
     write() {
       const wr = ui.write;
-      const items = WRITE.map((p, i) => {
+      const items = lesson.write.items.map((p, i) => {
         const res = wr.checked ? checkWrite(p, wr.text[i] || '') : null;
         return `<div class="card stack">
           <label class="eyebrow" for="w${i}">${esc(p.label)}</label>
@@ -480,10 +501,10 @@
           ${res ? `<div class="mark" style="align-items: flex-start"><span style="color: ${res.ok ? 'var(--green)' : 'var(--red)'}; display: flex">${res.ok ? I.okCircleLg : I.noCircleLg}</span><span style="font-size: 14px; line-height: 1.45; color: var(--label-2)">${rich(res.msg)}</span></div>` : ''}
         </div>`;
       }).join('');
-      const allOk = wr.checked && WRITE.every((p, i) => checkWrite(p, wr.text[i] || '').ok);
+      const allOk = wr.checked && lesson.write.items.every((p, i) => checkWrite(p, wr.text[i] || '').ok);
       return `<main class="screen">
         ${topbar('task', 'Day ' + DAY, 'Likho · 3 sentence')}
-        <div class="stack" style="gap: 6px"><h1 class="large-title" tabindex="-1">Apne baare mein likho</h1><p class="body">Aaj ke grammar se apni family ke baare mein 3 sentence likho.</p></div>
+        <div class="stack" style="gap: 6px"><h1 class="large-title" tabindex="-1">Apne baare mein likho</h1><p class="body">${esc(lesson.write.intro)}</p></div>
         ${items}
         <div class="spacer"></div>
         ${allOk
@@ -496,7 +517,8 @@
     complete() {
       const q = data.quizLast[DAY] || { correct: 0, total: lesson.quiz.questions.length, wrong: [] };
       const pct = Math.round((q.correct / q.total) * 100);
-      const wordsLearned = data.completedDays.length * lesson.words.length;
+      const wordsLearned = data.completedDays.reduce((n, d) => n + (window.LESSONS[d] ? window.LESSONS[d].words.length : 0), 0);
+      const nextReady = !!window.LESSONS[lesson.next.day];
       const wrongN = q.wrong.length;
       return `<main class="screen white" style="padding-top: calc(env(safe-area-inset-top) + 72px); align-items: stretch; gap: 18px">
         <div class="medal" style="margin-top: 0"><div>${I.checkBig}</div></div>
@@ -508,8 +530,8 @@
           <div class="stat">${I.clock}<b>${data.minutes[DAY] || 1}</b><span>minute</span></div>
         </div>
         <div class="card" style="display: flex; gap: 14px; align-items: center; box-shadow: none; border: 1px solid var(--separator)">
-          <div class="tile" style="width: 44px; height: 44px; border-radius: 12px; background: var(--accent)">${I.unlock}</div>
-          <div style="display: flex; flex-direction: column; gap: 2px"><p class="eyebrow">Kal ka task khul gaya</p><p style="margin: 0; font-size: 17px; font-weight: 700">Day ${lesson.next.day} · ${esc(lesson.next.title)}</p></div>
+          <div class="tile" style="width: 44px; height: 44px; border-radius: 12px; background: ${nextReady ? 'var(--accent)' : 'var(--secondary)'}">${nextReady ? I.unlock : I.lockMid}</div>
+          <div style="display: flex; flex-direction: column; gap: 2px"><p class="eyebrow">${nextReady ? 'Kal ka task khul gaya' : 'Agla task jald aa raha hai'}</p><p style="margin: 0; font-size: 17px; font-weight: 700">Day ${lesson.next.day} · ${esc(lesson.next.title)}</p></div>
         </div>
         <div class="spacer"></div>
         <button class="btn" data-act="go" data-arg="home">Home pe jao</button>
@@ -524,7 +546,7 @@
         <div class="stats">
           <div class="stat" style="background: var(--card)"><b>${data.streak}</b><span>din ka streak</span></div>
           <div class="stat" style="background: var(--card)"><b>${data.completedDays.length}</b><span>din poore</span></div>
-          <div class="stat" style="background: var(--card)"><b>${data.bestScore[DAY] || 0}%</b><span>best quiz</span></div>
+          <div class="stat" style="background: var(--card)"><b>${avgScore()}%</b><span>quiz average</span></div>
         </div>
         <p class="body muted" style="font-size: 14px">Progress sirf isi phone/browser mein save hota hai.</p>
         ${ui.confirmReset
@@ -536,6 +558,11 @@
     }
   };
 
+  function avgScore() {
+    const s = Object.values(data.bestScore);
+    return s.length ? Math.round(s.reduce((a, b) => a + b, 0) / s.length) : 0;
+  }
+
   function wrongCards(idxs) {
     return idxs.map((i) => {
       const q = lesson.quiz.questions[i];
@@ -543,21 +570,15 @@
     }).join('');
   }
 
-  // Writing practice: each line must use the right form of be for its subject.
-  const WRITE = [
-    { label: 'I am …', placeholder: 'Jaise: I am a student.', verb: 'am', subject: 'I', ok: '“I” ke saath **am**, bilkul sahi.', fix: '“I” ke saath hamesha **am** lagta hai, jaise “main hoon”. Likho: I am …' },
-    { label: 'My father is …', placeholder: 'Jaise: My father is a farmer.', verb: 'is', subject: 'my father', ok: '“My father” ek insaan hai, isliye **is**. Sahi!', fix: '“My father” ek insaan hai (he), isliye **is** lagega, jaise “woh hai”. Likho: My father is …' },
-    { label: 'My friends are …', placeholder: 'Jaise: My friends are kind.', verb: 'are', subject: 'my friends', ok: '“My friends” bahut log hain, isliye **are**. Sahi!', fix: '“My friends” bahut log hain (they), isliye **are** lagega, jaise “ve hain”. Likho: My friends are …' }
-  ];
+  // Writing practice: each line is checked against its lesson pattern.
   function checkWrite(p, text) {
-    const t = ' ' + norm(text).join(' ') + ' ';
     if (norm(text).length < 3) return { ok: false, msg: 'Kam se kam 3 shabd ka poora sentence likho.' };
-    const ok = t.includes(' ' + p.subject.toLowerCase() + ' ' + p.verb + ' ');
+    const ok = new RegExp(p.pattern).test(' ' + norm(text).join(' ') + ' ');
     return { ok, msg: ok ? p.ok : p.fix };
   }
 
   function norm(s) {
-    return s.toLowerCase().replace(/[^a-z' ]/g, ' ').split(/\s+/).filter(Boolean);
+    return s.toLowerCase().replace(/[’‘]/g, "'").replace(/[^a-z0-9' ]/g, ' ').split(/\s+/).filter(Boolean);
   }
 
   // ---------- render + actions ----------
@@ -648,6 +669,7 @@
       window.scrollTo(0, 0);
     },
     listen,
+    'open-day'(n) { useDay(Number(n)); go('task'); },
     'have-account'() {
       if (data.name) { go('home'); return; }
       ui.welcomeNote = 'Is phone pe pehle ka koi account nahi mila. Upar naam likh kar shuru karein.';
@@ -666,6 +688,7 @@
     reset() {
       ui.confirmReset = false;
       data = defaults();
+      useDay(currentDay());
       save();
       go('welcome');
     }

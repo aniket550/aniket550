@@ -33,7 +33,7 @@ app/
   index.html            app shell (PWA meta, home screen pe add ho sakta hai)
   styles.css            Apple-style design tokens, light + dark mode
   app.js                screens, navigation, quiz logic, progress (localStorage)
-  content/day02.js      Day 2 (Is / Am / Are) ka poora content
+  content/day01-07.js   Week 1 ke 7 din ka poora content (ek din = ek file)
   content/syllabus.js   45 din ka syllabus (Safar screen ke liye)
   manifest.webmanifest
   icon.svg
@@ -41,6 +41,9 @@ app/
 
 ## Naya din kaise jodein
 
-`app/content/day02.js` ko copy karke `dayNN.js` banao, `window.LESSONS[NN]` mein content bharo, aur `index.html` mein uski `<script>` jodo. Har word, rule, model aur quiz sawaal mein `why` field zaroor bharo, kyunki app ka asli fark yahi reason hai.
+1. `app/content/day07.js` ko copy karke `day08.js` banao aur `window.LESSONS[8]` mein content bharo.
+2. `app/index.html` mein `app.js` se pehle uski `<script>` jodo.
 
-Abhi sirf Day 2 ka content hai. Day 1 aur Day 3–45 ke din `LESSONS` mein jodne baaki hain, aur `app.js` mein `DAY` ko ek se zyada din ke liye badalna hoga.
+Har word, rule, model aur quiz sawaal mein `why` zaroor bharo, kyunki app ka asli fark yahi reason hai. Shabd ko `**bold**` likhne se woh app mein mota dikhta hai. "Likho" ke har item mein `pattern` (regex) hota hai jo user ke sentence ko check karta hai; uska `placeholder` wala example us pattern se pass hona chahiye.
+
+App apne aap pehla adhoora din "aaj ka task" banata hai. Ek din poora hote hi agla din khul jaata hai, aur poore hue din Safar screen se dobara khul sakte hain.
