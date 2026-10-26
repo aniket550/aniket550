@@ -1,0 +1,10 @@
+{
+  "name": "English 30",
+  "short_name": "English 30",
+  "description": "30 din mein English bolna shuru karo",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#F2F2F7",
+  "theme_color": "#F2F2F7",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
