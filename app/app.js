@@ -76,6 +76,7 @@
     home: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>',
     person: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
     arrow: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16M14 6l6 6-6 6"/></svg>',
+    micTab: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v4"/></svg>',
     route: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h8a3.5 3.5 0 0 0 0-7H8a3.5 3.5 0 0 1 0-7h8"/></svg>',
     lockMid: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
     lockSmall: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
@@ -132,7 +133,7 @@
   const tab = (id, icon, label, active) =>
     `<button class="${active === id ? 'active' : ''}" data-act="go" data-arg="${id}" ${active === id ? 'aria-current="page"' : ''}>${icon}<span>${label}</span></button>`;
   const tabbar = (active) => `
-    <nav class="tabbar" aria-label="Main">${tab('home', I.home, 'Home', active)}${tab('safar', I.route, 'Safar', active)}${tab('speak', I.mic, 'Bolo', active)}${tab('profile', I.person, 'Profile', active)}</nav>`;
+    <nav class="tabbar" aria-label="Main">${tab('home', I.home, 'Home', active)}${tab('safar', I.route, 'Safar', active)}${tab('speak', I.micTab, 'Bolo', active)}${tab('profile', I.person, 'Profile', active)}</nav>`;
 
   // ---------- screens ----------
   const screens = {
@@ -153,7 +154,7 @@
           <button class="btn" type="submit">Shuru karein</button>
         </form>
         ${ui.welcomeNote ? `<p class="body muted center" role="status" style="font-size: 14px">${esc(ui.welcomeNote)}</p>` : ''}
-        <button class="btn plain" style="margin-top: -6px; min-height: 48px" data-act="have-account">Mera account pehle se hai</button>
+        <button class="btn plain" style="margin-top: -10px; min-height: 48px" data-act="have-account">Mera account pehle se hai</button>
       </main>`;
     },
 
@@ -189,7 +190,7 @@
             <button class="btn" style="min-height: 52px; border-radius: 14px" data-act="go" data-arg="task">${steps ? 'Task jaari rakhein' : 'Aaj ka task shuru karein'}${I.next}</button>
           </div>`;
       return `<main class="screen with-tabbar" style="gap: 22px">
-        <div class="row-between" style="align-items: flex-end; margin-top: 40px">
+        <div class="row-between" style="align-items: flex-end; margin-top: 48px">
           <div style="display: flex; flex-direction: column; gap: 4px"><p class="eyebrow" style="font-size: 14px">${esc(date)} · Day ${DAY} of 30</p><h1 class="large-title" tabindex="-1">Namaste, ${esc(data.name || 'dost')}</h1></div>
           <span class="pill" role="img" aria-label="${data.streak} din ka streak">${I.flame}${data.streak}</span>
         </div>
@@ -224,7 +225,7 @@
       const basic = window.SYLLABUS.filter((d) => d.day <= 30).map(row).join('');
       const adv = window.SYLLABUS.filter((d) => d.day > 30).map(row).join('');
       return `<main class="screen with-tabbar" style="gap: 22px">
-        <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 40px"><p class="eyebrow" style="font-size: 14px">45 din ka raasta</p><h1 class="large-title" tabindex="-1">Safar</h1></div>
+        <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 48px"><p class="eyebrow" style="font-size: 14px">45 din ka raasta</p><h1 class="large-title" tabindex="-1">Safar</h1></div>
         <section class="stack">
           <div class="row-between" style="padding: 0 4px; align-items: baseline"><h2 class="title-2">Basic English</h2><span class="muted" style="font-size: 14px">Day 1–30</span></div>
           <div class="list">${basic}</div>

@@ -99,7 +99,7 @@ button { cursor: pointer; }
   animation: enter 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .screen.white { background: var(--card); }
-.screen.with-tabbar { padding-bottom: calc(env(safe-area-inset-bottom) + 110px); }
+.screen.with-tabbar { padding-bottom: calc(env(safe-area-inset-bottom) + 120px); }
 @keyframes enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .screen { animation: none; } }
 
@@ -143,7 +143,7 @@ button { cursor: pointer; }
 
 .list { background: var(--card); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
 .list-row {
-  display: flex; align-items: center; gap: 14px; width: 100%; padding: 13px 16px; border: 0; background: none;
+  display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 16px; border: 0; background: none;
   text-align: left; color: var(--label); position: relative;
 }
 .list-row + .list-row::before {
@@ -223,11 +223,12 @@ button { cursor: pointer; }
 
 .tabbar {
   position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px;
-  padding: 8px 12px calc(env(safe-area-inset-bottom) + 8px); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* 84px like an iOS tab bar: icons sit at the top, the rest clears the home indicator */
+  height: calc(84px + env(safe-area-inset-bottom)); padding: 8px 12px env(safe-area-inset-bottom); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: start;
   background: var(--bar); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-top: 0.5px solid var(--bar-line); z-index: 5;
 }
-.tabbar button { display: flex; flex-direction: column; align-items: center; gap: 3px; border: 0; background: none; color: var(--secondary); font-size: 11px; font-weight: 500; padding: 2px 0; }
+.tabbar button { display: flex; flex-direction: column; align-items: center; gap: 3px; border: 0; background: none; color: var(--secondary); font-size: 11px; font-weight: 500; padding: 0; }
 .tabbar button.active { color: var(--accent-text); font-weight: 600; }
 
 /* Reading */
