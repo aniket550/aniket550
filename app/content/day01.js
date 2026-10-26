@@ -1,204 +1,205 @@
-// Day 1 lesson content. Every rule carries a "why" so learners understand, not memorise.
+// Day 1 lesson content. Level: learners who know basic English but translate from Hindi
+// and freeze in real situations. Every rule carries a "why".
 window.LESSONS = window.LESSONS || {};
 window.LESSONS[1] = {
   day: 1,
   week: 1,
-  title: 'Introduction + Greetings',
-  subtitle: 'Apna parichay dena',
+  title: 'Self Introduction',
+  subtitle: 'Interview aur office mein apna parichay',
   minutes: 30,
   next: { day: 2, title: 'Is / Am / Are' },
 
   reading: {
-    title: 'Hello!',
+    title: 'Tell Me About Yourself',
     lines: [
-      { en: 'Good morning! My name is Priya.', hi: 'Good morning! Mera naam Priya hai.' },
-      { en: 'I am from Lucknow, and I am a student.', hi: 'Main Lucknow se hoon, aur main ek student hoon.' },
-      { en: 'Every day I say hello to my teacher.', hi: 'Main roz apne teacher ko hello bolti hoon.' },
-      { en: 'She asks, "How are you?" I say, "I am fine, thank you."', hi: 'Woh poochhti hain, "Aap kaise ho?" Main kehti hoon, "Main theek hoon, shukriya."' },
-      { en: 'At night I say, "Good night, Mom!"', hi: 'Raat ko main kehti hoon, "Good night, Mummy!"' }
+      { en: 'Good morning. I\'m Priya Sharma, and I\'m originally from Lucknow.', hi: 'Good morning. Main Priya Sharma hoon, aur main mool roop se Lucknow se hoon.' },
+      { en: 'I graduated from Lucknow University with a B.Com in 2023.', hi: 'Maine 2023 mein Lucknow University se B.Com kiya.' },
+      { en: 'Currently, I work as an accounts assistant at a small firm in Noida, so I\'m based in Delhi.', hi: 'Abhi main Noida ki ek chhoti firm mein accounts assistant hoon, isliye main Delhi mein rehti hoon.' },
+      { en: 'I\'m responsible for billing, and I have one year of experience in handling customer accounts.', hi: 'Billing meri zimmedari hai, aur mujhe customer accounts sambhalne ka ek saal ka experience hai.' },
+      { en: 'I\'m interested in finance, and I\'m looking forward to learning more in this role.', hi: 'Mujhe finance mein dilchaspi hai, aur main is role mein aur seekhne ke liye utsuk hoon.' }
     ],
-    grammarWords: ['am', 'is'],
-    vocabWords: ['Good morning', 'name', 'from', 'student', 'hello', 'teacher', 'thank you', 'Good night'],
+    grammarWords: ['I\'m', 'have', 'work'],
+    vocabWords: ['originally', 'graduated', 'Currently', 'based in', 'responsible for', 'experience', 'interested in', 'looking forward'],
     questions: [
-      { q: 'Priya kahan se hai?', a: 'Lucknow se.' },
-      { q: 'Priya kya karti hai?', a: 'Woh student hai.' },
-      { q: 'Raat ko Priya kya bolti hai?', a: '"Good night, Mom!"' }
+      { q: 'Priya mool roop se kahan ki hai, aur abhi kahan rehti hai?', a: 'Lucknow ki hai, abhi Delhi mein rehti hai.' },
+      { q: 'Priya abhi kya kaam karti hai?', a: 'Noida ki ek firm mein accounts assistant hai, billing sambhalti hai.' },
+      { q: 'Uske jawab ka aakhri sentence kya batata hai?', a: 'Ki use finance mein interest hai aur woh is role mein seekhna chahti hai.' }
     ]
   },
 
   words: [
     {
-      word: 'hello', ipa: '/həˈloʊ/', say: 'हेलो', meaning: 'namaste, baat shuru karne ka shabd',
-      use: { ex: 'Hello, I am Priya.', why: 'Kisi se baat shuru karne ka sabse aam tareeka. Dost, dukaan, phone, **sab jagah** chalta hai.' },
-      dont: { wrong: 'Yes, tell. (phone uthate hi)', right: 'Hello, who is speaking?', why: '“Yes, tell” Hindi ke “haan, bolo” ka seedha translation hai. English mein yeh **rude** lagta hai.' },
-      tags: ['Phone call', 'Pehli mulaqaat']
+      word: 'originally', ipa: '/əˈrɪdʒənəli/', say: 'ओरिजिनली', meaning: 'mool roop se (jahan ke ho)',
+      use: { ex: 'I\'m originally from Patna, but I live in Pune now.', why: 'Jab **paida hone ki jagah** aur **abhi rehne ki jagah** alag ho, tab dono saaf ho jaate hain.' },
+      dont: { wrong: 'I am originally belong to Patna.', right: 'I\'m originally from Patna.', why: '“belong” khud verb hai, “am” ke saath takrata hai. **“originally from”** kaafi hai.' },
+      tags: ['Interview', 'Pehli mulaqaat']
     },
     {
-      word: 'good morning', ipa: '/ɡʊd ˈmɔːrnɪŋ/', say: 'गुड मॉर्निंग', meaning: 'subah ka namaste',
-      use: { ex: 'Good morning, ma\'am!', why: 'Subah se **dopahar 12 baje tak** kisi se milne pe bolte hain.' },
-      dont: { wrong: 'Good morning! (shaam 7 baje)', right: 'Good evening!', why: 'Greeting **time ke hisaab se** badalti hai: 12 se 5 “good afternoon”, 5 ke baad “good evening”.' },
-      tags: ['Class', 'Office']
+      word: 'currently', ipa: '/ˈkɜːrəntli/', say: 'करेंटली', meaning: 'abhi, filhaal',
+      use: { ex: 'I currently work at an IT company.', why: 'Aapki **abhi ki** naukri ya padhai batane ke liye.' },
+      dont: { wrong: 'Currently I am doing job in TCS.', right: 'I currently work at TCS.', why: '**“Doing job”** English mein nahi bolte. Company ke saath **“at”**: work at TCS.' },
+      tags: ['Interview', 'Office']
     },
     {
-      word: 'good night', ipa: '/ɡʊd naɪt/', say: 'गुड नाइट', meaning: 'shubh raatri (jaate ya sote waqt)',
-      use: { ex: 'Good night, Mom!', why: 'Sone se pehle ya raat ko **alvida** kehte waqt.' },
-      dont: { wrong: 'Good night! (raat 8 baje kisi se milte hi)', right: 'Good evening!', why: '“Good night” milne pe nahi, sirf **jaate waqt** ya sote waqt bolte hain.' },
-      tags: ['Ghar', 'Dost']
+      word: 'based in', ipa: '/beɪst ɪn/', say: 'बेस्ट इन', meaning: '(kaam ke liye) yahan rehta hoon',
+      use: { ex: 'I\'m based in Bangalore.', why: 'Kaam ke hisaab se kahan rehte ho, yeh batane ka **professional** tareeka.' },
+      dont: { wrong: 'I am based at Bangalore.', right: 'I\'m based in Bangalore.', why: 'Shehar ke saath **“in”**. “At” ek khaas jagah ke liye (at the office).' },
+      tags: ['Interview', 'Office']
     },
     {
-      word: 'name', ipa: '/neɪm/', say: 'नेम', meaning: 'naam',
-      use: { ex: 'My name is Priya.', why: 'Apna naam batane ka seedha tareeka: **My name is** + naam.' },
-      dont: { wrong: 'My good name is Priya.', right: 'My name is Priya.', why: '“Good name” Hindi ke “shubh naam” se aaya hai. English mein naam **good ya bad nahi** hota.' },
-      tags: ['Pehli mulaqaat', 'Interview']
+      word: 'pursuing', ipa: '/pərˈsuːɪŋ/', say: 'परस्यूइंग', meaning: '(degree) kar raha hoon',
+      use: { ex: 'I\'m pursuing a B.Tech in computer science.', why: 'Chal rahi **degree ya course** ke liye formal shabd.' },
+      dont: { wrong: 'I am pursuing my 12th.', right: 'I\'m in Class 12.', why: '“Pursuing” **degree / course** ke liye hai. School ke liye seedha: I\'m in Class 12.' },
+      tags: ['Interview', 'College']
     },
     {
-      word: 'from', ipa: '/frʌm/', say: 'फ्रॉम', meaning: 'se (jagah)',
-      use: { ex: 'I am from Lucknow.', why: 'Aap kahan ke rehne wale ho, yeh batane ke liye. “from” = **“se”**.' },
-      dont: { wrong: 'I am belong to Lucknow.', right: 'I am from Lucknow.', why: '“belong” khud ek **verb** hai, uske saath “am” nahi lagta. Seedha “I am from” bolo.' },
-      tags: ['Pehli mulaqaat', 'Interview']
+      word: 'graduate', ipa: '/ˈɡrædʒuət/', say: 'ग्रैजुएट', meaning: 'snatak (degree poori)',
+      use: { ex: 'I graduated from Delhi University in 2022.', why: 'Degree poori hone ke liye verb **graduated from**.' },
+      dont: { wrong: 'I have done my graduation from Delhi University.', right: 'I graduated from Delhi University.', why: '“Done my graduation” Hindi “graduation kiya” ka translation hai. Natural English mein verb hi kaafi: **graduated**.' },
+      tags: ['Interview']
     },
     {
-      word: 'student', ipa: '/ˈstuːdənt/', say: 'स्टूडेंट', meaning: 'vidyarthi',
-      use: { ex: 'I am a student.', why: 'Ek insaan ki pehchaan batate waqt pehle **“a”** lagta hai.' },
-      dont: { wrong: 'I am student.', right: 'I am a student.', why: 'English mein ek insaan ke kaam ya pehchaan se pehle **“a”** zaroori hai. Poora rule Day 11 mein.' },
-      tags: ['Class', 'Interview']
+      word: 'fresher', ipa: '/ˈfreʃər/', say: 'फ्रेशर', meaning: 'pehli naukri dhoondhne wala',
+      use: { ex: 'I\'m a fresher, so I\'m ready to learn.', why: 'India mein job ke liye sab samajhte hain. **“a”** zaroor lagao.' },
+      dont: { wrong: 'I am fresher.', right: 'I\'m a fresher.', why: 'Kisi insaan ki pehchaan se pehle **“a”**: a fresher, a student.' },
+      note: 'Videsh ki company ke interview mein **“recent graduate”** bolo. “Fresher” wahan kam samjha jaata hai.',
+      tags: ['Interview']
     },
     {
-      word: 'thank you', ipa: '/θæŋk juː/', say: 'थैंक यू', meaning: 'shukriya, dhanyavaad',
-      use: { ex: 'Thank you for your help.', why: 'Koi madad kare ya kuch de, tab. Kis cheez ke liye, yeh **“for”** se batate hain.' },
-      dont: { wrong: 'Thanks you.', right: 'Thank you. / Thanks.', why: '“Thanks” **akela** bolte hain, ya “thank you”. Dono milakar “thanks you” galat hai.' },
-      tags: ['Dukaan', 'Har jagah']
+      word: 'experience', ipa: '/ɪkˈspɪriəns/', say: 'एक्सपीरियंस', meaning: 'anubhav',
+      use: { ex: 'I have two years of experience in sales.', why: 'Experience **paas hota** hai, isliye **have**. Kitna → “of”.' },
+      dont: { wrong: 'I am having two years experience.', right: 'I have two years of experience.', why: '“have” (paas hona) ek haalat hai, isliye **-ing nahi** lagta. Aur saalon ke baad **“of”**.' },
+      tags: ['Interview', 'Resume']
     },
     {
-      word: 'sorry', ipa: '/ˈsɑːri/', say: 'सॉरी', meaning: 'maaf karna',
-      use: { ex: 'Sorry, I am late.', why: 'Galti ho jaaye tab. “Sorry” pehle bolne se baat **naram** ho jaati hai.' },
-      dont: { wrong: 'Sorry for disturb.', right: 'Sorry to disturb you.', why: 'Kisi **kaam** ke liye maafi ho to “sorry to + verb” lagta hai: sorry to disturb, sorry to say.' },
-      tags: ['Office', 'Class']
+      word: 'responsible for', ipa: '/rɪˈspɑːnsəbl fɔːr/', say: 'रिस्पॉन्सिबल फ़ॉर', meaning: 'kis cheez ki zimmedari',
+      use: { ex: 'I\'m responsible for customer accounts.', why: 'Aapka **kaam kya hai**, yeh seedha batata hai. Interview mein bahut kaam ka.' },
+      dont: { wrong: 'I am responsible of accounts.', right: 'I\'m responsible for accounts.', why: '**“responsible for”** fixed jodi hai. “of” nahi lagta.' },
+      tags: ['Interview', 'Office']
     },
     {
-      word: 'please', ipa: '/pliːz/', say: 'प्लीज़', meaning: 'kripya',
-      use: { ex: 'Can I have some water, please?', why: 'Kuch maangte waqt **izzat** dikhane ke liye.' },
-      dont: { wrong: 'Give me water. (restaurant mein)', right: 'Can I have some water, please?', why: 'Bina “please” ke yeh **hukm** jaisa lagta hai, maangna nahi.' },
-      tags: ['Restaurant', 'Dukaan']
+      word: 'interested in', ipa: '/ˈɪntrəstɪd ɪn/', say: 'इंट्रेस्टिड इन', meaning: 'mein dilchaspi',
+      use: { ex: 'I\'m interested in digital marketing.', why: 'Cheez ke saath **in**. Kaam ke saath -ing: interested in learning.' },
+      dont: { wrong: 'I am interested to marketing.', right: 'I\'m interested in marketing.', why: '“interested” ke baad **“in”**. “to” ke baad aap koi kaam nahi, cheez bata rahe ho.' },
+      tags: ['Interview', 'College']
     },
     {
-      word: 'welcome', ipa: '/ˈwelkəm/', say: 'वेलकम', meaning: 'swagat / koi baat nahi',
-      use: { ex: 'You\'re welcome.', why: 'Koi “thank you” bole to uska **jawab**.' },
-      dont: { wrong: 'Most welcome.', right: 'You\'re welcome. / No problem.', why: '“Most welcome” India mein chalta hai, par “You\'re welcome” **duniya bhar mein** sahi aur samjha jaata hai.' },
-      tags: ['Dost', 'Office']
+      word: 'passionate about', ipa: '/ˈpæʃənət əˈbaʊt/', say: 'पैशनेट अबाउट', meaning: 'bahut zyada lagaav',
+      use: { ex: 'I\'m passionate about teaching.', why: '“Interested” se **zyada** gehra lagaav dikhata hai.' },
+      dont: { wrong: 'I am passionate for cricket.', right: 'I\'m passionate about cricket.', why: '“passionate” ke saath **“about”** lagta hai.' },
+      tags: ['Interview']
     },
     {
-      word: 'nice', ipa: '/naɪs/', say: 'नाइस', meaning: 'achha',
-      use: { ex: 'Nice to meet you.', why: 'Kisi se **pehli baar** milne pe.' },
-      dont: { wrong: 'Nice to meet you. (doosri baar milne pe)', right: 'Nice to see you again.', why: '“Meet” pehli mulaqaat ke liye hai. **Dobara** milne pe “see you again”.' },
-      tags: ['Pehli mulaqaat', 'Dost']
+      word: 'strength', ipa: '/streŋθ/', say: 'स्ट्रेंथ', meaning: 'khoobi, taakat',
+      use: { ex: 'My biggest strength is patience.', why: 'Interview ka pakka sawaal: **“What are your strengths?”**' },
+      dont: { wrong: 'My strength is I am hard work.', right: 'I\'m hardworking. / My strength is hard work.', why: '“Hard work” **cheez** hai. Insaan ke liye **“hardworking”**.' },
+      tags: ['Interview']
     },
     {
-      word: 'bye', ipa: '/baɪ/', say: 'बाय', meaning: 'alvida',
-      use: { ex: 'Bye! See you tomorrow.', why: 'Dost ya ghar walon se **jaate waqt**.' },
-      dont: { wrong: 'Bye-bye! (interview ke baad)', right: 'Goodbye. Have a nice day.', why: '“Bye-bye” **bachchon jaisa** lagta hai. Office ya interview mein “Goodbye”.' },
-      tags: ['Dost', 'Interview']
+      word: 'free time', ipa: '/friː taɪm/', say: 'फ्री टाइम', meaning: 'khaali samay',
+      use: { ex: 'In my free time, I like reading.', why: 'Hobby batane ka **natural** tareeka.' },
+      dont: { wrong: 'My hobbies are reading books, listening music.', right: 'In my free time, I like reading and listening to music.', why: '“listen **to** music”, “to” zaroori. Aur “my hobbies are …” **school essay** jaisa lagta hai.' },
+      tags: ['Interview', 'Dost']
     },
     {
-      word: 'excuse me', ipa: '/ɪkˈskjuːz miː/', say: 'एक्सक्यूज़ मी', meaning: 'suniye / maaf kijiye',
-      use: { ex: 'Excuse me, where is the bus stop?', why: 'Kisi anjaan ka **dhyan kheenchne** ya raasta poochhne ke liye.' },
-      dont: { wrong: 'Excuse me! (kisi ka pair dab gaya)', right: 'Sorry!', why: '“Excuse me” galti se **pehle** (dhyan kheenchne), “sorry” galti ke **baad**.' },
-      tags: ['Bahar', 'Dukaan']
+      word: 'handle', ipa: '/ˈhændl/', say: 'हैंडल', meaning: 'sambhalna',
+      use: { ex: 'I handle customer complaints.', why: 'Kaam ya zimmedari sambhalna: **handle + cheez**.' },
+      dont: { wrong: 'I handle with customers.', right: 'I deal with customers.', why: '“handle” ke baad **“with” nahi**. “With” sirf “deal with” mein lagta hai.' },
+      tags: ['Office', 'Interview']
     },
     {
-      word: 'friend', ipa: '/frend/', say: 'फ्रेंड', meaning: 'dost',
-      use: { ex: 'This is my friend, Ravi.', why: 'Kisi ka parichay karwane ke liye **“This is”**.' },
-      dont: { wrong: 'She is my friend circle.', right: 'She is my friend.', why: '“Friend circle” ek **group** hai, ek insaan nahi.' },
-      tags: ['Dost', 'Pehli mulaqaat']
+      word: 'looking forward to', ipa: '/ˈlʊkɪŋ ˈfɔːrwərd tə/', say: 'लुकिंग फ़ॉरवर्ड टू', meaning: 'intezaar hai (khushi se)',
+      use: { ex: 'I\'m looking forward to working with you.', why: 'Interview ya email **khatam** karne ka polite tareeka.' },
+      dont: { wrong: 'I am looking forward to work with you.', right: 'I\'m looking forward to working with you.', why: 'Is jodi mein **“to” ke baad -ing** aata hai. Yeh khaas rule hai, yaad rakho.' },
+      tags: ['Interview', 'Email']
     },
     {
-      word: 'teacher', ipa: '/ˈtiːtʃər/', say: 'टीचर', meaning: 'adhyapak',
-      use: { ex: 'She is my English teacher.', why: 'Kisi ki **pehchaan** batane ke liye.' },
-      dont: { wrong: 'My teacher name is Mr Singh.', right: 'My teacher\'s name is Mr Singh.', why: '“Teacher ka naam” = teacher**\'s** name. Kisi ki cheez batane ke liye **’s** lagta hai.' },
-      tags: ['Class']
+      word: 'basically', ipa: '/ˈbeɪsɪkli/', say: 'बेसिकली', meaning: 'seedhi baat mein',
+      use: { ex: 'The job is basically about sales.', why: 'Lambi baat ko **ek line** mein samjhane ke liye. **Kabhi kabhi**.' },
+      dont: { wrong: 'Basically I am from Patna, basically I did B.Com.', right: 'I\'m from Patna. I did my B.Com there.', why: 'Har sentence mein “basically” lagane se aap **ghabraaye hue** lagte ho. Hata do, aap confident lagoge.' },
+      tags: ['Interview', 'Office']
     }
   ],
 
   grammar: {
-    what: 'Apne baare mein batane ke 2 saanche: **My name is ___** aur **I am ___**. Inse naam, jagah, kaam aur haal sab bata sakte ho.',
-    formula: ['I', 'am', 'naam / jagah / kaam'],
+    what: 'Achha parichay **3 hisson** mein hota hai: kaun ho, kahan se ho, aur kya karte ho. Saath mein ek **khaas baat**. Galtiyan wahan hoti hain jahan hum Hindi se shabd-dar-shabd translate karte hain.',
+    formula: ['Naam + jagah', 'kaam / padhai', 'ek khaas baat'],
     pairs: [
-      { hi: 'Mera naam Priya', hiVerb: 'hai', en: 'My name', enVerb: 'is' },
-      { hi: 'Main Lucknow se', hiVerb: 'hoon', en: 'I', enVerb: 'am from' },
-      { hi: 'Main student', hiVerb: 'hoon', en: 'I', enVerb: 'am a' },
-      { hi: 'Main theek', hiVerb: 'hoon', en: 'I', enVerb: 'am' }
+      { hi: 'Main mool roop se Lucknow se', hiVerb: 'hoon', en: 'I\'m', enVerb: 'originally from Lucknow' },
+      { hi: 'Abhi main Delhi mein', hiVerb: 'rehti hoon', en: 'I\'m', enVerb: 'based in Delhi' },
+      { hi: 'Mujhe 2 saal ka experience', hiVerb: 'hai', en: 'I', enVerb: 'have 2 years of experience' },
+      { hi: 'Main sales mein', hiVerb: 'kaam karta hoon', en: 'I', enVerb: 'work in sales' }
     ],
     rules: [
       {
-        title: 'Naam batana',
-        right: ['My name is Priya.', 'I am Priya.'],
-        why: 'Dono sahi hain. **“My name is”** thoda formal hai (interview, form). **“I am”** roz ki baat-cheet mein zyada chalta hai.'
+        title: '“Myself …” se shuru mat karo',
+        wrong: 'Myself Priya Sharma.', right: ['I\'m Priya Sharma.', 'My name is Priya Sharma.'],
+        why: '“Myself” tab lagta hai jab kaam **khud pe** ho: “I hurt myself.” Naam batane ke liye sentence ko **subject** chahiye: **I\'m**.'
       },
       {
-        title: '“My good name” mat bolo',
-        wrong: 'My good name is Priya.', right: ['My name is Priya.'],
-        why: 'Hindi mein “aapka shubh naam?” poochhte hain, isliye log “good name” bol dete hain. English mein naam **good ya bad nahi** hota.'
+        title: 'Experience: have, “am having” nahi',
+        wrong: 'I am having 2 years of experience.', right: ['I have 2 years of experience.'],
+        why: '“have” yahan **paas hona** hai, jo ek haalat hai. Haalat wale verb ke saath **-ing nahi** lagta.'
       },
       {
-        title: 'Jagah: I am from',
-        wrong: 'I am belong to Patna.', right: ['I am from Patna.'],
-        why: '“from” = **“se”**. “belong” khud verb hai, isliye “am belong” mein do verb takra jaate hain. Seedha “I am from” bolo.'
+        title: 'Padhai: graduated from',
+        wrong: 'I have done my graduation from Delhi University in 2022.', right: ['I graduated from Delhi University in 2022.', 'I did my B.Com at Delhi University.'],
+        why: 'Saal bata diya (2022) to baat **beet chuki** hai: simple past. Aur “done my graduation” ki jagah seedha verb **graduated**.'
       },
       {
-        title: 'Kaam ya pehchaan: I am a ___',
-        wrong: 'I am student.', right: ['I am a student.', 'I am an engineer.'],
-        why: 'Ek insaan ki pehchaan se pehle **“a”** lagta hai. Agar agla shabd a, e, i, o, u ki **awaaz** se shuru ho to **“an”**.',
-        tip: 'A / An / The ka poora rule Day 11 mein aayega.'
+        title: '“What do you do?” = aapka kaam',
+        wrong: 'I am doing job.', right: ['I work as an accountant.', 'I\'m a student. I\'m in my final year of B.Sc.'],
+        why: '**“Doing job”** English mein nahi bolte. Kaam ke liye **work as + post**, ya **I\'m a + post**.'
       },
       {
-        title: 'Haal poochhna',
-        wrong: 'How you are?', right: ['How are you?', 'I am fine, thank you.'],
-        why: 'Sawaal mein **“are” pehle** aata hai, jaise Hindi mein “kya” shuru mein. Poora rule kal (Day 2) mein.'
+        title: '“How are you?” ka natural jawab',
+        wrong: 'I am fine. (aur chup)', right: ['I\'m good, thanks. How about you?', 'Not bad. How are things with you?'],
+        why: 'Sirf “I am fine” **robot jaisa** lagta hai. Natural baat-cheet mein jawab ke saath **sawaal wapas** poochhte hain.'
       },
       {
-        title: 'Greeting time ke hisaab se',
-        wrong: 'Good night! (shaam ko milte waqt)', right: ['Good morning (12 baje tak)', 'Good afternoon (12 se 5)', 'Good evening (5 ke baad)'],
-        why: '**“Good night” milne pe nahi** bolte, sirf jaate ya sote waqt. Milte waqt time dekh kar greeting chuno.'
+        title: 'Bolte waqt I\'m, I\'ve',
+        right: ['I am → I\'m', 'I have → I\'ve', 'You are → You\'re'],
+        why: 'Bolchaal mein **short form** natural aur tez lagta hai. Har jagah “I am … I am …” bolne se **ratta** jaisa lagta hai. Formal likhai mein “I am” theek hai.'
       }
     ]
   },
 
   models: [
-    { situation: 'Pehli mulaqaat', en: 'Hi, I am Priya. Nice to meet you.', why: 'Pehle naam, phir **“Nice to meet you”**. Pehli mulaqaat ka poora set.' },
-    { situation: 'Phone pe', en: 'Hello, this is Priya. Who is speaking?', why: 'Phone pe apne aap ko **“this is”** se batate hain, “I am” se nahi.' },
-    { situation: 'Class mein', en: 'Good morning, ma\'am. May I come in?', why: 'Andar aane ki ijaazat ka polite tareeka: **“May I come in?”**' },
-    { situation: 'Dukaan pe', en: 'Excuse me, how much is this?', why: 'Anjaan se baat **“Excuse me”** se shuru karo, phir sawaal.' },
-    { situation: 'Jaate waqt', en: 'Bye! See you tomorrow.', why: 'Dost ko alvida. Office mein: **“Goodbye. Have a nice day.”**' }
+    { situation: 'Interview', en: 'I\'m Rohan. I\'m originally from Indore, and I graduated in mechanical engineering last year.', why: 'Naam, jagah, padhai: **3 hisse** ek saath, saaf aur chhote.' },
+    { situation: 'Office ka pehla din', en: 'Hi, I\'m Rohan. I\'ve just joined the marketing team.', why: '**“I\'ve just joined”** = abhi abhi join kiya. Naye logon se milne ka best tareeka.' },
+    { situation: 'Formal phone call', en: 'Hi, this is Priya from ABC Finance. Am I speaking to Mr Verma?', why: 'Phone pe apna parichay **“this is … from …”** se. “I am Priya speaking” nahi.' },
+    { situation: 'Naye logon se baat', en: 'So, what do you do? I work in sales at a car company. How about you?', why: 'Jawab ke baad **“How about you?”** se baat aage badhti hai.' },
+    { situation: 'Kisi ka parichay', en: 'Rahul, this is Neha. She\'s our new designer.', why: 'Kisi ko milwane ke liye **“this is”** + ek line ki pehchaan.' }
   ],
 
   quiz: {
     passPercent: 70,
     questions: [
-      { prompt: 'Sahi shabd chuno', q: 'My ___ is Priya.', options: ['name', 'good name'], answer: 'name', why: 'English mein naam “good” nahi hota. Bas **“My name is”**.' },
-      { prompt: 'Sahi shabd chuno', q: 'I am ___ Lucknow.', options: ['from', 'belong', 'in from'], answer: 'from', why: '“from” = “se”. **I am from** + jagah.' },
-      { prompt: 'Sahi shabd chuno', q: 'I am ___ student.', options: ['a', 'an'], answer: 'a', why: '“student” **s ki awaaz** se shuru hota hai, a/e/i/o/u se nahi. Isliye “a”.' },
-      { prompt: 'Shaam 7 baje kisi se milo to?', q: '', options: ['Good night!', 'Good evening!'], answer: 'Good evening!', why: '“Good night” sirf **jaate ya sote** waqt. Shaam ko milne pe “Good evening”.' },
-      { prompt: 'Koi “Thank you” bole to jawab?', q: '', options: ['Thanks you.', 'You\'re welcome.'], answer: 'You\'re welcome.', why: '“Thank you” ka jawab **“You\'re welcome”**. “Thanks you” galat hai.' },
-      { prompt: 'Kaunsa sentence sahi hai?', q: '', options: ['How you are?', 'How are you?'], answer: 'How are you?', why: 'Sawaal mein **“are” pehle**, jaise Hindi mein “kya” shuru mein.' },
-      { prompt: 'Phone uthate hi kya bologe?', q: '', options: ['Yes, tell.', 'Hello, who is speaking?'], answer: 'Hello, who is speaking?', why: '“Yes, tell” Hindi “haan, bolo” ka translation hai aur **rude** lagta hai.' },
-      { prompt: 'Galti se kisi ka pair dab gaya. Kya bologe?', q: '', options: ['Excuse me!', 'Sorry!'], answer: 'Sorry!', why: 'Galti ke **baad “sorry”**. “Excuse me” galti se pehle dhyan kheenchne ke liye.' },
-      { prompt: 'Kisi se pehli baar mile ho', q: '', options: ['Nice to meet you.', 'Nice to see you again.'], answer: 'Nice to meet you.', why: '**Pehli baar = meet**. Dobara milne pe “see you again”.' },
-      { prompt: 'Sahi shabd chuno', q: 'Sorry ___ disturb you.', options: ['for', 'to'], answer: 'to', why: 'Kisi **kaam** (disturb) ke liye maafi: **sorry to + verb**.' }
+      { prompt: 'Interview mein kaunsa sahi hai?', q: '', options: ['Myself Priya Sharma.', 'I\'m Priya Sharma.'], answer: 'I\'m Priya Sharma.', why: '“Myself” **subject nahi** ban sakta. Naam ke liye **I\'m**.' },
+      { prompt: 'Sahi shabd chuno', q: 'I ___ two years of experience.', options: ['am having', 'have', 'having'], answer: 'have', why: 'Experience paas hona = haalat, isliye **have**, -ing nahi.' },
+      { prompt: 'Kaunsa sentence sahi hai?', q: '', options: ['I am interested to marketing.', 'I\'m interested in marketing.'], answer: 'I\'m interested in marketing.', why: '**interested in** + cheez.' },
+      { prompt: 'Sahi shabd chuno', q: 'I\'m looking forward to ___ with you.', options: ['work', 'working'], answer: 'working', why: '“looking forward to” ke baad **-ing**.' },
+      { prompt: 'Kaunsa zyada natural hai?', q: '', options: ['I have done my graduation from Delhi University in 2022.', 'I graduated from Delhi University in 2022.'], answer: 'I graduated from Delhi University in 2022.', why: 'Saal bataya hai, to **simple past**. Aur verb **graduated** seedha.' },
+      { prompt: '“What do you do?” ka sahi jawab', q: '', options: ['I am doing job.', 'I work as an accountant.'], answer: 'I work as an accountant.', why: '**work as + post**. “Doing job” nahi bolte.' },
+      { prompt: '“How are you?” ka sabse natural jawab', q: '', options: ['I am fine.', 'I\'m good, thanks. How about you?'], answer: 'I\'m good, thanks. How about you?', why: 'Jawab ke saath **sawaal wapas**. Baat-cheet aage badhti hai.' },
+      { prompt: 'Sahi shabd chuno', q: 'I\'m currently based ___ Pune.', options: ['at', 'in', 'on'], answer: 'in', why: 'Shehar ke saath **in**.' },
+      { prompt: 'Kaunsa sentence sahi hai?', q: '', options: ['My hobby is listening music.', 'I like listening to music.'], answer: 'I like listening to music.', why: '“listen **to** music”. Aur “I like …” zyada natural.' },
+      { prompt: 'Formal phone call pe apna parichay', q: '', options: ['I am Priya speaking.', 'Hi, this is Priya from ABC Finance.'], answer: 'Hi, this is Priya from ABC Finance.', why: 'Phone pe **“this is … from …”**.' }
     ]
   },
 
   speak: [
-    'Good morning! My name is Priya.',
-    'I am from Lucknow.',
-    'Nice to meet you.'
+    'I\'m originally from Patna, but I\'m currently based in Pune.',
+    'I have two years of experience in sales.',
+    'I\'m looking forward to working with you.'
   ],
 
   write: {
-    intro: 'Apna parichay 3 sentence mein likho.',
+    intro: 'Interview ke liye apna parichay 3 sentence mein likho. Asli jaankari likho.',
     items: [
-      { label: 'My name is …', placeholder: 'Jaise: My name is Priya.', pattern: '\\bmy name is [a-z]+', ok: 'Naam batane ka **sahi tareeka**.', fix: 'Naam ke liye likho: **My name is** + aapka naam. “My good name” nahi.' },
-      { label: 'I am from …', placeholder: 'Jaise: I am from Lucknow.', pattern: '\\bi am from [a-z]+', ok: '**“from” = “se”**, bilkul sahi.', fix: 'Jagah ke liye likho: **I am from** + shehar. “I am belong” nahi.' },
-      { label: 'I am a / an …', placeholder: 'Jaise: I am a student.', pattern: '\\bi am (a|an) [a-z]+', ok: 'Pehchaan se pehle **“a / an”**, sahi!', fix: 'Pehchaan se pehle **“a”** ya **“an”** lagao: I am **a** student, I am **an** engineer.' }
+      { label: 'Naam aur jagah', placeholder: 'Jaise: I\'m Priya, and I\'m originally from Lucknow.', pattern: '^(?!.*\\bmyself\\b).*\\bi(\'m| am)\\b.*\\bfrom [a-z]+', ok: '**I\'m** se shuru, aur jagah **from** se. Bilkul sahi!', fix: '“Myself” mat likho. Likho: **I\'m** + naam, **I\'m originally from** + shehar.' },
+      { label: 'Experience ya padhai', placeholder: 'Jaise: I have two years of experience in sales.', pattern: '^(?!.*\\bam having\\b)(?!.*\\bdone my graduation\\b).*(\\bi (have|\'ve) [a-z0-9 ]*experience\\b|\\bi\'ve [a-z0-9 ]*experience\\b|\\bi(\'m| am) (pursuing|a fresher|a student|in class)\\b|\\bi graduated\\b)', ok: 'Experience ke liye **have**, padhai ke liye **graduated / pursuing**. Sahi!', fix: 'Likho: **I have** … years of experience, ya **I graduated from** …, ya **I\'m pursuing** … “am having” mat likho.' },
+      { label: 'Interest ya aage ka plan', placeholder: 'Jaise: I\'m interested in finance.', pattern: '\\binterested in [a-z]+|\\blooking forward to [a-z]+ing\\b|\\bpassionate about [a-z]+', ok: 'Sahi jodi: **interested in / looking forward to …ing**. Shabash!', fix: 'Likho: I\'m **interested in** + cheez, ya I\'m **looking forward to** + verb**ing**.' }
     ]
   }
 };
