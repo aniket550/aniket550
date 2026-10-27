@@ -173,6 +173,7 @@
     out.habits = habits;
     out.log = log;
     if (data.settings && ["system", "light", "dark"].indexOf(data.settings.theme) !== -1) out.settings.theme = data.settings.theme;
+    if (data.settings && data.settings.swipeTip === true) out.settings.swipeTip = true;
     return out;
   }
 

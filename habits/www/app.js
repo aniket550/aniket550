@@ -172,11 +172,20 @@
   let data = C.emptyState();
   let loaded = false;
   const ui = {
+    tipRow: false, confetti: false,
     tab: "today", day: todayKey(), view: "list", detail: null, mode: "month", calMonth: null, period: "week",
     sheet: null, confirm: null, celebrate: null, toast: null, menu: null, undo: null, editMode: false, enter: true
   };
 
   function commit() { Store.save(data); render(); }
+
+  // Last drawn value per key: lets rings, bars and numbers move from old to new.
+  const mem = {};
+  function prev(key, value) {
+    const old = key in mem ? mem[key] : value;
+    mem[key] = value;
+    return old;
+  }
 
   // ---------- day maths for the UI ----------
   // A weekly habit counts as satisfied once its weekly goal is met.
@@ -292,7 +301,7 @@
     return scheduleText(h);
   }
 
-  function habitRow(it) {
+  function habitRow(it, n) {
     const h = it.habit;
     const future = ui.day > todayKey();
     const counter = h.target > 1;
@@ -300,10 +309,11 @@
     if (it.done) cls.push("done");
     else if (it.satisfied) cls.push("met");
     if (ui.flash === h.id) cls.push("pop");
+    if (n === 0 && ui.tipRow) cls.push("demo");
     const label = counter ? "Add one to " + h.name : (it.done ? "Mark " + h.name + " not done" : "Mark " + h.name + " done");
     const check = '<button class="check' + (counter && !it.done ? " counter" : "") + '" data-action="toggle" data-id="' + h.id + '" aria-label="' + esc(label) + '"' + (future ? " disabled" : "") + ">" +
       (counter && !it.done ? miniRing(it.frac, 32, "var(--c)", 3) + '<b class="num">' + it.count + "</b>" : ICON.check(15)) + "</button>";
-    return '<div class="' + cls.join(" ") + '" style="--c:' + colorOf(h) + '" data-id="' + h.id + '">' +
+    return '<div class="' + cls.join(" ") + '" style="--c:' + colorOf(h) + ";--i:" + (n || 0) + '" data-id="' + h.id + '">' +
       '<div class="swipe-hint left">' + ICON.check(18) + '</div><div class="swipe-hint right">' + ICON.minus(18) + "</div>" +
       '<div class="row-body"><span class="row-icon" aria-hidden="true">' + habitIcon(h, 21) + "</span>" +
       '<button class="row-main" data-action="open" data-id="' + h.id + '"><span class="row-title">' + esc(h.name) + '</span><span class="row-sub">' + rowSub(it) + "</span></button>" +
@@ -313,14 +323,27 @@
   function listView(st) {
     if (!data.habits.length) return emptyState();
     if (!st.total) return '<div class="empty-note">Nothing planned for this day.</div>';
-    return TIMES.map((t) => {
+    // First visit: explain the gestures and act them out on the first row.
+    ui.tipRow = !data.settings.swipeTip && ui.day === todayKey() && !trayMode;
+    let n = 0;
+    const groups = TIMES.map((t) => {
       const items = st.items.filter((i) => i.habit.time === t.id);
       if (!items.length) return "";
       const done = items.filter((i) => i.satisfied).length;
       return '<section class="time-group"><header class="group-head"><span class="gh-title">' + ICON[t.icon](14) + t.label + "</span>" +
         '<span class="gh-count num' + (done === items.length ? " all" : "") + '">' + done + "/" + items.length + "</span></header>" +
-        '<div class="rows">' + items.map(habitRow).join("") + "</div></section>";
+        '<div class="rows">' + items.map((it) => habitRow(it, n++)).join("") + "</div></section>";
     }).join("");
+    return (ui.tipRow ? swipeTip() : "") + '<div class="habit-list' + (ui.enter ? " stagger" : "") + '">' + groups + "</div>";
+  }
+
+  function swipeTip() {
+    return '<section class="swipe-tip" role="note" aria-label="How to use habits">' +
+      '<div class="tip-head"><span class="tip-badge">New here?</span><button class="tip-ok" data-action="tip-done">Got it</button></div>' +
+      '<div class="tip-row"><span class="tip-ico ok">' + ICON.check(16) + '</span><p><b>Swipe right</b> on a habit to mark it done</p><span class="tip-arrow">' + ICON.right(16) + "</span></div>" +
+      '<div class="tip-row"><span class="tip-ico undo">' + ICON.minus(16) + '</span><p><b>Swipe left</b> to undo, or take one away</p><span class="tip-arrow">' + ICON.left(16) + "</span></div>" +
+      '<div class="tip-row"><span class="tip-ico hold"><i></i></span><p><b>Press and hold</b> to edit or delete it</p></div>' +
+      '<p class="tip-foot">Or just tap the circle. Watch the first habit below.</p></section>';
   }
 
   function gridView() {
@@ -361,7 +384,8 @@
     items.forEach((it, i) => {
       const off = -(i * (seg + gap)) - gap / 2;
       arcs += '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" stroke-width="' + stroke + '" stroke-dasharray="' + seg + " " + circ + '" stroke-dashoffset="' + off + '" class="sr-track"/>';
-      if (it.frac > 0) arcs += '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" stroke-width="' + stroke + '" stroke-dasharray="' + seg * it.frac + " " + circ + '" stroke-dashoffset="' + off + '" class="sr-fill"/>';
+      const len = seg * it.frac, from = prev("ring:" + ui.day + ":" + it.habit.id, len);
+      arcs += '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" stroke-width="' + stroke + '" stroke-dasharray="' + from + " " + circ + '" data-len="' + len + '" data-circ="' + circ + '" stroke-dashoffset="' + off + '" class="sr-fill"/>';
     });
     if (!items.length) arcs = '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" stroke-width="' + stroke + '" class="sr-track"/>';
     return '<svg class="seg-ring" width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + " " + size + '" aria-hidden="true"><g transform="rotate(-90 ' + c + " " + c + ')">' + arcs + "</g></svg>";
@@ -380,8 +404,8 @@
   // The day's score as one pill per habit, filling in the habit's own colour.
   function scoreBar(st) {
     return '<div class="score-bar" role="img" aria-label="' + st.done + " of " + st.total + ' habits done">' + st.items.map((it) =>
-      '<i style="--c:' + colorOf(it.habit) + ";--f:" + Math.round(it.frac * 100) + '%"' + (it.satisfied ? ' class="on"' : "") + "></i>").join("") +
-      '<span class="num">' + pct(st.done, st.total) + "%</span></div>";
+      '<i style="--c:' + colorOf(it.habit) + '"' + (it.satisfied ? ' class="on"' : "") + '><b style="width:' + prev("pill:" + ui.day + ":" + it.habit.id, Math.round(it.frac * 100)) + '%" data-w="' + Math.round(it.frac * 100) + '%"></b></i>').join("") +
+      '<span class="num" data-count="' + pct(st.done, st.total) + '" data-from="' + prev("pct:" + ui.day, pct(st.done, st.total)) + '" data-suffix="%">' + pct(st.done, st.total) + "%</span></div>";
   }
 
   function phoneToday(st, isToday) {
@@ -391,7 +415,7 @@
     let html = '<header class="brand-row"><span class="brand-tile">' + brandMark(22) + '</span><b class="brand-name">' + APP_NAME + "</b>" +
       '<button class="glass-btn" data-action="tab" data-v="settings" aria-label="Settings">' + ICON.settings(19) + "</button>" +
       '<button class="glass-btn add" data-action="add" aria-label="New habit">' + ICON.plus(21) + "</button></header>";
-    const num = (n, cls) => '<span class="hl-num ' + cls + ' num">' + n + "</span>";
+    const num = (n, cls) => '<span class="hl-num ' + cls + (prev("hl:" + cls + ui.day, n) !== n ? " bump" : "") + ' num">' + n + "</span>";
     html += '<section class="hero"><p class="kicker">' + fmt(ui.day, { weekday: "long", day: "numeric", month: "long" }) + "</p>" +
       '<h1 class="headline">' + (hl.na != null ? num(hl.na, "done") : "") + esc(hl.a) + "<br>" + (hl.nb != null ? num(hl.nb, "left") : "") + esc(hl.b) + "</h1>" +
       (isToday && st.total ? scoreBar(st) : "") + (hl.sub ? '<p class="lede">' + esc(hl.sub) + "</p>" : "") +
@@ -401,7 +425,7 @@
       html += '<section class="momentum' + (perfect ? " perfect" : "") + '"><div class="m-text"><p class="kicker">' + (isToday ? "Today's progress" : "That day") + "</p>" +
         '<p class="m-big num">' + st.done + "<span> of " + st.total + "</span></p>" +
         '<p class="m-sub">' + (best ? '<span class="flame">' + ICON.flame(13) + "</span>" + esc(best.h.name) + " · " + plural(best.s.current, best.s.unit) : "Small steps add up.") + "</p></div>" +
-        '<div class="m-ring">' + segRing(st.items, 104, 9) + '<span class="m-pct num">' + pct(st.done, st.total) + "<small>%</small></span></div></section>";
+        '<div class="m-ring">' + segRing(st.items, 104, 9) + '<span class="m-pct num"><span data-count="' + pct(st.done, st.total) + '" data-from="' + prev("mpct:" + ui.day, pct(st.done, st.total)) + '">' + pct(st.done, st.total) + "</span><small>%</small></span></div></section>";
     }
     html += '<div class="sec-head"><p class="kicker">This week</p><p class="sec-meta">' + fmt(ui.day, { month: "short", year: "numeric" }) + "</p></div>" + weekStrip();
     if (data.habits.length) {
@@ -655,6 +679,7 @@
       '<section class="settings-group"><p class="caption">Your data</p><div class="list card">' +
       '<button class="list-row" data-action="export"><span class="tile" style="--c:#3F82CC">' + ICON.upload(18) + '</span><span class="lr-text"><span class="lr-title">Export backup</span><span class="lr-sub">Save all habits and history as a file</span></span></button>' +
       '<button class="list-row" data-action="import"><span class="tile" style="--c:#4F8C63">' + ICON.download(18) + '</span><span class="lr-text"><span class="lr-title">Import backup</span><span class="lr-sub">Replace everything with a backup file</span></span></button>' +
+      '<button class="list-row" data-action="tips-again"><span class="tile" style="--c:#BC8A35">' + ICON.right(18) + '</span><span class="lr-text"><span class="lr-title">Show gesture tips</span><span class="lr-sub">How swiping and holding a habit works</span></span></button>' +
       '<button class="list-row" data-action="sample"><span class="tile" style="--c:#7766C6">' + ICON.sparkle(18) + '</span><span class="lr-text"><span class="lr-title">Load example habits</span><span class="lr-sub">Replace everything with sample data</span></span></button>' +
       '<button class="list-row danger" data-action="reset"><span class="tile" style="--c:#C2413B">' + ICON.trash(18) + '</span><span class="lr-text"><span class="lr-title">Erase everything</span><span class="lr-sub">Delete all habits and history</span></span></button>' +
       '</div><p class="footnote">Your habits are stored only on ' + where + ". Export a backup to move them to another device.</p></section>" +
@@ -932,8 +957,49 @@
     }
     ui.enter = false;
     ui.flash = null;
+    playMotion();
     if (ui.celebrate && !ui.celebrate.shown) { ui.celebrate.shown = true; countUp(app.querySelector(".cb-num")); }
     applyTheme();
+  }
+
+  function playMotion() {
+    const fills = app.querySelectorAll(".sr-fill[data-len], .score-bar b[data-w], [data-count][data-from]");
+    if (!fills.length && !ui.confetti) return;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      fills.forEach((el) => {
+        if (el.dataset.len != null) el.setAttribute("stroke-dasharray", el.dataset.len + " " + el.dataset.circ);
+        else if (el.dataset.w != null) el.style.width = el.dataset.w;
+        else if (el.dataset.from !== el.dataset.count) tween(el, +el.dataset.from, +el.dataset.count, el.dataset.suffix || "");
+      });
+    }));
+    if (ui.confetti) { ui.confetti = false; burst(); }
+  }
+  function tween(el, from, to, suffix) {
+    const t0 = performance.now(), dur = 600;
+    (function step(t) {
+      const p = Math.min(1, (t - t0) / dur);
+      el.textContent = Math.round(from + (to - from) * (1 - Math.pow(1 - p, 3))) + suffix;
+      if (p < 1) requestAnimationFrame(step);
+    })(t0);
+  }
+  // Perfect day: a small burst of marigold and habit colours from the progress ring.
+  function burst() {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const anchor = app.querySelector(".m-ring, .arc-center, .score-bar");
+    if (!anchor) return;
+    const r = anchor.getBoundingClientRect();
+    const box = document.createElement("div");
+    box.className = "confetti";
+    box.style.left = r.left + r.width / 2 + "px";
+    box.style.top = r.top + r.height / 2 + "px";
+    const colors = ["var(--marigold)"].concat(COLORS.map((c) => c.hex));
+    for (let i = 0; i < 18; i++) {
+      const p = document.createElement("i");
+      p.style.cssText = "--a:" + (i * 20 + Math.random() * 12) + "deg;--d:" + (70 + Math.random() * 60) + "px;--c:" + colors[i % colors.length] + ";--t:" + (0.7 + Math.random() * 0.4) + "s";
+      box.appendChild(p);
+    }
+    document.body.appendChild(box);
+    setTimeout(() => box.remove(), 1300);
   }
 
   function countUp(el) {
@@ -989,7 +1055,7 @@
         setTimeout(() => haptic("success"), 120);
       } else {
         const st = dayStats(key);
-        if (st.total && st.done === st.total) { setTimeout(() => haptic("success"), 120); Store.save(data); toast(ICON.check(16) + " Perfect day"); return; }
+        if (st.total && st.done === st.total) { setTimeout(() => haptic("success"), 120); ui.confetti = true; Store.save(data); toast(ICON.check(16) + " Perfect day"); return; }
       }
     } else haptic("light");
     commit();
@@ -1165,6 +1231,8 @@
       }
       case "delete": deleteHabit(id); break;
       case "undo": undoDelete(); break;
+      case "tip-done": data.settings.swipeTip = true; commit(); break;
+      case "tips-again": delete data.settings.swipeTip; commit(); toast("Gesture tips are back on Today"); break;
       case "menu-close": ui.menu = null; render(); break;
       case "menu-edit": { const m = habitById(ui.menu.id); ui.menu = null; if (m) { ui.sheet = { draft: draftFrom(m), fresh: true }; } render(); break; }
       case "menu-open": openDetail(ui.menu.id); break;
@@ -1257,6 +1325,7 @@
     g.row.querySelector(".row-body").style.transform = "";
     const h = habitById(g.row.dataset.id);
     if (!h) return;
+    if (Math.abs(g.dx) > 70 && !data.settings.swipeTip) data.settings.swipeTip = true;
     if (g.dx > 70) bump(h, ui.day, h.target > 1 ? 1 : 1 - C.countOn(data, h.id, ui.day));
     else if (g.dx < -70) bump(h, ui.day, -1);
   }

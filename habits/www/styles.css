@@ -288,16 +288,14 @@ html.scrolled .brand-row {
 .kicker { font-size: 12px; font-weight: 650; letter-spacing: 0.12em; text-transform: uppercase; color: var(--secondary); }
 .hero { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 14px 0 2px; }
 .headline { font-family: var(--font-display); font-size: 40px; font-weight: 780; letter-spacing: -0.045em; line-height: 1.04; margin-top: 2px; }
-.hl-num { display: inline-block; min-width: 0.6em; margin-right: 0.08em; font-weight: 750; letter-spacing: -0.04em; animation: num-in 0.5s var(--spring); }
+.hl-num { display: inline-block; min-width: 0.6em; margin-right: 0.08em; font-weight: 750; letter-spacing: -0.04em; }
+.hl-num.bump { animation: num-in 0.55s var(--spring); }
 .hl-num.done { color: var(--marigold-text); }
 .hl-num.left { color: var(--tertiary); }
-@keyframes num-in { from { opacity: 0; transform: translateY(8px) scale(0.92); } }
+@keyframes num-in { 0% { opacity: 0.2; transform: translateY(10px) scale(0.8); } 60% { transform: translateY(-3px) scale(1.08); } 100% { opacity: 1; transform: none; } }
 .score-bar { display: flex; align-items: center; gap: 5px; width: 100%; margin: 6px 0 2px; }
-.score-bar i {
-  flex: 1; height: 8px; border-radius: 4px;
-  background: linear-gradient(90deg, var(--c) var(--f), color-mix(in srgb, var(--c) 18%, transparent) var(--f));
-  transition: background 0.4s var(--ease);
-}
+.score-bar i { flex: 1; height: 8px; border-radius: 4px; overflow: hidden; background: color-mix(in srgb, var(--c) 18%, transparent); transition: box-shadow 0.4s; }
+.score-bar i b { display: block; height: 100%; border-radius: 4px; background: var(--c); transition: width 0.6s var(--ease); }
 .score-bar i.on { box-shadow: 0 0 10px color-mix(in srgb, var(--c) 35%, transparent); }
 .score-bar span { flex-shrink: 0; margin-left: 6px; font-size: 14px; font-weight: 700; color: var(--secondary); }
 .lede { font-size: 16px; color: var(--secondary); }
@@ -840,4 +838,81 @@ html.tray-mode, html.tray-mode body { background: transparent; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
+/* ---------- motion ---------- */
+.habit-list { display: flex; flex-direction: column; gap: 18px; }
+/* Rows rise in one after another when a screen opens. */
+.habit-list.stagger .habit-row { animation: row-in 0.5s var(--ease) backwards; animation-delay: calc(var(--i) * 45ms + 60ms); }
+@keyframes row-in { from { opacity: 0; transform: translateY(14px) scale(0.98); } }
+.momentum, .score-bar { animation: fade-up 0.5s var(--ease) backwards; }
+.momentum { animation-delay: 0.08s; }
+@keyframes fade-up { from { opacity: 0; transform: translateY(8px); } }
+
+/* Checking a habit sends a ring out from the check. */
+.check::after {
+  content: ""; position: absolute; inset: 9px; border-radius: 50%; border: 2px solid var(--c); opacity: 0; pointer-events: none;
+}
+.habit-row.pop.done .check::after { animation: ripple 0.6s var(--ease); }
+@keyframes ripple { 0% { opacity: 0.7; transform: scale(1); } 100% { opacity: 0; transform: scale(2.1); } }
+.habit-row.pop.done .row-body { animation: row-glow 0.7s var(--ease); }
+@keyframes row-glow { 0% { box-shadow: inset 0 0 0 1px var(--line), 0 0 0 0 color-mix(in srgb, var(--c) 40%, transparent); } 100% { box-shadow: inset 0 0 0 1px var(--line), 0 0 0 10px transparent; } }
+
+/* Perfect day burst, placed over the progress ring by script. */
+.confetti { position: fixed; z-index: 75; width: 0; height: 0; pointer-events: none; }
+.confetti i {
+  position: absolute; width: 8px; height: 8px; margin: -4px; border-radius: 2px; background: var(--c);
+  animation: fly var(--t) cubic-bezier(0.15, 0.7, 0.3, 1) forwards;
+}
+.confetti i:nth-child(3n) { border-radius: 50%; }
+@keyframes fly {
+  0% { transform: rotate(var(--a)) translateY(0) scale(0.4); opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: rotate(var(--a)) translateY(calc(-1 * var(--d))) rotate(200deg) scale(1); opacity: 0; }
+}
+
+/* ---------- first-run gesture tip ---------- */
+.swipe-tip {
+  display: flex; flex-direction: column; gap: 10px; padding: 16px 16px 14px; border-radius: 22px;
+  background: color-mix(in srgb, var(--tab-blue) 8%, var(--card)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tab-blue) 22%, transparent);
+  animation: fade-up 0.5s var(--ease) backwards;
+}
+.tip-head { display: flex; align-items: center; justify-content: space-between; }
+.tip-badge { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--tab-blue-ink); }
+.tip-ok { height: 32px; padding: 0 14px; border-radius: 16px; background: var(--tab-blue); color: #FFFFFF; font-size: 14px; font-weight: 650; }
+.tip-row { display: flex; align-items: center; gap: 12px; }
+.tip-row p { flex: 1; font-size: 15px; color: var(--label-2); }
+.tip-row b { color: var(--label); font-weight: 650; }
+.tip-ico { width: 32px; height: 32px; flex-shrink: 0; border-radius: 10px; display: grid; place-items: center; color: #FFFFFF; }
+.tip-ico.ok { background: #5C8D69; }
+.tip-ico.undo { background: var(--secondary); }
+.tip-ico.hold { background: var(--card); box-shadow: inset 0 0 0 1px var(--line); }
+.tip-ico.hold i { width: 12px; height: 12px; border-radius: 50%; background: var(--tab-blue); animation: hold-pulse 1.6s ease-in-out infinite; }
+@keyframes hold-pulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--tab-blue) 45%, transparent); } 50% { box-shadow: 0 0 0 7px transparent; } }
+.tip-arrow { color: var(--tertiary); }
+.tip-row:nth-of-type(2) .tip-arrow { animation: nudge-r 1.4s ease-in-out infinite; }
+.tip-row:nth-of-type(3) .tip-arrow { animation: nudge-l 1.4s ease-in-out infinite; }
+@keyframes nudge-r { 50% { transform: translateX(4px); } }
+@keyframes nudge-l { 50% { transform: translateX(-4px); } }
+.tip-foot { font-size: 13px; color: var(--secondary); }
+
+/* The first row acts the gestures out: right (done), back, left (undo), back. A finger shows the drag. */
+.habit-row.demo .row-body { animation: demo-swipe 5.2s ease-in-out 0.9s infinite; }
+.habit-row.demo .swipe-hint.left { animation: demo-hint-l 5.2s ease-in-out 0.9s infinite; }
+.habit-row.demo .swipe-hint.right { animation: demo-hint-r 5.2s ease-in-out 0.9s infinite; }
+.habit-row.demo::after {
+  content: ""; position: absolute; z-index: 3; top: 50%; left: 45%; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%;
+  background: color-mix(in srgb, var(--label) 22%, transparent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--card) 80%, transparent);
+  opacity: 0; pointer-events: none; animation: demo-finger 5.2s ease-in-out 0.9s infinite;
+}
+@keyframes demo-swipe {
+  0%, 6% { transform: none; } 20%, 30% { transform: translateX(84px); } 40%, 52% { transform: none; }
+  66%, 76% { transform: translateX(-84px); } 88%, 100% { transform: none; }
+}
+@keyframes demo-hint-l { 0%, 8% { opacity: 0; } 18%, 32% { opacity: 1; } 40%, 100% { opacity: 0; } }
+@keyframes demo-hint-r { 0%, 56% { opacity: 0; } 64%, 78% { opacity: 1; } 86%, 100% { opacity: 0; } }
+@keyframes demo-finger {
+  0% { opacity: 0; transform: none; } 6% { opacity: 1; transform: scale(0.85); } 20% { opacity: 1; transform: translateX(84px) scale(0.85); }
+  30% { opacity: 0; transform: translateX(84px); } 52% { opacity: 0; transform: none; } 56% { opacity: 1; transform: scale(0.85); }
+  66% { opacity: 1; transform: translateX(-84px) scale(0.85); } 76%, 100% { opacity: 0; transform: translateX(-84px); }
 }

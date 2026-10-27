@@ -94,9 +94,10 @@ test("validate rejects junk and keeps good parts of a backup", () => {
   const out = C.validate({
     habits: [daily, { id: "bad", name: "x", target: 0, created: "2026-10-01", schedule: { type: "daily" } }],
     log: { "2026-10-26": { d: 2, z: -1 }, "nope": { d: 1 } },
-    settings: { theme: "dark" }
+    settings: { theme: "dark", swipeTip: true, junk: 1 }
   });
   assert.deepEqual(out.habits.map((h) => h.id), ["d"]);
   assert.deepEqual(out.log, { "2026-10-26": { d: 2 } });
   assert.equal(out.settings.theme, "dark");
+  assert.deepEqual(out.settings, { theme: "dark", swipeTip: true });
 });
