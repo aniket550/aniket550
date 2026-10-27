@@ -882,9 +882,11 @@
   }
 
   function tabbar() {
-    const i = TABS.findIndex((t) => t[0] === ui.tab);
-    return '<nav class="tabbar" aria-label="Sections"><span class="tab-glow" style="transform:translateX(' + Math.max(0, i) * 100 + '%)"></span>' + TABS.map((t) =>
-      '<button class="tab' + (ui.tab === t[0] ? " on" : "") + '" data-action="tab" data-v="' + t[0] + '"' + (ui.tab === t[0] ? ' aria-current="page"' : "") + ">" +
+    // The lens is drawn where it was and slides to the new tab once on screen (see playMotion).
+    const i = Math.max(0, TABS.findIndex((t) => t[0] === ui.tab));
+    const from = prev("tabGlow", i), moved = from !== i;
+    return '<nav class="tabbar" aria-label="Sections"><span class="tab-glow' + (moved ? " moving" : "") + '" style="transform:translateX(' + from * 100 + '%)" data-tab-to="' + i * 100 + '%"><i></i></span>' + TABS.map((t) =>
+      '<button class="tab' + (ui.tab === t[0] ? " on" + (moved ? " pop" : "") : "") + '" data-action="tab" data-v="' + t[0] + '"' + (ui.tab === t[0] ? ' aria-current="page"' : "") + ">" +
       '<span class="tab-ico">' + (ui.tab === t[0] ? ICON_FILL[t[0]](24) : ICON[t[0]](24)) + '</span><span class="tab-label">' + t[1] + "</span></button>").join("") + "</nav>";
   }
 
@@ -968,11 +970,12 @@
   }
 
   function playMotion() {
-    const fills = app.querySelectorAll(".sr-fill[data-len], .score-bar b[data-w], [data-count][data-from]");
+    const fills = app.querySelectorAll(".sr-fill[data-len], .score-bar b[data-w], [data-count][data-from], .tab-glow[data-tab-to]");
     if (!fills.length && !ui.confetti) return;
     requestAnimationFrame(() => requestAnimationFrame(() => {
       fills.forEach((el) => {
-        if (el.dataset.len != null) el.setAttribute("stroke-dasharray", el.dataset.len + " " + el.dataset.circ);
+        if (el.dataset.tabTo != null) el.style.transform = "translateX(" + el.dataset.tabTo + ")";
+        else if (el.dataset.len != null) el.setAttribute("stroke-dasharray", el.dataset.len + " " + el.dataset.circ);
         else if (el.dataset.w != null) el.style.width = el.dataset.w;
         else if (el.dataset.from !== el.dataset.count) tween(el, +el.dataset.from, +el.dataset.count, el.dataset.suffix || "");
       });

@@ -3,6 +3,10 @@
 Har update ke saath version badhta hai (`npm run bump`) aur yahan ek line judti hai.
 Version ka matlab: **1.2.3** → 1 = bada badlav, 2 = naya feature ya design, 3 = chhota sudhaar.
 
+## 1.1.2
+- Tab badalne pe nav bar ka kaanch wala lens ab slide hota hai, chalte waqt halka sa failta hai, aur naye tab ka icon uchhalta hai
+- Nav bar thoda aur transparent
+
 ## 1.1.1
 - Scroll karne pe nav bar ab chhota nahi hota, hamesha poora dikhta hai
 
