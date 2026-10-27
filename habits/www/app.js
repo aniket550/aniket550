@@ -607,8 +607,7 @@
     const today = todayKey();
     const st = dayStats(today);
     let html = '<header class="screen-head"><div><p class="eyebrow">' + plural(data.habits.length, "habit") + (st.total ? " · " + st.done + " done today" : "") + '</p><h1 class="large-title">Habits</h1></div>' +
-      '<div class="head-tools">' + (data.habits.length ? '<button class="text-btn' + (ui.editMode ? " strong" : "") + '" data-action="edit-mode">' + (ui.editMode ? "Done" : "Edit") + "</button>" : "") +
-      (isWide() ? "" : '<button class="icon-btn add" data-action="add" aria-label="New habit">' + ICON.plus(22) + "</button>") + "</div></header>";
+      (data.habits.length ? '<div class="head-tools"><button class="text-btn' + (ui.editMode ? " strong" : "") + '" data-action="edit-mode">' + (ui.editMode ? "Done" : "Edit") + "</button></div>" : "") + "</header>";
     if (!data.habits.length) return html + emptyState();
     if (ui.editMode) html += '<p class="edit-note">Tap ⊖ to delete a habit, or tap a card to change it.</p>';
     html += '<div class="habit-grid">' + data.habits.map(habitCard).join("") +
@@ -816,8 +815,10 @@
   }
 
   function tabbar() {
-    return '<nav class="tabbar" aria-label="Sections">' + TABS.map((t) =>
-      '<button class="tab' + (ui.tab === t[0] ? " on" : "") + '" data-action="tab" data-v="' + t[0] + '"' + (ui.tab === t[0] ? ' aria-current="page"' : "") + "><span class=\"tab-pill\">" + ICON[t[0]](22) + "</span><span>" + t[1] + "</span></button>").join("") + "</nav>";
+    const i = TABS.findIndex((t) => t[0] === ui.tab);
+    return '<div class="dock"><nav class="tabbar" aria-label="Sections">' + (i >= 0 ? '<span class="tab-glow" style="transform:translateX(' + i * 100 + '%)"></span>' : "") + TABS.map((t) =>
+      '<button class="tab' + (ui.tab === t[0] ? " on" : "") + '" data-action="tab" data-v="' + t[0] + '"' + (ui.tab === t[0] ? ' aria-current="page"' : "") + ">" + ICON[t[0]](22) + "<span>" + t[1] + "</span></button>").join("") + "</nav>" +
+      '<button class="fab" data-action="add" aria-label="New habit">' + ICON.plus(24) + "</button></div>";
   }
 
   function trayView() {
