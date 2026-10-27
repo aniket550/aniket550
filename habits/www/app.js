@@ -76,6 +76,15 @@
     open: (s) => svg('<path d="M14 4h6v6M20 4l-8.5 8.5M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/>', s)
   };
 
+  // Selected tabs use filled glyphs, like SF Symbols' .fill variants. --cut is the colour punched through them.
+  const fill = (body, s) => '<svg width="' + s + '" height="' + s + '" viewBox="0 0 24 24" aria-hidden="true">' + body + "</svg>";
+  const ICON_FILL = {
+    today: (s) => fill('<rect x="3" y="4.2" width="18" height="16.8" rx="4.4" fill="currentColor"/><path d="M8 2.6v3.4M16 2.6v3.4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M8.4 13.9l2.4 2.3 4.9-4.7" fill="none" stroke="var(--cut)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>', s),
+    progress: (s) => fill('<rect x="3.6" y="11" width="3.6" height="10" rx="1.8" fill="currentColor"/><rect x="8.6" y="5" width="3.6" height="16" rx="1.8" fill="currentColor"/><rect x="13.6" y="9" width="3.6" height="12" rx="1.8" fill="currentColor"/><rect x="18.4" y="3" width="3.6" height="18" rx="1.8" fill="currentColor"/>', s),
+    habits: (s) => fill('<rect x="3" y="3" width="8" height="8" rx="2.6" fill="currentColor"/><rect x="13" y="3" width="8" height="8" rx="2.6" fill="currentColor"/><rect x="3" y="13" width="8" height="8" rx="2.6" fill="currentColor"/><rect x="13" y="13" width="8" height="8" rx="2.6" fill="currentColor"/>', s),
+    settings: (s) => fill('<path fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/><circle cx="12" cy="12" r="3.2" fill="var(--cut)"/>', s)
+  };
+
   // ---------- small helpers ----------
   function esc(s) {
     return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -223,10 +232,21 @@
     for (let i = 0; i < target; i++) out += '<i class="' + (i < count ? "on" : "") + '"></i>';
     return out + "</span>";
   }
+  // The logo: a warm sunrise tile with the day as an arc and the sun on it.
+  // The arc is bright up to the sun and faint after it: the part of the day still ahead.
+  // scripts/icons.js draws the app icons from the same shapes.
+  let markId = 0;
   function brandMark(size) {
-    // The Day Arc as a logo: a half circle with a sun on it.
-    return '<svg class="brand-mark" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17a9 9 0 0 1 18 0" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="16.6" cy="10.2" r="2.6" fill="var(--marigold)"/></svg>';
+    const g = "rm" + markId++;
+    return '<svg class="brand-mark" width="' + size + '" height="' + size + '" viewBox="0 0 1024 1024" aria-hidden="true"><defs>' +
+      '<linearGradient id="' + g + 'b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFC45C"/><stop offset=".55" stop-color="#F59A3A"/><stop offset="1" stop-color="#E5672E"/></linearGradient>' +
+      '<radialGradient id="' + g + 'h" cx=".3" cy="0" r=".9"><stop offset="0" stop-color="#FFF" stop-opacity=".45"/><stop offset=".6" stop-color="#FFF" stop-opacity="0"/></radialGradient></defs>' +
+      '<rect width="1024" height="1024" rx="230" fill="url(#' + g + 'b)"/><rect width="1024" height="1024" rx="230" fill="url(#' + g + 'h)"/>' +
+      '<path d="M686 433A270 270 0 0 1 782 640" fill="none" stroke="#FFF" stroke-opacity=".42" stroke-width="92" stroke-linecap="round"/>' +
+      '<path d="M242 640A270 270 0 0 1 686 433" fill="none" stroke="#FFF" stroke-width="92" stroke-linecap="round"/>' +
+      '<circle cx="686" cy="433" r="122" fill="#FFF" fill-opacity=".28"/><circle cx="686" cy="433" r="80" fill="#FFF"/></svg>';
   }
+
 
   // ---------- Today: the Day Arc ----------
   // A sun path from 6 am to 10 pm. Habits sit at their part of the day, the sun shows now.
@@ -412,7 +432,7 @@
     const hl = headline(st, isToday);
     const best = data.habits.map((h) => ({ h: h, s: C.streak(data, h, todayKey()) })).filter((x) => x.s.current >= 2).sort((a, b) => b.s.current - a.s.current)[0];
     // Glass top bar: clear at the top of the page, frosted once the page scrolls under it.
-    let html = '<header class="brand-row"><span class="brand-tile">' + brandMark(22) + '</span><b class="brand-name">' + APP_NAME + "</b>" +
+    let html = '<header class="brand-row"><span class="brand-logo">' + brandMark(40) + '</span><b class="brand-name">' + APP_NAME + "</b>" +
       '<button class="glass-btn" data-action="tab" data-v="settings" aria-label="Settings">' + ICON.settings(19) + "</button>" +
       '<button class="glass-btn add" data-action="add" aria-label="New habit">' + ICON.plus(21) + "</button></header>";
     const num = (n, cls) => '<span class="hl-num ' + cls + (prev("hl:" + cls + ui.day, n) !== n ? " bump" : "") + ' num">' + n + "</span>";
@@ -872,7 +892,8 @@
   function tabbar() {
     const i = TABS.findIndex((t) => t[0] === ui.tab);
     return '<nav class="tabbar" aria-label="Sections"><span class="tab-glow" style="transform:translateX(' + Math.max(0, i) * 100 + '%)"></span>' + TABS.map((t) =>
-      '<button class="tab' + (ui.tab === t[0] ? " on" : "") + '" data-action="tab" data-v="' + t[0] + '"' + (ui.tab === t[0] ? ' aria-current="page"' : "") + ">" + ICON[t[0]](22) + "<span>" + t[1] + "</span></button>").join("") + "</nav>";
+      '<button class="tab' + (ui.tab === t[0] ? " on" : "") + '" data-action="tab" data-v="' + t[0] + '"' + (ui.tab === t[0] ? ' aria-current="page"' : "") + ">" +
+      '<span class="tab-ico">' + (ui.tab === t[0] ? ICON_FILL[t[0]](24) : ICON[t[0]](24)) + '</span><span class="tab-label">' + t[1] + "</span></button>").join("") + "</nav>";
   }
 
   function trayView() {
@@ -1364,7 +1385,16 @@
   });
 
   wideQuery.addEventListener("change", render);
-  const markScrolled = () => document.documentElement.classList.toggle("scrolled", window.scrollY > 6);
+  let lastY = 0;
+  const markScrolled = () => {
+    const y = window.scrollY, root = document.documentElement;
+    root.classList.toggle("scrolled", y > 6);
+    if (!isWide()) {
+      if (y > 140 && y - lastY > 6) root.classList.add("tab-mini");
+      else if (lastY - y > 6 || y < 80) root.classList.remove("tab-mini");
+    }
+    lastY = y;
+  };
   window.addEventListener("scroll", markScrolled, { passive: true });
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
 
