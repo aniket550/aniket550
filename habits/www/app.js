@@ -47,8 +47,8 @@
   // ---------- icons (SF Symbols-like line icons) ----------
   const svg = (body, size, extra) => '<svg width="' + (size || 22) + '" height="' + (size || 22) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"' + (extra || "") + ">" + body + "</svg>";
   const ICON = {
-    today: (s) => svg('<path d="M3 17.5a9 9 0 0 1 18 0"/><path d="M1.5 17.5h21"/><circle cx="16.4" cy="10.6" r="2.1" fill="currentColor" stroke="none"/>', s),
-    progress: (s) => svg('<path d="M3.5 18.5c3-1 4.2-6.5 7.2-6.5s3.2 3.5 5.6 3.5 2.7-7 4.2-9"/><path d="M3.5 21.5h17"/>', s),
+    today: (s) => svg('<rect x="3.5" y="4.5" width="17" height="16" rx="4"/><path d="M3.5 9.5h17M8 2.8v3.4M16 2.8v3.4"/><path d="M8.6 14.6l2.2 2.1 4.6-4.4"/>', s),
+    progress: (s) => svg('<path d="M5 20V12M10 20V6M15 20v-9M20 20V4"/>', s, ' stroke-width="2.4"'),
     habits: (s) => svg('<rect x="3.5" y="3.5" width="7" height="7" rx="2.4"/><rect x="13.5" y="3.5" width="7" height="7" rx="2.4"/><rect x="3.5" y="13.5" width="7" height="7" rx="2.4"/><rect x="13.5" y="13.5" width="7" height="7" rx="2.4"/>', s),
     settings: (s) => svg('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>', s),
     plus: (s) => svg('<path d="M12 5v14M5 12h14"/>', s, ' stroke-width="2.3"'),
@@ -620,7 +620,7 @@
     const theme = data.settings.theme;
     const seg = (v, label) => '<button class="seg-btn' + (theme === v ? " on" : "") + '" data-action="theme" data-v="' + v + '" aria-pressed="' + (theme === v) + '">' + label + "</button>";
     const where = desktop ? "this Mac" : native ? "this phone" : "this browser";
-    return '<header class="screen-head">' + (isWide() ? "" : '<button class="nav-btn back" data-action="tab" data-v="today">' + ICON.left(20) + "Today</button>") + '<div><h1 class="large-title">Settings</h1></div></header>' +
+    return '<header class="screen-head"><div><h1 class="large-title">Settings</h1></div></header>' +
       '<section class="settings-group"><p class="caption">Appearance</p><div class="segmented" role="group" aria-label="Theme">' + seg("system", "System") + seg("light", "Light") + seg("dark", "Dark") + "</div></section>" +
       '<section class="settings-group"><p class="caption">Your data</p><div class="list card">' +
       '<button class="list-row" data-action="export"><span class="tile" style="--c:#3F82CC">' + ICON.upload(18) + '</span><span class="lr-text"><span class="lr-title">Export backup</span><span class="lr-sub">Save all habits and history as a file</span></span></button>' +
@@ -797,12 +797,12 @@
   }
 
   // ---------- shell ----------
-  const TABS = [["today", "Today"], ["progress", "Progress"], ["habits", "Habits"]];
+  const TABS = [["today", "Today"], ["progress", "Progress"], ["habits", "Habits"], ["settings", "Settings"]];
 
   function sidebar() {
     const today = todayKey();
     return '<nav class="sidebar" aria-label="Sections"><div class="side-brand">' + brandMark(24) + "<b>" + APP_NAME + "</b></div>" +
-      TABS.concat([["settings", "Settings"]]).map((t) => '<button class="side-item' + (ui.tab === t[0] ? " on" : "") + '" data-action="tab" data-v="' + t[0] + '">' + ICON[t[0]](18) + "<span>" + t[1] + "</span></button>").join("") +
+      TABS.map((t) => '<button class="side-item' + (ui.tab === t[0] ? " on" : "") + '" data-action="tab" data-v="' + t[0] + '">' + ICON[t[0]](18) + "<span>" + t[1] + "</span></button>").join("") +
       '<p class="side-caption">Today</p><div class="side-habits">' + data.habits.map((h) => {
         const st = C.streak(data, h, today);
         const due = C.isScheduled(h, today);
@@ -816,9 +816,8 @@
 
   function tabbar() {
     const i = TABS.findIndex((t) => t[0] === ui.tab);
-    return '<div class="dock"><nav class="tabbar" aria-label="Sections">' + (i >= 0 ? '<span class="tab-glow" style="transform:translateX(' + i * 100 + '%)"></span>' : "") + TABS.map((t) =>
-      '<button class="tab' + (ui.tab === t[0] ? " on" : "") + '" data-action="tab" data-v="' + t[0] + '"' + (ui.tab === t[0] ? ' aria-current="page"' : "") + ">" + ICON[t[0]](22) + "<span>" + t[1] + "</span></button>").join("") + "</nav>" +
-      '<button class="fab" data-action="add" aria-label="New habit">' + ICON.plus(24) + "</button></div>";
+    return '<nav class="tabbar" aria-label="Sections"><span class="tab-glow" style="transform:translateX(' + Math.max(0, i) * 100 + '%)"></span>' + TABS.map((t) =>
+      '<button class="tab' + (ui.tab === t[0] ? " on" : "") + '" data-action="tab" data-v="' + t[0] + '"' + (ui.tab === t[0] ? ' aria-current="page"' : "") + ">" + ICON[t[0]](22) + "<span>" + t[1] + "</span></button>").join("") + "</nav>";
   }
 
   function trayView() {
@@ -875,7 +874,7 @@
     else {
       const detailHabit = wide && ui.detail && (ui.tab === "today" || ui.tab === "habits") ? habitById(ui.detail) : null;
       const phoneDetail = !wide && ui.detail && habitById(ui.detail);
-      const hideDock = phoneDetail || ui.tab === "settings";
+      const hideDock = phoneDetail;
       html = '<div class="shell' + (detailHabit ? " has-detail" : "") + '">' + (wide ? sidebar() : "") +
         '<main class="pane main' + (ui.enter ? " enter" : "") + (hideDock && !wide ? " no-dock" : "") + '" data-scroll="main">' + mainScreen() + "</main>" +
         (detailHabit ? '<aside class="pane side-detail" data-scroll="detail">' + detailView(detailHabit) + "</aside>" : "") + "</div>" +
@@ -1262,7 +1261,7 @@
     if (ui.tab === "today" && ev.key === "ArrowLeft") { ui.day = C.addDays(ui.day, -1); render(); }
     else if (ui.tab === "today" && ev.key === "ArrowRight" && ui.day < todayKey()) { ui.day = C.addDays(ui.day, 1); render(); }
     else if (ev.key === "t") { ui.day = todayKey(); go("today"); }
-    else if (/^[1-3]$/.test(ev.key)) go(TABS[+ev.key - 1][0]);
+    else if (/^[1-4]$/.test(ev.key)) go(TABS[+ev.key - 1][0]);
   });
 
   wideQuery.addEventListener("change", render);
@@ -1305,7 +1304,7 @@
       else if (cmd === "prev-day") { ui.tab = "today"; ui.day = C.addDays(ui.day, -1); render(); }
       else if (cmd === "next-day" && ui.day < todayKey()) { ui.tab = "today"; ui.day = C.addDays(ui.day, 1); render(); }
       else if (cmd === "today") { ui.day = todayKey(); go("today"); }
-      else if (cmd === "settings" || TABS.some((t) => t[0] === cmd)) go(cmd);
+      else if (TABS.some((t) => t[0] === cmd)) go(cmd);
       else if (cmd === "export") exportBackup();
       else if (cmd === "import") importBackup();
     });

@@ -23,6 +23,8 @@
   --on-ink: #FFFFFF;
   --marigold: #E8962E;
   --marigold-text: #A85B0C;
+  --tab-blue: #3F82CC;
+  --tab-blue-ink: #2F6DB3;
   --danger: #C2413B;
   --good: #2E7D4A;
   --on-color: #FFFFFF;
@@ -74,6 +76,8 @@
     --on-ink: #111215;
     --marigold: #F2A645;
     --marigold-text: #F5B565;
+    --tab-blue: #5E9BE0;
+    --tab-blue-ink: #7DB1EC;
     --danger: #EF6A63;
     --good: #5FD08A;
     --glass: rgba(36, 37, 43, 0.68);
@@ -106,6 +110,8 @@
   --on-ink: #111215;
   --marigold: #F2A645;
   --marigold-text: #F5B565;
+  --tab-blue: #5E9BE0;
+  --tab-blue-ink: #7DB1EC;
   --danger: #EF6A63;
   --good: #5FD08A;
   --glass: rgba(36, 37, 43, 0.68);
@@ -607,23 +613,25 @@ h1, h2, p { margin: 0; }
 .hm-legend { display: flex; align-items: center; justify-content: flex-end; gap: 4px; margin-top: 10px; font-size: 11px; color: var(--secondary); }
 .hm-legend span { margin: 0 4px; }
 
-/* ---------- dock: glass tab bar + round add button ---------- */
-.dock {
+/* ---------- tab bar (floating glass), as in the first version ---------- */
+.tabbar {
   position: fixed; left: 50%; bottom: calc(var(--sab) + 12px); transform: translateX(-50%); z-index: 20;
-  width: min(400px, calc(100% - 32px)); display: flex; gap: 10px; align-items: center;
-}
-.tabbar, .fab {
+  width: min(380px, calc(100% - 32px)); height: 64px; padding: 6px; border-radius: 32px;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
   background: var(--glass); -webkit-backdrop-filter: saturate(180%) blur(24px); backdrop-filter: saturate(180%) blur(24px);
   box-shadow: inset 0 0 0 1px var(--glass-line), 0 10px 30px var(--glass-shade), 0 1px 3px var(--glass-shade);
 }
-.tabbar { position: relative; flex: 1; height: 64px; padding: 6px; border-radius: 32px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.tab-glow { position: absolute; top: 6px; left: 6px; width: calc((100% - 12px) / 3); height: 52px; border-radius: 26px; background: color-mix(in srgb, var(--label) 8%, transparent); transition: transform 0.45s var(--spring); }
-.tab { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--secondary); font-size: 10.5px; font-weight: 600; border-radius: 26px; }
-.tab.on { color: var(--label); }
-.tab svg { transition: transform 0.2s var(--spring); }
+.tab-glow {
+  position: absolute; top: 6px; left: 6px; width: calc((100% - 12px) / 4); height: 52px; border-radius: 26px;
+  background: color-mix(in srgb, var(--tab-blue) 14%, transparent); transition: transform 0.45s var(--spring);
+}
+.tab {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  color: var(--secondary); font-size: 10.5px; font-weight: 600; letter-spacing: 0.01em; border-radius: 26px;
+}
+.tab.on { color: var(--tab-blue-ink); }
 .tab:active svg { transform: scale(0.88); }
-.fab { width: 64px; height: 64px; flex-shrink: 0; border-radius: 32px; display: grid; place-items: center; color: var(--label); transition: transform 0.25s var(--spring); }
-.fab:active { transform: scale(0.9) rotate(90deg); }
+.tab svg { transition: transform 0.2s var(--spring); }
 
 /* ---------- sheets and overlays ---------- */
 .scrim { position: fixed; inset: 0; z-index: 30; background: var(--scrim); }
