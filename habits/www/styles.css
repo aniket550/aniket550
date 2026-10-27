@@ -484,20 +484,31 @@ h1, h2, p { margin: 0; }
 .md.full b { color: #FFFFFF; }
 .md.is-today b { color: var(--marigold-text); font-weight: 800; }
 .md.full.is-today b { color: #FFFFFF; }
-.md.future { background: none; }
+.md.future, .md.md-none { background: none; }
+.md.md-none b { color: var(--tertiary); }
 .md.future::after { background: none; }
 .md.future b { color: var(--tertiary); }
 
-.by-habit { display: flex; flex-direction: column; gap: 14px; }
-.bh-row { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; }
-.bh-icon { width: 38px; height: 38px; flex-shrink: 0; border-radius: 12px; display: grid; place-items: center; font-size: 19px; color: var(--c); background: color-mix(in srgb, var(--c) 12%, var(--card)); }
-.bh-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
-.bh-top { display: flex; justify-content: space-between; gap: 8px; }
-.bh-name { font-size: 15px; font-weight: 620; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bh-top b { font-size: 15px; }
-.bh-track { height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; }
+.by-card { padding: 18px 18px 6px; }
+.by-habit { display: flex; flex-direction: column; }
+.bh-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 0; text-align: left; }
+.bh-row + .bh-row { border-top: 1px solid var(--line); }
+.bh-icon { width: 40px; height: 40px; flex-shrink: 0; border-radius: 13px; display: grid; place-items: center; font-size: 19px; color: var(--c); background: color-mix(in srgb, var(--c) 12%, var(--card)); }
+.bh-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.bh-name { font-size: 15px; font-weight: 620; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bh-week { display: grid; grid-template-columns: repeat(7, 14px); gap: 4px; }
+.bh-week i { height: 6px; border-radius: 3px; background: var(--track); }
+.bh-week i.on { background: var(--c); }
+.bh-week i.miss { background: color-mix(in srgb, var(--c) 22%, transparent); }
+.bh-week i.now { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--c) 60%, transparent); background: none; }
+.bh-week i.off { background: none; box-shadow: inset 0 0 0 1px var(--track); }
+.bh-week i.later { opacity: 0.5; }
+.bh-track { display: block; height: 6px; max-width: 160px; border-radius: 3px; background: var(--track); overflow: hidden; }
 .bh-track i { display: block; height: 100%; border-radius: 3px; background: var(--c); }
-.bh-meta { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; color: var(--secondary); }
+.bh-meta { display: inline-flex; align-items: center; gap: 3px; font-size: 12.5px; color: var(--secondary); white-space: nowrap; overflow: hidden; }
+.bh-pct { flex-shrink: 0; min-width: 44px; text-align: right; font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
+.bh-pct small { font-size: 12px; color: var(--secondary); margin-left: 1px; }
+.bh-pct.none { color: var(--tertiary); font-weight: 600; }
 
 /* ---------- habits grid ---------- */
 .edit-note { font-size: 14px; color: var(--secondary); margin-top: -6px; }

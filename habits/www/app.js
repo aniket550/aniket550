@@ -449,7 +449,7 @@
   // A week is only seven numbers: bars read better than a line.
   function weekBars(points) {
     return '<div class="week-bars">' + points.map((p) => '<div class="wb' + (p.hi ? " hi" : "") + (p.v == null ? " future" : "") + '"' +
-      (p.v != null ? ' title="' + p.v + '%"' : "") + '><span class="wb-track"><i style="height:' + (p.v == null ? 0 : Math.max(6, p.v)) + '%"></i></span><span>' + p.label + "</span></div>").join("") + "</div>";
+      (p.v != null ? ' title="' + p.v + '%"' : "") + '><span class="wb-track"><i style="height:' + (p.v ? Math.max(6, p.v) : 0) + '%"></i></span><span>' + p.label + "</span></div>").join("") + "</div>";
   }
 
   function periodData(period) {
@@ -548,7 +548,7 @@
       if (k > today) { cells += '<span class="md future"><b>' + (i + 1) + "</b></span>"; continue; }
       const s = dayStats(k);
       const p = s.total ? s.done / s.total : 0;
-      cells += '<span class="md' + (s.total && p === 1 ? " full" : "") + (k === today ? " is-today" : "") + '" style="--p:' + Math.round(p * 100) + '%" title="' + fmt(k, { day: "numeric", month: "short" }) + ": " + s.done + " of " + s.total + '"><b>' + (i + 1) + "</b></span>";
+      cells += '<span class="md' + (s.total && p === 1 ? " full" : "") + (s.total ? "" : " md-none") + (k === today ? " is-today" : "") + '" style="--p:' + Math.round(p * 100) + '%" title="' + fmt(k, { day: "numeric", month: "short" }) + ": " + s.done + " of " + s.total + '"><b>' + (i + 1) + "</b></span>";
     }
     return cells;
   }
@@ -577,10 +577,30 @@
     const from = ui.period === "week" ? C.weekStart(today) : ui.period === "month" ? C.addDays(today, -29) : C.addDays(today, -364);
     const rows = data.habits.map((h) => ({ h: h, r: C.rate(data, h, from, today), s: C.streak(data, h, today) }))
       .sort((a, b) => (b.r.pct == null ? -1 : b.r.pct) - (a.r.pct == null ? -1 : a.r.pct));
-    html += '<section class="card"><div class="card-head"><h2>By habit</h2><span class="caption">This ' + P.name + '</span></div><div class="by-habit">' + rows.map((x) =>
-      '<button class="bh-row" data-action="open" data-id="' + x.h.id + '" style="--c:' + colorOf(x.h) + '"><span class="bh-icon">' + habitIcon(x.h, 19) + '</span><span class="bh-main"><span class="bh-top"><span class="bh-name">' + esc(x.h.name) + '</span><b class="num">' + (x.r.pct == null ? "–" : x.r.pct + "%") + "</b></span>" +
-      '<span class="bh-track"><i style="width:' + (x.r.pct || 0) + '%"></i></span><span class="bh-meta">' + x.r.done + " of " + x.r.due + (x.s.current ? ' · <span class="flame">' + ICON.flame(11) + "</span>" + plural(x.s.current, x.s.unit) : "") + "</span></span></button>").join("") + "</div></section>";
+    html += '<section class="card by-card"><div class="card-head"><h2>By habit</h2><span class="caption">This ' + P.name + '</span></div><div class="by-habit">' + rows.map(byHabitRow).join("") + "</div></section>";
     return html;
+  }
+
+  // One line per habit: the week as seven dots (or a bar for longer periods) and its share done.
+  function byHabitRow(x) {
+    const today = todayKey(), h = x.h, r = x.r;
+    let meta;
+    if (h.schedule.type === "weekly" && ui.period === "week") meta = C.weekDoneDays(data, h, C.weekStart(today)) + " of " + h.schedule.times + " this week";
+    else if (!r.due) meta = C.isScheduled(h, today) ? "Not done yet today" : "Nothing due yet";
+    else meta = r.done + " of " + r.due + " done";
+    if (x.s.current) meta += ' · <span class="flame">' + ICON.flame(11) + "</span>" + plural(x.s.current, x.s.unit);
+    let viz;
+    if (ui.period === "week") {
+      viz = '<span class="bh-week">';
+      for (let i = 0, k = C.weekStart(today); i < 7; i++, k = C.addDays(k, 1)) {
+        const done = C.countOn(data, h.id, k) >= h.target;
+        viz += '<i class="' + (done ? "on" : k > today ? "later" : !C.isScheduled(h, k) || h.schedule.type === "weekly" ? "off" : k === today ? "now" : "miss") + '"></i>';
+      }
+      viz += "</span>";
+    } else viz = '<span class="bh-track"><i style="width:' + (r.pct || 0) + '%"></i></span>';
+    return '<button class="bh-row" data-action="open" data-id="' + h.id + '" style="--c:' + colorOf(h) + '"><span class="bh-icon">' + habitIcon(h, 19) + "</span>" +
+      '<span class="bh-main"><span class="bh-name">' + esc(h.name) + "</span>" + viz + '<span class="bh-meta">' + meta + "</span></span>" +
+      '<b class="bh-pct num' + (r.pct == null ? " none" : "") + '">' + (r.pct == null ? "–" : r.pct + "<small>%</small>") + "</b></button>";
   }
 
   // ---------- Habits ----------
