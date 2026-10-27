@@ -1369,16 +1369,7 @@
   });
 
   wideQuery.addEventListener("change", render);
-  let lastY = 0;
-  const markScrolled = () => {
-    const y = window.scrollY, root = document.documentElement;
-    root.classList.toggle("scrolled", y > 6);
-    if (!isWide()) {
-      if (y > 140 && y - lastY > 6) root.classList.add("tab-mini");
-      else if (lastY - y > 6 || y < 80) root.classList.remove("tab-mini");
-    }
-    lastY = y;
-  };
+  const markScrolled = () => document.documentElement.classList.toggle("scrolled", window.scrollY > 6);
   window.addEventListener("scroll", markScrolled, { passive: true });
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
 

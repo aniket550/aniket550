@@ -689,12 +689,11 @@ html.scrolled .brand-row {
 
 /* ---------- tab bar: iOS 26 style ----------
    A floating glass capsule. The selected tab gets a glass lens, a filled icon and the tint;
-   the others stay in the label colour. Scrolling down shrinks it to the current tab at the left. */
+   the others stay in the label colour. */
 .tabbar {
   --cut: #FFFFFF; --bar-w: min(380px, calc(100vw - 32px));
   position: fixed; z-index: 20; bottom: calc(var(--sab) + 10px); left: calc(50% - var(--bar-w) / 2);
   width: var(--bar-w); height: 62px; padding: 5px; border-radius: 31px; display: flex;
-  transition: width 0.5s cubic-bezier(0.3, 1.15, 0.4, 1), left 0.5s cubic-bezier(0.3, 1.15, 0.4, 1);
 }
 :root[data-theme="dark"] .tabbar { --cut: #1A1B20; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tabbar { --cut: #1A1B20; } }
@@ -712,11 +711,6 @@ html.scrolled .brand-row {
 .tab-label { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 0.01em; white-space: nowrap; transition: opacity 0.2s; }
 .tab.on { color: var(--tab-blue-ink); }
 .tab:active .tab-ico { transform: scale(0.84); }
-html.tab-mini .tabbar { --bar-w: 62px; left: max(16px, var(--sal)); }
-html.tab-mini .tab:not(.on) { flex-grow: 0; opacity: 0; pointer-events: none; }
-html.tab-mini .tab-label { opacity: 0; }
-html.tab-mini .tab-glow { opacity: 0; }
-html.tab-mini .tab.on .tab-ico { transform: scale(1.1); }
 
 /* ---------- sheets and overlays ---------- */
 .scrim { position: fixed; inset: 0; z-index: 30; background: var(--scrim); }
