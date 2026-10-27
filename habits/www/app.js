@@ -373,7 +373,7 @@
     if (!isToday) return { a: fmt(ui.day, { weekday: "long" }) + ",", b: fmt(ui.day, { day: "numeric", month: "long" }) + ".", sub: st.done + " of " + st.total + " done that day. Tap any habit to fix it." };
     if (!st.total) return { a: "A quiet day.", b: "Nothing planned.", sub: "Rest counts too." };
     if (!left) return { a: "That's the day.", b: "All done.", sub: "Every habit checked. See you tomorrow." };
-    if (!st.done) return nowHour() < 12 ? { a: "Fresh day.", b: "Start small.", sub: "Begin with the easiest habit." } : { a: "Still time", b: "for one.", sub: "Pick the easiest habit and start there." };
+    if (!st.done) return { na: 0, a: " down,", nb: left, b: " to go.", sub: "" };
     return { na: st.done, a: " down,", nb: left, b: " to go.", sub: st.done / st.total >= 0.5 ? "More than halfway. Keep it rolling." : "Good start. One more?" };
   }
 
@@ -394,7 +394,7 @@
     const num = (n, cls) => '<span class="hl-num ' + cls + ' num">' + n + "</span>";
     html += '<section class="hero"><p class="kicker">' + fmt(ui.day, { weekday: "long", day: "numeric", month: "long" }) + "</p>" +
       '<h1 class="headline">' + (hl.na != null ? num(hl.na, "done") : "") + esc(hl.a) + "<br>" + (hl.nb != null ? num(hl.nb, "left") : "") + esc(hl.b) + "</h1>" +
-      (isToday && st.total ? scoreBar(st) : "") + '<p class="lede">' + esc(hl.sub) + "</p>" +
+      (isToday && st.total ? scoreBar(st) : "") + (hl.sub ? '<p class="lede">' + esc(hl.sub) + "</p>" : "") +
       (isToday ? "" : '<button class="pill-btn" data-action="go-today">Back to today</button>') + "</section>";
     if (data.habits.length) {
       const perfect = st.total && st.done === st.total;
