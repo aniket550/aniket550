@@ -1,7 +1,7 @@
 {
   "name": "habits",
   "productName": "Roj Habit",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Roj Habit: a habit tracker for Android and Mac (iOS later)",
   "author": "Aniket",
@@ -13,7 +13,8 @@
     "serve": "npm run vendor && python3 -m http.server 8000 --directory www",
     "android:sync": "npm run vendor && cap sync android",
     "mac": "npm run vendor && electron .",
-    "build:mac": "npm run vendor && electron-builder --mac dmg --arm64 --x64 --publish never"
+    "build:mac": "npm run vendor && electron-builder --mac dmg --arm64 --x64 --publish never",
+    "bump": "node scripts/bump.js"
   },
   "dependencies": {
     "@capacitor/android": "8.5.3",

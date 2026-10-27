@@ -113,6 +113,11 @@ jobs:
         with:
           path: out
           merge-multiple: true
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: habits/package.json
+          sparse-checkout-cone-mode: false
+          path: src
       - name: Publish the rojhabit-latest release
         working-directory: out
         env:
@@ -120,16 +125,18 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           ls -la
+          VERSION=$(node -p "require('../src/habits/package.json').version")
+          ARM=$(ls *arm64.dmg); X64=$(ls *x64.dmg)
           gh release delete roz-latest --cleanup-tag --yes || true  # the app's old name
           gh release delete rojhabit-latest --cleanup-tag --yes || true
           gh release create rojhabit-latest RojHabit-android.apk *.dmg \
             --target "${{ github.sha }}" \
             --prerelease \
-            --title "Roj Habit: latest build" \
-            --notes "Build ${{ github.run_number }} from ${{ github.ref_name }}.
+            --title "Roj Habit $VERSION" \
+            --notes "Version $VERSION, build ${{ github.run_number }} from ${{ github.ref_name }}.
 
           - Android: download RojHabit-android.apk on your phone and install it.
-          - Mac with Apple chip (M1 and later): RojHabit-1.0.0-mac-arm64.dmg
-          - Intel Mac: RojHabit-1.0.0-mac-x64.dmg
+          - Mac with Apple chip (M1 and later): $ARM
+          - Intel Mac: $X64
 
-          Install steps are in habits/README.md."
+          What changed: habits/CHANGELOG.md. Install steps: habits/README.md."

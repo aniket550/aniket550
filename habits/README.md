@@ -48,6 +48,16 @@ Mac pe Roj Habit **menu bar** mein bhi rehta hai (upar right mein chhota arc ico
 | ⌘[ / ⌘] ya ← / → | Pichhla / agla din |
 | ⌘E | Backup export |
 
+## Version
+
+App ka version Settings ke neeche, aur release page ke title mein dikhta hai. Har update ke saath version badhta hai, aur `CHANGELOG.md` mein likha hota hai ki kya badla. Naya version banane ke liye:
+
+```bash
+cd habits
+npm run bump            # 1.1.0 -> 1.1.1  chhota sudhaar
+npm run bump -- minor   # 1.1.1 -> 1.2.0  naya feature / design
+```
+
 ## Data kahan rehta hai
 
 Data **sirf aapke device pe** rehta hai (Android pe app storage, Mac pe `~/Library/Application Support/Roj Habit`). Phone aur Mac abhi sync nahi hote. Data ek device se doosre pe le jaana ho to:

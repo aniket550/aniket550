@@ -9,7 +9,8 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         // CI passes its run number, so every new APK installs as an update over the old one.
         versionCode((System.getenv("ROZ_VERSION_CODE") ?: "1").toInteger())
-        versionName "1.0"
+        // The version people see comes from package.json (npm run bump).
+        versionName new groovy.json.JsonSlurper().parse(file("../../package.json")).version
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
