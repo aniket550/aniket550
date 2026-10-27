@@ -1,0 +1,11 @@
+{
+  "appId": "com.aniket.habits",
+  "appName": "Roz",
+  "webDir": "www",
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "css",
+      "initialViewportFitValueHint": "cover"
+    }
+  }
+}

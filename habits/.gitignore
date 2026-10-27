@@ -1,0 +1,7 @@
+node_modules/
+dist/
+www/vendor/
+
+# Signing keys never go in the repo
+*.keystore
+*.jks

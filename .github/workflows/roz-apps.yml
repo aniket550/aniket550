@@ -1,0 +1,134 @@
+name: Roz apps
+
+# Builds the Android APK and the Mac DMGs for the habit tracker in habits/,
+# then puts them on one GitHub release page ("roz-latest") for easy download.
+on:
+  push:
+    paths:
+      - "habits/**"
+      - ".github/workflows/roz-apps.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: roz-apps-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: habits
+
+env:
+  ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: habits/package-lock.json
+      - run: npm ci
+      - run: npm test
+
+  android:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: habits/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npm run android:sync
+      # Without a signing secret the APK is a debug build. Keeping the debug key in the
+      # cache lets new builds install as updates while the cache lives (7 days unused).
+      - uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: roz-debug-keystore
+      - name: Build APK
+        working-directory: habits/android
+        env:
+          ROZ_VERSION_CODE: ${{ github.run_number }}
+          KEYSTORE_B64: ${{ secrets.ROZ_KEYSTORE_B64 }}
+          ROZ_KEYSTORE_PASSWORD: ${{ secrets.ROZ_KEYSTORE_PASSWORD }}
+          ROZ_KEY_ALIAS: ${{ secrets.ROZ_KEY_ALIAS }}
+          ROZ_KEY_PASSWORD: ${{ secrets.ROZ_KEY_PASSWORD }}
+        run: |
+          chmod +x gradlew
+          mkdir -p ../dist
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/roz.keystore"
+            export ROZ_KEYSTORE="$RUNNER_TEMP/roz.keystore"
+            ./gradlew assembleRelease --no-daemon
+            cp app/build/outputs/apk/release/app-release.apk ../dist/Roz-android.apk
+          else
+            echo "::warning::No ROZ_KEYSTORE_B64 secret, so this is a debug APK. See habits/README.md, Android signing."
+            ./gradlew assembleDebug --no-daemon
+            cp app/build/outputs/apk/debug/app-debug.apk ../dist/Roz-android.apk
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Roz-android
+          path: habits/dist/Roz-android.apk
+          if-no-files-found: error
+
+  mac:
+    needs: test
+    runs-on: macos-latest
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: ""
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: habits/package-lock.json
+      - run: npm ci
+      - run: npm run build:mac
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Roz-mac
+          path: habits/dist/*.dmg
+          if-no-files-found: error
+
+  release:
+    needs: [android, mac]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+      - name: Publish the roz-latest release
+        working-directory: out
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          ls -la
+          gh release delete roz-latest --cleanup-tag --yes || true
+          gh release create roz-latest Roz-android.apk *.dmg \
+            --target "${{ github.sha }}" \
+            --prerelease \
+            --title "Roz: latest build" \
+            --notes "Build ${{ github.run_number }} from ${{ github.ref_name }}.
+
+          - Android: download Roz-android.apk on your phone and install it.
+          - Mac with Apple chip (M1 and later): Roz-1.0.0-mac-arm64.dmg
+          - Intel Mac: Roz-1.0.0-mac-x64.dmg
+
+          Install steps are in habits/README.md."
