@@ -789,14 +789,14 @@
   }
   function draftFrom(h) {
     return { id: h.id, name: h.name, icon: h.icon, emoji: h.emoji, color: h.color, time: h.time, unit: h.unit, target: h.target,
-      schedule: { type: h.schedule.type, days: (h.schedule.days || [1, 2, 3, 4, 5]).slice(), times: h.schedule.times || 3 } };
+      schedule: { type: h.schedule.type === "days" && h.schedule.days.length === 7 ? "daily" : h.schedule.type, days: (h.schedule.days || [1, 2, 3, 4, 5]).slice(), times: h.schedule.times || 3 } };
   }
 
   function editorSheet(d) {
     const c = (COLORS.find((x) => x.id === d.color) || COLORS[0]).hex;
     const s = d.schedule;
     let html = '<div class="sheet-bar"><button class="nav-btn" data-action="close-sheet">Cancel</button><h2>' + (d.id ? "Edit habit" : "New habit") + '</h2><button class="nav-btn strong" data-action="save" id="save-btn"' + (d.name.trim() ? "" : " disabled") + ">" + (d.id ? "Save" : "Add") + "</button></div>";
-    html += '<div class="sheet-body" style="--c:' + c + '">';
+    html += '<div class="sheet-body" data-scroll="sheet" style="--c:' + c + '">';
     html += '<div class="editor-hero"><span class="hero-tile">' + habitIcon(d, 28) + '</span><input id="habit-name" class="name-input" type="text" maxlength="40" placeholder="What will you do?" value="' + esc(d.name) + '" autocomplete="off" aria-label="Habit name"></div>';
     if (!d.id) {
       const have = data.habits.map((h) => h.name.toLowerCase());
@@ -808,7 +808,10 @@
     html += '<p class="caption">Time of day</p><div class="segmented four">' + TIMES.map((t) => '<button class="seg-btn' + (d.time === t.id ? " on" : "") + '" data-action="time" data-v="' + t.id + '">' + ICON[t.icon](16) + "<span>" + t.label + "</span></button>").join("") + "</div>";
     html += '<p class="caption">Repeat</p><div class="segmented">' +
       [["daily", "Every day"], ["days", "Some days"], ["weekly", "Weekly"]].map((x) => '<button class="seg-btn' + (s.type === x[0] ? " on" : "") + '" data-action="rtype" data-v="' + x[0] + '">' + x[1] + "</button>").join("") + "</div>";
-    if (s.type === "days") html += '<div class="day-chips">' + WEEK_ORDER.map((x) => '<button class="day-chip' + (s.days.indexOf(x) !== -1 ? " on" : "") + '" data-action="rday" data-v="' + x + '" aria-pressed="' + (s.days.indexOf(x) !== -1) + '">' + DOW_SHORT[x].slice(0, 2) + "</button>").join("") + "</div>";
+    if (s.type !== "weekly") {
+      const on = (x) => s.type === "daily" || s.days.indexOf(x) !== -1;
+      html += '<div class="day-chips">' + WEEK_ORDER.map((x) => '<button class="day-chip' + (on(x) ? " on" : "") + '" data-action="rday" data-v="' + x + '" aria-pressed="' + on(x) + '">' + DOW_SHORT[x].slice(0, 2) + "</button>").join("") + "</div>";
+    }
     if (s.type === "weekly") html += '<div class="stepper-row card"><span>Times per week</span>' + stepper("times", s.times) + "</div>";
     html += '<p class="caption">Daily goal</p><div class="stepper-row card"><span>' + (d.target > 1 ? "Count up to" : "Once a day") + "</span>" + stepper("target", d.target) + "</div>";
     if (d.target > 1) html += '<input id="habit-unit" class="unit-input" type="text" maxlength="16" placeholder="Unit, like glasses or pages" value="' + esc(d.unit) + '" aria-label="Unit">';
@@ -1225,11 +1228,20 @@
       case "icon": ui.sheet.draft.icon = el.dataset.v; render(); break;
       case "color": ui.sheet.draft.color = el.dataset.v; render(); break;
       case "time": ui.sheet.draft.time = el.dataset.v; render(); break;
-      case "rtype": ui.sheet.draft.schedule.type = el.dataset.v; render(); break;
-      case "rday": {
-        const days = ui.sheet.draft.schedule.days, v = +el.dataset.v, i = days.indexOf(v);
-        if (i === -1) days.push(v); else days.splice(i, 1);
+      case "rtype": {
+        const sc = ui.sheet.draft.schedule;
+        sc.type = el.dataset.v;
+        if (sc.type === "days" && sc.days.length === 7) sc.days = [1, 2, 3, 4, 5];
         render(); break;
+      }
+      case "rday": {
+        // All seven days on is Every day; turning one off makes it Some days.
+        const sc = ui.sheet.draft.schedule, v = +el.dataset.v;
+        if (sc.type === "daily") { sc.type = "days"; sc.days = [0, 1, 2, 3, 4, 5, 6]; }
+        const i = sc.days.indexOf(v);
+        if (i === -1) sc.days.push(v); else sc.days.splice(i, 1);
+        if (sc.days.length === 7) sc.type = "daily";
+        haptic("light"); render(); break;
       }
       case "step": {
         const d = ui.sheet.draft, f = el.dataset.f, max = f === "times" ? 7 : 99;

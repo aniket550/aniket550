@@ -3,6 +3,10 @@
 Har update ke saath version badhta hai (`npm run bump`) aur yahan ek line judti hai.
 Version ka matlab: **1.2.3** → 1 = bada badlav, 2 = naya feature ya design, 3 = chhota sudhaar.
 
+## 1.1.4
+- Habit edit karte waqt koi bhi button dabane pe sheet ab upar nahi bhaagti, wahin rehti hai
+- Repeat mein din ke button ab Every day pe bhi dikhte hain. Saare 7 din chuno to apne aap Every day ho jaata hai, ek din hatao to Some days
+
 ## 1.1.3
 - Android: upar aur neeche ke kaale patte hata diye. App ab poori screen pe dikhta hai, aur upar time, battery aur notification icons saaf dikhte hain
 
