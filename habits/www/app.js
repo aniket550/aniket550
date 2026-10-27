@@ -374,17 +374,27 @@
     if (!st.total) return { a: "A quiet day.", b: "Nothing planned.", sub: "Rest counts too." };
     if (!left) return { a: "That's the day.", b: "All done.", sub: "Every habit checked. See you tomorrow." };
     if (!st.done) return nowHour() < 12 ? { a: "Fresh day.", b: "Start small.", sub: "Begin with the easiest habit." } : { a: "Still time", b: "for one.", sub: "Pick the easiest habit and start there." };
-    return { a: st.done + " down,", b: left + " to go.", sub: st.done / st.total >= 0.5 ? "More than halfway. Keep it rolling." : "Good start. One more?" };
+    return { na: st.done, a: " down,", nb: left, b: " to go.", sub: st.done / st.total >= 0.5 ? "More than halfway. Keep it rolling." : "Good start. One more?" };
+  }
+
+  // The day's score as one pill per habit, filling in the habit's own colour.
+  function scoreBar(st) {
+    return '<div class="score-bar" role="img" aria-label="' + st.done + " of " + st.total + ' habits done">' + st.items.map((it) =>
+      '<i style="--c:' + colorOf(it.habit) + ";--f:" + Math.round(it.frac * 100) + '%"' + (it.satisfied ? ' class="on"' : "") + "></i>").join("") +
+      '<span class="num">' + pct(st.done, st.total) + "%</span></div>";
   }
 
   function phoneToday(st, isToday) {
     const hl = headline(st, isToday);
     const best = data.habits.map((h) => ({ h: h, s: C.streak(data, h, todayKey()) })).filter((x) => x.s.current >= 2).sort((a, b) => b.s.current - a.s.current)[0];
+    // Glass top bar: clear at the top of the page, frosted once the page scrolls under it.
     let html = '<header class="brand-row"><span class="brand-tile">' + brandMark(22) + '</span><b class="brand-name">' + APP_NAME + "</b>" +
-      '<button class="icon-btn soft" data-action="tab" data-v="settings" aria-label="Settings">' + ICON.settings(19) + "</button>" +
-      '<button class="icon-btn add" data-action="add" aria-label="New habit">' + ICON.plus(22) + "</button></header>";
+      '<button class="glass-btn" data-action="tab" data-v="settings" aria-label="Settings">' + ICON.settings(19) + "</button>" +
+      '<button class="glass-btn add" data-action="add" aria-label="New habit">' + ICON.plus(21) + "</button></header>";
+    const num = (n, cls) => '<span class="hl-num ' + cls + ' num">' + n + "</span>";
     html += '<section class="hero"><p class="kicker">' + fmt(ui.day, { weekday: "long", day: "numeric", month: "long" }) + "</p>" +
-      '<h1 class="headline">' + esc(hl.a) + "<br>" + esc(hl.b) + '</h1><p class="lede">' + esc(hl.sub) + "</p>" +
+      '<h1 class="headline">' + (hl.na != null ? num(hl.na, "done") : "") + esc(hl.a) + "<br>" + (hl.nb != null ? num(hl.nb, "left") : "") + esc(hl.b) + "</h1>" +
+      (isToday && st.total ? scoreBar(st) : "") + '<p class="lede">' + esc(hl.sub) + "</p>" +
       (isToday ? "" : '<button class="pill-btn" data-action="go-today">Back to today</button>') + "</section>";
     if (data.habits.length) {
       const perfect = st.total && st.done === st.total;
@@ -1285,6 +1295,8 @@
   });
 
   wideQuery.addEventListener("change", render);
+  const markScrolled = () => document.documentElement.classList.toggle("scrolled", window.scrollY > 6);
+  window.addEventListener("scroll", markScrolled, { passive: true });
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
 
   // Roll over to the new day at midnight, and keep the sun moving.
