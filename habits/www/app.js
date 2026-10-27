@@ -249,6 +249,36 @@
       '<div class="arc-ends"><span>6 am</span>' + (anytime.length ? '<span class="anytime-dots">' + anytime.map((i) => '<i class="' + (i.satisfied ? "on" : "") + '" style="--c:' + colorOf(i.habit) + '" title="' + esc(i.habit.name) + '"></i>').join("") + "</span>" : "") + "<span>10 pm</span></div></section>";
   }
 
+  // Phone version of the same idea: the day as one line, 6 am to 10 pm, with the sun at now.
+  function dayLine(st, isToday) {
+    const span = ARC_END - ARC_START;
+    const pos = (h) => ((Math.max(ARC_START, Math.min(ARC_END, h)) - ARC_START) / span) * 100;
+    const now = isToday ? nowHour() : ARC_END;
+    let marks = "";
+    TIMES.forEach((t) => {
+      if (t.hour == null) return;
+      const items = st.items.filter((i) => i.habit.time === t.id);
+      items.forEach((it, j) => {
+        const h = Math.max(ARC_START + 0.8, Math.min(ARC_END - 0.8, t.hour + 0.4 + (j - (items.length - 1) / 2) * 2));
+        marks += '<span class="dl-mark' + (it.satisfied ? " done" : it.frac > 0 ? " part" : "") + '" style="left:' + pos(h) + "%;--c:" + colorOf(it.habit) + ";--f:" + Math.round(it.frac * 100) + '%" title="' + esc(it.habit.name) + '">' + esc(it.habit.emoji) + "</span>";
+      });
+    });
+    const anytime = st.items.filter((i) => i.habit.time === "anytime");
+    const left = st.total - st.done;
+    const perfect = st.total > 0 && !left;
+    let line;
+    if (!st.total) line = "Nothing planned";
+    else if (perfect) line = "Every habit done";
+    else line = plural(left, "habit") + " left" + (isToday && nowHour() >= 20 ? ", still time" : "");
+    return '<section class="day-line ' + (isToday ? skyClass() : "sky-past") + (perfect ? " perfect" : "") + '">' +
+      '<div class="dl-top"><div><p class="dl-num num">' + st.done + "<span>/" + st.total + '</span></p><p class="dl-sub">' + line + "</p></div>" +
+      (perfect ? '<span class="dl-badge">' + ICON.check(14) + "Perfect day</span>" : '<span class="dl-pct num">' + pct(st.done, st.total) + "%</span>") + "</div>" +
+      (anytime.length ? '<div class="dl-anytime">' + anytime.map((i) => '<span class="' + (i.satisfied ? "on" : "") + '" style="--c:' + colorOf(i.habit) + '">' + esc(i.habit.emoji) + (i.habit.target > 1 ? ' <b class="num">' + i.count + "/" + i.habit.target + "</b>" : "") + "</span>").join("") + '<em>anytime</em></div>' : "") +
+      '<div class="dl-track"><div class="dl-rail"><i style="width:' + pos(now) + '%"></i></div>' + marks +
+      (isToday ? '<span class="dl-sun" style="left:' + pos(now) + '%"></span>' : "") + "</div>" +
+      '<div class="dl-ticks"><span style="left:0">6 am</span><span style="left:' + pos(12) + '%">Noon</span><span style="left:' + pos(17) + '%">5 pm</span><span style="left:100%">10 pm</span></div></section>';
+  }
+
   function weekStrip() {
     const today = todayKey();
     const start = C.weekStart(ui.day);
@@ -351,7 +381,7 @@
       (isWide() ? "" : '<button class="icon-btn" data-action="tab" data-v="settings" aria-label="Settings">' + ICON.settings(20) + "</button>") + "</div>";
     let body = '<header class="screen-head"><div><p class="eyebrow">' + (isToday ? "Today · " : "") + eyebrow + '</p><h1 class="large-title">' + title + "</h1></div>" + tools + "</header>" +
       weekStrip();
-    if (data.habits.length) body += dayArc(st, isToday);
+    if (data.habits.length) body += isWide() ? dayArc(st, isToday) : dayLine(st, isToday);
     body += ui.view === "grid" ? gridView() : listView(st);
     if (data.habits.length && ui.view === "list" && st.total) body += '<p class="hint">Swipe right to check off, left to undo. Press and hold for more.</p>';
     return body;
