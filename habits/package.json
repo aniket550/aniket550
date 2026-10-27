@@ -27,7 +27,8 @@
   "devDependencies": {
     "@capacitor/cli": "8.5.3",
     "electron": "44.7.0",
-    "electron-builder": "26.17.0"
+    "electron-builder": "26.17.0",
+    "lucide-static": "1.55.0"
   },
   "build": {
     "appId": "com.aniket.habits",

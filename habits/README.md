@@ -2,16 +2,16 @@
 
 **Roj Habit** ek habit tracker hai, Android aur Mac ke liye. iPhone wala app baad mein aayega, aur wo bhi isi code se banega.
 
-Roz ki habits tick karo. **Day Arc** pe dekho ki din kitna bhara: subah 6 se raat 10 tak suraj ka raasta, jis par har habit apne waqt pe baithi hai, aur aasmaan ka rang waqt ke saath badalta hai.
+Roz ki habits tick karo. Phone pe home page seedha batata hai ki din kahan khada hai ("2 down, 4 to go."), aur Mac pe **Day Arc** dikhata hai: subah 6 se raat 10 tak suraj ka raasta, jis par har habit apne waqt pe baithi hai.
 
 ## Kaise use karein
 
 | Kaam | Kaise |
 |---|---|
-| Nayi habit | Neeche gol **+** button (Mac: ⌘N). Upar ke suggestions se ek tap mein bhar jaati hai |
-| Tick karna | Left ka gola dabao, ya habit ko **right swipe** karo |
+| Nayi habit | Upar right ka kaala **+** button (Mac: ⌘N). Suggestions se ek tap mein bhar jaati hai |
+| Tick karna | Habit ke right wala gola dabao, ya habit ko **right swipe** karo |
 | Undo | Habit ko **left swipe** karo |
-| Ginti wali habit (jaise 8 glass paani) | Gola dabane par +1 hota hai, aur moti (●●●○○) bharte jaate hain |
+| Ginti wali habit (jaise 8 glass paani) | Right wala gola dabane par +1 hota hai, aur moti (●●●○○) bharte jaate hain |
 | Edit / Delete | Habit ko **dabaa ke rakho** (Mac: right-click). Ya **Habits** tab → **Edit** → lal ⊖ dabao |
 | Galti se delete ho gaya | Neeche aane wale **Undo** button ko dabao (5 second tak rehta hai) |
 | Pichhla din theek karna | Upar hafte ki strip se din chuno, ya habit ke calendar mein us din pe tap karo |
@@ -62,6 +62,7 @@ habits/
     app.js              screens, swipe, haptics, platform ka jod
     styles.css          design: rang, light/dark, phone + Mac layout
     fonts/              Inter font (SIL Open Font License), offline ke liye
+    habit-icons.js      habit ke line icons, Lucide se (ISC License). scripts/habit-icons.js banata hai
   android/              Android project (Capacitor)
   electron/             Mac app: window, menu bar panel, menu
   test/core.test.js     core.js ke tests

@@ -12,13 +12,16 @@
   const MILESTONES = [7, 21, 30, 50, 100, 200, 365];
 
   const COLORS = [
-    { id: "sky", hex: "#3F82CC" }, { id: "clay", hex: "#C96A42" }, { id: "sage", hex: "#4F8C63" },
-    { id: "iris", hex: "#7766C6" }, { id: "amber", hex: "#B87B1E" }, { id: "rose", hex: "#C25E7D" },
-    { id: "teal", hex: "#2F8F8F" }, { id: "slate", hex: "#565B66" }
+    { id: "sky", hex: "#4C84BC" }, { id: "clay", hex: "#C2704B" }, { id: "sage", hex: "#5C8D69" },
+    { id: "iris", hex: "#7F72BE" }, { id: "amber", hex: "#BC8A35" }, { id: "rose", hex: "#BF6E86" },
+    { id: "teal", hex: "#3F8F8C" }, { id: "slate", hex: "#626875" }
   ];
-  const EMOJIS = ["💧", "📚", "🧘", "🏃", "😴", "🥗", "💊", "🦷", "✍️", "🎸", "🧠", "🚶",
-    "🏋️", "🚴", "🧹", "🌱", "☀️", "🙏", "📵", "🍎", "☕", "🎨", "💻", "🗣️",
-    "💰", "🛏️", "🚿", "🧴", "📞", "🎧", "🧊", "❤️"];
+  const ICONS = Object.keys(window.HABIT_ICONS).filter((n) => n !== "sparkles" && n !== "glass-water"); // 5 rows of 7 in the picker
+  // Older habits and backups stored an emoji; show the matching line icon instead.
+  const EMOJI_ICON = { "💧": "droplet", "📚": "book-open", "🧘": "flower-2", "🏃": "activity", "😴": "moon", "🥗": "salad", "💊": "pill",
+    "✍️": "notebook-pen", "🎸": "guitar", "🧠": "brain", "🚶": "footprints", "🏋️": "dumbbell", "🚴": "bike", "🧹": "brush-cleaning", "🌱": "sprout",
+    "☀️": "sun", "📵": "phone-off", "🍎": "apple", "☕": "coffee", "🎨": "palette", "💻": "laptop", "🗣️": "languages", "💰": "piggy-bank",
+    "🛏️": "bed", "🚿": "shower-head", "🎧": "music", "❤️": "heart", "✨": "sparkles" };
   // Where each part of the day sits on the Day Arc (hours, 6 am to 10 pm).
   const TIMES = [
     { id: "morning", label: "Morning", hint: "before noon", icon: "sunrise", hour: 8 },
@@ -28,14 +31,14 @@
   ];
   const ARC_START = 6, ARC_END = 22;
   const SUGGESTIONS = [
-    { name: "Drink water", emoji: "💧", color: "sky", time: "anytime", target: 8, unit: "glasses" },
-    { name: "Read 10 pages", emoji: "📚", color: "clay", time: "evening", target: 1, unit: "" },
-    { name: "Walk 8,000 steps", emoji: "🚶", color: "teal", time: "afternoon", target: 1, unit: "" },
-    { name: "Meditate", emoji: "🧘", color: "iris", time: "morning", target: 1, unit: "" },
-    { name: "Sleep by 11", emoji: "😴", color: "slate", time: "evening", target: 1, unit: "" },
-    { name: "Workout", emoji: "🏋️", color: "amber", time: "morning", target: 1, unit: "", weekly: 3 },
-    { name: "No phone in bed", emoji: "📵", color: "rose", time: "evening", target: 1, unit: "" },
-    { name: "Journal", emoji: "✍️", color: "sage", time: "evening", target: 1, unit: "" }
+    { name: "Drink water", icon: "droplet", color: "sky", time: "anytime", target: 8, unit: "glasses" },
+    { name: "Read 10 pages", icon: "book-open", color: "clay", time: "evening", target: 1, unit: "" },
+    { name: "Walk 8,000 steps", icon: "footprints", color: "teal", time: "afternoon", target: 1, unit: "" },
+    { name: "Meditate", icon: "flower-2", color: "iris", time: "morning", target: 1, unit: "" },
+    { name: "Sleep by 11", icon: "moon", color: "slate", time: "evening", target: 1, unit: "" },
+    { name: "Workout", icon: "dumbbell", color: "amber", time: "morning", target: 1, unit: "", weekly: 3 },
+    { name: "No phone in bed", icon: "phone-off", color: "rose", time: "evening", target: 1, unit: "" },
+    { name: "Journal", icon: "notebook-pen", color: "sage", time: "evening", target: 1, unit: "" }
   ];
   const DOW_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0]; // Monday first
@@ -86,6 +89,14 @@
   const wideQuery = window.matchMedia("(min-width: 900px)");
   const isWide = () => wideQuery.matches && !trayMode;
   const nowHour = () => { const d = new Date(); return d.getHours() + d.getMinutes() / 60; };
+
+  function iconSvg(name, size) {
+    return '<svg class="hicon" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + window.HABIT_ICONS[name] + "</svg>";
+  }
+  // A habit's line icon, or its old emoji if it has no icon we know.
+  function habitIcon(h, size) {
+    return window.HABIT_ICONS[h.icon] ? iconSvg(h.icon, size || 22) : '<span class="hemoji">' + esc(h.emoji || "•") + "</span>";
+  }
 
   function scheduleText(h) {
     const s = h.schedule;
@@ -138,7 +149,7 @@
     state.habits.forEach((h, i) => {
       if (!COLORS.some((c) => c.id === h.color)) h.color = COLORS[i % COLORS.length].id;
       if (!TIMES.some((t) => t.id === h.time)) h.time = "anytime";
-      if (typeof h.emoji !== "string" || !h.emoji) h.emoji = "✓";
+      if (!window.HABIT_ICONS[h.icon]) h.icon = EMOJI_ICON[h.emoji] || (h.emoji ? "" : "sparkles");
       if (typeof h.unit !== "string") h.unit = "";
       h.target = Math.max(1, Math.floor(h.target));
     });
@@ -231,7 +242,7 @@
         marks += '<g class="arc-mark' + (it.satisfied ? " done" : "") + '" style="--c:' + c + '">' +
           '<circle cx="' + p.x + '" cy="' + p.y + '" r="15" class="am-bg"/>' +
           (it.frac > 0 && it.frac < 1 ? '<circle cx="' + p.x + '" cy="' + p.y + '" r="15" class="am-part" stroke-dasharray="' + 2 * Math.PI * 15 * it.frac + ' 200" transform="rotate(-90 ' + p.x + " " + p.y + ')"/>' : "") +
-          '<text x="' + p.x + '" y="' + (p.y + 0.5) + '">' + esc(it.habit.emoji) + "</text></g>";
+          (window.HABIT_ICONS[it.habit.icon] ? '<g class="am-icon" transform="translate(' + (p.x - 8) + " " + (p.y - 8) + ') scale(0.667)">' + window.HABIT_ICONS[it.habit.icon] + "</g>" : '<text x="' + p.x + '" y="' + (p.y + 0.5) + '">' + esc(it.habit.emoji) + "</text>") + "</g>";
       });
     });
     const anytime = st.items.filter((i) => i.habit.time === "anytime");
@@ -247,36 +258,6 @@
       marks + "</svg>" +
       '<div class="arc-center"><p class="arc-num num">' + st.done + "<span>/" + st.total + '</span></p><p class="arc-line">' + line + "</p></div>" +
       '<div class="arc-ends"><span>6 am</span>' + (anytime.length ? '<span class="anytime-dots">' + anytime.map((i) => '<i class="' + (i.satisfied ? "on" : "") + '" style="--c:' + colorOf(i.habit) + '" title="' + esc(i.habit.name) + '"></i>').join("") + "</span>" : "") + "<span>10 pm</span></div></section>";
-  }
-
-  // Phone version of the same idea: the day as one line, 6 am to 10 pm, with the sun at now.
-  function dayLine(st, isToday) {
-    const span = ARC_END - ARC_START;
-    const pos = (h) => ((Math.max(ARC_START, Math.min(ARC_END, h)) - ARC_START) / span) * 100;
-    const now = isToday ? nowHour() : ARC_END;
-    let marks = "";
-    TIMES.forEach((t) => {
-      if (t.hour == null) return;
-      const items = st.items.filter((i) => i.habit.time === t.id);
-      items.forEach((it, j) => {
-        const h = Math.max(ARC_START + 0.8, Math.min(ARC_END - 0.8, t.hour + 0.4 + (j - (items.length - 1) / 2) * 2));
-        marks += '<span class="dl-mark' + (it.satisfied ? " done" : it.frac > 0 ? " part" : "") + '" style="left:' + pos(h) + "%;--c:" + colorOf(it.habit) + ";--f:" + Math.round(it.frac * 100) + '%" title="' + esc(it.habit.name) + '">' + esc(it.habit.emoji) + "</span>";
-      });
-    });
-    const anytime = st.items.filter((i) => i.habit.time === "anytime");
-    const left = st.total - st.done;
-    const perfect = st.total > 0 && !left;
-    let line;
-    if (!st.total) line = "Nothing planned";
-    else if (perfect) line = "Every habit done";
-    else line = plural(left, "habit") + " left" + (isToday && nowHour() >= 20 ? ", still time" : "");
-    return '<section class="day-line ' + (isToday ? skyClass() : "sky-past") + (perfect ? " perfect" : "") + '">' +
-      '<div class="dl-top"><div><p class="dl-num num">' + st.done + "<span>/" + st.total + '</span></p><p class="dl-sub">' + line + "</p></div>" +
-      (perfect ? '<span class="dl-badge">' + ICON.check(14) + "Perfect day</span>" : '<span class="dl-pct num">' + pct(st.done, st.total) + "%</span>") + "</div>" +
-      (anytime.length ? '<div class="dl-anytime">' + anytime.map((i) => '<span class="' + (i.satisfied ? "on" : "") + '" style="--c:' + colorOf(i.habit) + '">' + esc(i.habit.emoji) + (i.habit.target > 1 ? ' <b class="num">' + i.count + "/" + i.habit.target + "</b>" : "") + "</span>").join("") + '<em>anytime</em></div>' : "") +
-      '<div class="dl-track"><div class="dl-rail"><i style="width:' + pos(now) + '%"></i></div>' + marks +
-      (isToday ? '<span class="dl-sun" style="left:' + pos(now) + '%"></span>' : "") + "</div>" +
-      '<div class="dl-ticks"><span style="left:0">6 am</span><span style="left:' + pos(12) + '%">Noon</span><span style="left:' + pos(17) + '%">5 pm</span><span style="left:100%">10 pm</span></div></section>';
   }
 
   function weekStrip() {
@@ -323,9 +304,9 @@
       (counter && !it.done ? miniRing(it.frac, 32, "var(--c)", 3) + '<b class="num">' + it.count + "</b>" : ICON.check(15)) + "</button>";
     return '<div class="' + cls.join(" ") + '" style="--c:' + colorOf(h) + '" data-id="' + h.id + '">' +
       '<div class="swipe-hint left">' + ICON.check(18) + '</div><div class="swipe-hint right">' + ICON.minus(18) + "</div>" +
-      '<div class="row-body">' + check +
+      '<div class="row-body"><span class="row-icon" aria-hidden="true">' + habitIcon(h, 21) + "</span>" +
       '<button class="row-main" data-action="open" data-id="' + h.id + '"><span class="row-title">' + esc(h.name) + '</span><span class="row-sub">' + rowSub(it) + "</span></button>" +
-      '<span class="row-emoji" aria-hidden="true">' + esc(h.emoji) + "</span></div></div>";
+      check + "</div></div>";
   }
 
   function listView(st) {
@@ -335,7 +316,7 @@
       const items = st.items.filter((i) => i.habit.time === t.id);
       if (!items.length) return "";
       const done = items.filter((i) => i.satisfied).length;
-      return '<section class="time-group"><header class="group-head"><span class="gh-title">' + ICON[t.icon](15) + t.label + '<em>' + t.hint + "</em></span>" +
+      return '<section class="time-group"><header class="group-head"><span class="gh-title">' + ICON[t.icon](14) + t.label + "</span>" +
         '<span class="gh-count num' + (done === items.length ? " all" : "") + '">' + done + "/" + items.length + "</span></header>" +
         '<div class="rows">' + items.map(habitRow).join("") + "</div></section>";
     }).join("");
@@ -358,7 +339,7 @@
         const label = esc(h.name) + ", " + fmt(k, { weekday: "long" }) + (done ? ", done" : ", not done");
         return '<button class="' + cls + '" style="--c:' + colorOf(h) + '" data-action="cell" data-id="' + h.id + '" data-key="' + k + '" aria-label="' + label + '"' + (k > today ? " disabled" : "") + ">" + (done ? ICON.check(12) : "") + "</button>";
       }).join("");
-      return '<button class="g-name" data-action="open" data-id="' + h.id + '"><span>' + esc(h.emoji) + "</span>" + esc(h.name) + "</button>" + cells;
+      return '<button class="g-name" data-action="open" data-id="' + h.id + '"><span class="g-icon">' + habitIcon(h, 15) + "</span>" + esc(h.name) + "</button>" + cells;
     }).join("");
     return '<section class="card grid-card"><div class="week-grid">' + head + rows + "</div></section>";
   }
@@ -369,21 +350,72 @@
       '<button class="btn" data-action="add">' + ICON.plus(18) + "New habit</button></div>";
   }
 
+  // Segmented ring: one piece per habit, filled in the brand colour as it gets done.
+  function segRing(items, size, stroke) {
+    const r = (size - stroke) / 2, c = size / 2, circ = 2 * Math.PI * r;
+    const n = Math.max(items.length, 1);
+    const gap = n > 1 ? Math.min(stroke + 4, circ / n / 2) : 0;
+    const seg = circ / n - gap;
+    let arcs = "";
+    items.forEach((it, i) => {
+      const off = -(i * (seg + gap)) - gap / 2;
+      arcs += '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" stroke-width="' + stroke + '" stroke-dasharray="' + seg + " " + circ + '" stroke-dashoffset="' + off + '" class="sr-track"/>';
+      if (it.frac > 0) arcs += '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" stroke-width="' + stroke + '" stroke-dasharray="' + seg * it.frac + " " + circ + '" stroke-dashoffset="' + off + '" class="sr-fill"/>';
+    });
+    if (!items.length) arcs = '<circle cx="' + c + '" cy="' + c + '" r="' + r + '" stroke-width="' + stroke + '" class="sr-track"/>';
+    return '<svg class="seg-ring" width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + " " + size + '" aria-hidden="true"><g transform="rotate(-90 ' + c + " " + c + ')">' + arcs + "</g></svg>";
+  }
+
+  // The headline says where the day stands, in plain words.
+  function headline(st, isToday) {
+    const left = st.total - st.done;
+    if (!isToday) return { a: fmt(ui.day, { weekday: "long" }) + ",", b: fmt(ui.day, { day: "numeric", month: "long" }) + ".", sub: st.done + " of " + st.total + " done that day. Tap any habit to fix it." };
+    if (!st.total) return { a: "A quiet day.", b: "Nothing planned.", sub: "Rest counts too." };
+    if (!left) return { a: "That's the day.", b: "All done.", sub: "Every habit checked. See you tomorrow." };
+    if (!st.done) return nowHour() < 12 ? { a: "Fresh day.", b: "Start small.", sub: "Begin with the easiest habit." } : { a: "Still time", b: "for one.", sub: "Pick the easiest habit and start there." };
+    return { a: st.done + " down,", b: left + " to go.", sub: st.done / st.total >= 0.5 ? "More than halfway. Keep it rolling." : "Good start. One more?" };
+  }
+
+  function phoneToday(st, isToday) {
+    const hl = headline(st, isToday);
+    const best = data.habits.map((h) => ({ h: h, s: C.streak(data, h, todayKey()) })).filter((x) => x.s.current >= 2).sort((a, b) => b.s.current - a.s.current)[0];
+    let html = '<header class="brand-row"><span class="brand-tile">' + brandMark(22) + '</span><b class="brand-name">' + APP_NAME + "</b>" +
+      '<button class="icon-btn soft" data-action="tab" data-v="settings" aria-label="Settings">' + ICON.settings(19) + "</button>" +
+      '<button class="icon-btn add" data-action="add" aria-label="New habit">' + ICON.plus(22) + "</button></header>";
+    html += '<section class="hero"><p class="kicker">' + fmt(ui.day, { weekday: "long", day: "numeric", month: "long" }) + "</p>" +
+      '<h1 class="headline">' + esc(hl.a) + "<br>" + esc(hl.b) + '</h1><p class="lede">' + esc(hl.sub) + "</p>" +
+      (isToday ? "" : '<button class="pill-btn" data-action="go-today">Back to today</button>') + "</section>";
+    if (data.habits.length) {
+      const perfect = st.total && st.done === st.total;
+      html += '<section class="momentum' + (perfect ? " perfect" : "") + '"><div class="m-text"><p class="kicker">' + (isToday ? "Today's progress" : "That day") + "</p>" +
+        '<p class="m-big num">' + st.done + "<span> of " + st.total + "</span></p>" +
+        '<p class="m-sub">' + (best ? '<span class="flame">' + ICON.flame(13) + "</span>" + esc(best.h.name) + " · " + plural(best.s.current, best.s.unit) : "Small steps add up.") + "</p></div>" +
+        '<div class="m-ring">' + segRing(st.items, 104, 9) + '<span class="m-pct num">' + pct(st.done, st.total) + "<small>%</small></span></div></section>";
+    }
+    html += '<div class="sec-head"><p class="kicker">This week</p><p class="sec-meta">' + fmt(ui.day, { month: "short", year: "numeric" }) + "</p></div>" + weekStrip();
+    if (data.habits.length) {
+      html += '<div class="sec-head"><h2 class="sec-title">Your habits</h2><span class="sec-tools"><span class="kicker">' + plural(st.total, "habit") + "</span>" +
+        '<button class="icon-btn bare" data-action="view" aria-label="' + (ui.view === "list" ? "Show week grid" : "Show list") + '">' + (ui.view === "list" ? ICON.grid(18) : ICON.list(18)) + "</button></span></div>";
+    }
+    html += ui.view === "grid" ? gridView() : listView(st);
+    return html;
+  }
+
   function todayScreen() {
     const today = todayKey();
     const st = dayStats(ui.day);
     const isToday = ui.day === today;
+    if (!isWide()) return phoneToday(st, isToday);
     const eyebrow = fmt(ui.day, { weekday: "long", day: "numeric", month: "long" });
     const title = isToday ? greeting() : fmt(ui.day, { weekday: "long" });
     const tools = '<div class="head-tools">' +
       (isToday ? "" : '<button class="pill-btn" data-action="go-today">Today</button>') +
       (data.habits.length ? '<button class="icon-btn" data-action="view" aria-label="' + (ui.view === "list" ? "Show week grid" : "Show list") + '">' + (ui.view === "list" ? ICON.grid(20) : ICON.list(20)) + "</button>" : "") +
-      (isWide() ? "" : '<button class="icon-btn" data-action="tab" data-v="settings" aria-label="Settings">' + ICON.settings(20) + "</button>") + "</div>";
+      "</div>";
     let body = '<header class="screen-head"><div><p class="eyebrow">' + (isToday ? "Today · " : "") + eyebrow + '</p><h1 class="large-title">' + title + "</h1></div>" + tools + "</header>" +
       weekStrip();
-    if (data.habits.length) body += isWide() ? dayArc(st, isToday) : dayLine(st, isToday);
+    if (data.habits.length) body += dayArc(st, isToday);
     body += ui.view === "grid" ? gridView() : listView(st);
-    if (data.habits.length && ui.view === "list" && st.total) body += '<p class="hint">Swipe right to check off, left to undo. Press and hold for more.</p>';
     return body;
   }
 
@@ -545,7 +577,7 @@
     const rows = data.habits.map((h) => ({ h: h, r: C.rate(data, h, from, today), s: C.streak(data, h, today) }))
       .sort((a, b) => (b.r.pct == null ? -1 : b.r.pct) - (a.r.pct == null ? -1 : a.r.pct));
     html += '<section class="card"><div class="card-head"><h2>By habit</h2><span class="caption">This ' + P.name + '</span></div><div class="by-habit">' + rows.map((x) =>
-      '<button class="bh-row" data-action="open" data-id="' + x.h.id + '" style="--c:' + colorOf(x.h) + '"><span class="bh-emoji">' + esc(x.h.emoji) + '</span><span class="bh-main"><span class="bh-top"><span class="bh-name">' + esc(x.h.name) + '</span><b class="num">' + (x.r.pct == null ? "–" : x.r.pct + "%") + "</b></span>" +
+      '<button class="bh-row" data-action="open" data-id="' + x.h.id + '" style="--c:' + colorOf(x.h) + '"><span class="bh-icon">' + habitIcon(x.h, 19) + '</span><span class="bh-main"><span class="bh-top"><span class="bh-name">' + esc(x.h.name) + '</span><b class="num">' + (x.r.pct == null ? "–" : x.r.pct + "%") + "</b></span>" +
       '<span class="bh-track"><i style="width:' + (x.r.pct || 0) + '%"></i></span><span class="bh-meta">' + x.r.done + " of " + x.r.due + (x.s.current ? ' · <span class="flame">' + ICON.flame(11) + "</span>" + plural(x.s.current, x.s.unit) : "") + "</span></span></button>").join("") + "</div></section>";
     return html;
   }
@@ -565,7 +597,7 @@
     return '<div class="habit-card' + (ui.editMode ? " wiggle" : "") + '" style="--c:' + colorOf(h) + '" data-id="' + h.id + '">' +
       (ui.editMode ? '<button class="del-badge" data-action="delete" data-id="' + h.id + '" aria-label="Delete ' + esc(h.name) + '">' + ICON.minus(14) + "</button>" : "") +
       '<button class="hc-main" data-action="' + (ui.editMode ? "edit" : "open") + '" data-id="' + h.id + '">' +
-      '<span class="hc-top"><span class="hc-emoji">' + esc(h.emoji) + "</span>" + (st.current ? '<span class="hc-streak num"><span class="flame">' + ICON.flame(12) + "</span>" + st.current + "</span>" : "") + "</span>" +
+      '<span class="hc-top"><span class="hc-icon">' + habitIcon(h, 23) + "</span>" + (st.current ? '<span class="hc-streak num"><span class="flame">' + ICON.flame(12) + "</span>" + st.current + "</span>" : "") + "</span>" +
       '<span class="hc-name">' + esc(h.name) + '</span><span class="hc-sched">' + scheduleText(h) + (goalText(h) ? " · " + esc(goalText(h)) : "") + "</span>" +
       '<span class="hc-week">' + dots + "</span></button></div>";
   }
@@ -574,7 +606,8 @@
     const today = todayKey();
     const st = dayStats(today);
     let html = '<header class="screen-head"><div><p class="eyebrow">' + plural(data.habits.length, "habit") + (st.total ? " · " + st.done + " done today" : "") + '</p><h1 class="large-title">Habits</h1></div>' +
-      (data.habits.length ? '<div class="head-tools"><button class="text-btn' + (ui.editMode ? " strong" : "") + '" data-action="edit-mode">' + (ui.editMode ? "Done" : "Edit") + "</button></div>" : "") + "</header>";
+      '<div class="head-tools">' + (data.habits.length ? '<button class="text-btn' + (ui.editMode ? " strong" : "") + '" data-action="edit-mode">' + (ui.editMode ? "Done" : "Edit") + "</button>" : "") +
+      (isWide() ? "" : '<button class="icon-btn add" data-action="add" aria-label="New habit">' + ICON.plus(22) + "</button>") + "</div></header>";
     if (!data.habits.length) return html + emptyState();
     if (ui.editMode) html += '<p class="edit-note">Tap ⊖ to delete a habit, or tap a card to change it.</p>';
     html += '<div class="habit-grid">' + data.habits.map(habitCard).join("") +
@@ -608,7 +641,7 @@
     let html = '<div class="detail" style="--c:' + colorOf(h) + '">';
     html += '<div class="detail-bar"><button class="nav-btn" data-action="close-detail">' + ICON.left(20) + (isWide() ? "Close" : "Back") + "</button>" +
       '<button class="nav-btn" data-action="edit" data-id="' + h.id + '">' + ICON.pencil(17) + "Edit</button></div>";
-    html += '<section class="detail-hero"><div class="hero-top"><span class="hero-emoji">' + esc(h.emoji) + '</span><span class="hero-sched">' + scheduleText(h) + (goalText(h) ? " · " + esc(goalText(h)) : "") + "</span></div>" +
+    html += '<section class="detail-hero"><div class="hero-top"><span class="hero-icon">' + habitIcon(h, 26) + '</span><span class="hero-sched">' + scheduleText(h) + (goalText(h) ? " · " + esc(goalText(h)) : "") + "</span></div>" +
       "<h2>" + esc(h.name) + '</h2><p class="hero-since">Since ' + fmt(h.created, { day: "numeric", month: "long", year: "numeric" }) + "</p>" +
       '<p class="hero-streak"><b class="num">' + st.current + "</b><span>" + (st.unit === "week" ? (st.current === 1 ? "week" : "weeks") : (st.current === 1 ? "day" : "days")) + " in a row</span></p></section>";
     if (h.target > 1 && C.isScheduled(h, ui.day) && ui.day <= today) {
@@ -685,10 +718,10 @@
   function newDraft() {
     const used = data.habits.map((h) => h.color);
     const color = (COLORS.find((c) => used.indexOf(c.id) === -1) || COLORS[data.habits.length % COLORS.length]).id;
-    return { name: "", emoji: "✨", color: color, time: "anytime", schedule: { type: "daily", days: [1, 2, 3, 4, 5], times: 3 }, target: 1, unit: "" };
+    return { name: "", icon: "sprout", color: color, time: "anytime", schedule: { type: "daily", days: [1, 2, 3, 4, 5], times: 3 }, target: 1, unit: "" };
   }
   function draftFrom(h) {
-    return { id: h.id, name: h.name, emoji: h.emoji, color: h.color, time: h.time, unit: h.unit, target: h.target,
+    return { id: h.id, name: h.name, icon: h.icon, emoji: h.emoji, color: h.color, time: h.time, unit: h.unit, target: h.target,
       schedule: { type: h.schedule.type, days: (h.schedule.days || [1, 2, 3, 4, 5]).slice(), times: h.schedule.times || 3 } };
   }
 
@@ -697,13 +730,13 @@
     const s = d.schedule;
     let html = '<div class="sheet-bar"><button class="nav-btn" data-action="close-sheet">Cancel</button><h2>' + (d.id ? "Edit habit" : "New habit") + '</h2><button class="nav-btn strong" data-action="save" id="save-btn"' + (d.name.trim() ? "" : " disabled") + ">" + (d.id ? "Save" : "Add") + "</button></div>";
     html += '<div class="sheet-body" style="--c:' + c + '">';
-    html += '<div class="editor-hero"><span class="hero-tile">' + esc(d.emoji) + '</span><input id="habit-name" class="name-input" type="text" maxlength="40" placeholder="What will you do?" value="' + esc(d.name) + '" autocomplete="off" aria-label="Habit name"></div>';
+    html += '<div class="editor-hero"><span class="hero-tile">' + habitIcon(d, 28) + '</span><input id="habit-name" class="name-input" type="text" maxlength="40" placeholder="What will you do?" value="' + esc(d.name) + '" autocomplete="off" aria-label="Habit name"></div>';
     if (!d.id) {
       const have = data.habits.map((h) => h.name.toLowerCase());
       const sugg = SUGGESTIONS.filter((x) => have.indexOf(x.name.toLowerCase()) === -1);
-      if (sugg.length) html += '<div class="suggest" role="group" aria-label="Suggestions">' + sugg.map((x, i) => '<button class="chip" data-action="suggest" data-v="' + SUGGESTIONS.indexOf(x) + '">' + x.emoji + " " + esc(x.name) + "</button>").join("") + "</div>";
+      if (sugg.length) html += '<div class="suggest" role="group" aria-label="Suggestions">' + sugg.map((x, i) => '<button class="chip" data-action="suggest" data-v="' + SUGGESTIONS.indexOf(x) + '">' + iconSvg(x.icon, 16) + esc(x.name) + "</button>").join("") + "</div>";
     }
-    html += '<p class="caption">Icon</p><div class="emoji-grid">' + EMOJIS.map((e) => '<button class="emoji-btn' + (e === d.emoji ? " on" : "") + '" data-action="emoji" data-v="' + e + '" aria-label="Icon ' + e + '">' + e + "</button>").join("") + "</div>";
+    html += '<p class="caption">Icon</p><div class="icon-grid">' + ICONS.map((n) => '<button class="icon-pick' + (n === d.icon ? " on" : "") + '" data-action="icon" data-v="' + n + '" aria-label="Icon ' + n.replace(/-/g, " ") + '">' + iconSvg(n, 22) + "</button>").join("") + "</div>";
     html += '<p class="caption">Colour</p><div class="color-row">' + COLORS.map((x) => '<button class="swatch' + (x.id === d.color ? " on" : "") + '" style="--s:' + x.hex + '" data-action="color" data-v="' + x.id + '" aria-label="Colour ' + x.id + '"></button>').join("") + "</div>";
     html += '<p class="caption">Time of day</p><div class="segmented four">' + TIMES.map((t) => '<button class="seg-btn' + (d.time === t.id ? " on" : "") + '" data-action="time" data-v="' + t.id + '">' + ICON[t.icon](16) + "<span>" + t.label + "</span></button>").join("") + "</div>";
     html += '<p class="caption">Repeat</p><div class="segmented">' +
@@ -732,7 +765,7 @@
       return '<div class="scrim clear" data-action="menu-close"></div><div class="popover" role="menu" style="left:' + x + "px;top:" + y + 'px">' + items + "</div>";
     }
     return '<div class="scrim enter" data-action="menu-close"></div><div class="action-sheet" role="menu" style="--c:' + colorOf(h) + '">' +
-      '<div class="as-group"><div class="as-head"><span class="as-emoji">' + esc(h.emoji) + "</span><div><b>" + esc(h.name) + "</b><span>" + scheduleText(h) + (goalText(h) ? " · " + esc(goalText(h)) : "") + "</span></div></div>" + items + "</div>" +
+      '<div class="as-group"><div class="as-head"><span class="as-icon">' + habitIcon(h, 21) + "</span><div><b>" + esc(h.name) + "</b><span>" + scheduleText(h) + (goalText(h) ? " · " + esc(goalText(h)) : "") + "</span></div></div>" + items + "</div>" +
       '<button class="as-cancel" data-action="menu-close">Cancel</button></div>';
   }
 
@@ -759,7 +792,7 @@
     for (let i = 0; i < 7; i++) dots += "<i></i>";
     return '<div class="celebrate" style="--c:' + colorOf(h) + '" role="dialog" aria-labelledby="cb-n">' +
       '<div class="cb-glow"></div><div class="cb-inner"><p class="caption">' + n + " " + unit + ' in a row</p><p class="cb-num num" id="cb-n" data-to="' + n + '">' + n + "</p>" +
-      '<div class="cb-dots">' + dots + '</div><p class="cb-name">' + esc(h.emoji) + " " + esc(h.name) + "</p><p class=\"cb-line\">" + (lines[n] || "Keep it going.") + "</p>" +
+      '<div class="cb-dots">' + dots + '</div><p class="cb-name">' + habitIcon(h, 22) + esc(h.name) + "</p><p class=\"cb-line\">" + (lines[n] || "Keep it going.") + "</p>" +
       '<button class="btn light" data-action="celebrate-close">Keep going</button></div></div>';
   }
 
@@ -776,16 +809,14 @@
         const done = due && C.isDone(data, h, today);
         return '<div class="side-habit' + (ui.detail === h.id ? " on" : "") + (due ? "" : " rest") + '" data-id="' + h.id + '" style="--c:' + colorOf(h) + '">' +
           '<button class="side-check' + (done ? " done" : "") + '" data-action="toggle-today" data-id="' + h.id + '" aria-label="' + esc((done ? "Undo " : "Check off ") + h.name) + '"' + (due ? "" : " disabled") + ">" + (done ? ICON.check(10) : "") + "</button>" +
-          '<button class="sh-name" data-action="open" data-id="' + h.id + '">' + esc(h.emoji) + " " + esc(h.name) + "</button>" + (st.current ? '<span class="sh-streak num">' + st.current + "</span>" : "") + "</div>";
+          '<button class="sh-name" data-action="open" data-id="' + h.id + '">' + esc(h.name) + "</button>" + (st.current ? '<span class="sh-streak num">' + st.current + "</span>" : "") + "</div>";
       }).join("") + "</div>" +
       '<button class="side-new" data-action="add">' + ICON.plus(16) + "New habit<kbd>⌘N</kbd></button></nav>";
   }
 
   function tabbar() {
-    const i = TABS.findIndex((t) => t[0] === ui.tab);
-    return '<div class="dock"><nav class="tabbar" aria-label="Sections">' + (i >= 0 ? '<span class="tab-glow" style="transform:translateX(' + i * 100 + '%)"></span>' : "") + TABS.map((t) =>
-      '<button class="tab' + (ui.tab === t[0] ? " on" : "") + '" data-action="tab" data-v="' + t[0] + '"' + (ui.tab === t[0] ? ' aria-current="page"' : "") + ">" + ICON[t[0]](22) + "<span>" + t[1] + "</span></button>").join("") + "</nav>" +
-      '<button class="fab" data-action="add" aria-label="New habit">' + ICON.plus(24) + "</button></div>";
+    return '<nav class="tabbar" aria-label="Sections">' + TABS.map((t) =>
+      '<button class="tab' + (ui.tab === t[0] ? " on" : "") + '" data-action="tab" data-v="' + t[0] + '"' + (ui.tab === t[0] ? ' aria-current="page"' : "") + "><span class=\"tab-pill\">" + ICON[t[0]](22) + "</span><span>" + t[1] + "</span></button>").join("") + "</nav>";
   }
 
   function trayView() {
@@ -952,7 +983,7 @@
     const schedule = d.schedule.type === "days" ? { type: "days", days: d.schedule.days.slice().sort() } :
       d.schedule.type === "weekly" ? { type: "weekly", times: d.schedule.times } : { type: "daily" };
     if (schedule.type === "days" && !schedule.days.length) { toast("Pick at least one day"); return; }
-    const fields = { name: name, emoji: d.emoji, color: d.color, time: d.time, schedule: schedule, target: d.target, unit: d.target > 1 ? d.unit.trim() : "" };
+    const fields = { name: name, icon: d.icon, color: d.color, time: d.time, schedule: schedule, target: d.target, unit: d.target > 1 ? d.unit.trim() : "" };
     const isNew = !d.id;
     if (d.id) Object.assign(habitById(d.id), fields);
     else {
@@ -1081,12 +1112,12 @@
       case "save": saveDraft(); break;
       case "suggest": {
         const s = SUGGESTIONS[+el.dataset.v], d = ui.sheet.draft;
-        Object.assign(d, { name: s.name, emoji: s.emoji, color: s.color, time: s.time, target: s.target, unit: s.unit });
+        Object.assign(d, { name: s.name, icon: s.icon, color: s.color, time: s.time, target: s.target, unit: s.unit });
         d.schedule.type = s.weekly ? "weekly" : "daily";
         if (s.weekly) d.schedule.times = s.weekly;
         haptic("light"); render(); break;
       }
-      case "emoji": ui.sheet.draft.emoji = el.dataset.v; render(); break;
+      case "icon": ui.sheet.draft.icon = el.dataset.v; render(); break;
       case "color": ui.sheet.draft.color = el.dataset.v; render(); break;
       case "time": ui.sheet.draft.time = el.dataset.v; render(); break;
       case "rtype": ui.sheet.draft.schedule.type = el.dataset.v; render(); break;
@@ -1285,15 +1316,15 @@
     s.settings.theme = theme || "system";
     const today = todayKey();
     const start = C.addDays(today, -74);
-    const H = (id, name, emoji, color, time, schedule, target, unit, p) => ({ id, name, emoji, color, time, schedule, target, unit, created: start, p });
+    const H = (id, name, icon, color, time, schedule, target, unit, p) => ({ id, name, icon, color, time, schedule, target, unit, created: start, p });
     const list = [
-      H("s1", "Sleep 7½ hours", "😴", "iris", "morning", { type: "daily" }, 1, "", 0.8),
-      H("s2", "Stretch 10 min", "🧘", "sage", "morning", { type: "days", days: [1, 2, 3, 4, 5] }, 1, "", 0.85),
-      H("s3", "Walk 8,000 steps", "🚶", "teal", "afternoon", { type: "daily" }, 1, "", 0.7),
-      H("s4", "Run", "🏃", "amber", "afternoon", { type: "weekly", times: 3 }, 1, "", 0.45),
-      H("s5", "Read 10 pages", "📚", "clay", "evening", { type: "daily" }, 1, "", 0.92),
-      H("s6", "Journal", "✍️", "rose", "evening", { type: "days", days: [0, 3] }, 1, "", 0.6),
-      H("s7", "Drink water", "💧", "sky", "anytime", { type: "daily" }, 8, "glasses", 0.8)
+      H("s1", "Sleep 7½ hours", "moon", "iris", "morning", { type: "daily" }, 1, "", 0.8),
+      H("s2", "Stretch 10 min", "person-standing", "sage", "morning", { type: "days", days: [1, 2, 3, 4, 5] }, 1, "", 0.85),
+      H("s3", "Walk 8,000 steps", "footprints", "teal", "afternoon", { type: "daily" }, 1, "", 0.7),
+      H("s4", "Run", "activity", "amber", "afternoon", { type: "weekly", times: 3 }, 1, "", 0.45),
+      H("s5", "Read 10 pages", "book-open", "clay", "evening", { type: "daily" }, 1, "", 0.92),
+      H("s6", "Journal", "notebook-pen", "rose", "evening", { type: "days", days: [0, 3] }, 1, "", 0.6),
+      H("s7", "Drink water", "droplet", "sky", "anytime", { type: "daily" }, 8, "glasses", 0.8)
     ];
     let seed = 7;
     const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
