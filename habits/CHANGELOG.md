@@ -3,6 +3,9 @@
 Har update ke saath version badhta hai (`npm run bump`) aur yahan ek line judti hai.
 Version ka matlab: **1.2.3** → 1 = bada badlav, 2 = naya feature ya design, 3 = chhota sudhaar.
 
+## 1.1.3
+- Android: upar aur neeche ke kaale patte hata diye. App ab poori screen pe dikhta hai, aur upar time, battery aur notification icons saaf dikhte hain
+
 ## 1.1.2
 - Tab badalne pe nav bar ka kaanch wala lens ab slide hota hai, chalte waqt halka sa failta hai, aur naye tab ka icon uchhalta hai
 - Nav bar thoda aur transparent
