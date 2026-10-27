@@ -232,20 +232,12 @@
     for (let i = 0; i < target; i++) out += '<i class="' + (i < count ? "on" : "") + '"></i>';
     return out + "</span>";
   }
-  // The logo: a warm sunrise tile with the day as an arc and the sun on it.
-  // The arc is bright up to the sun and faint after it: the part of the day still ahead.
-  // scripts/icons.js draws the app icons from the same shapes.
+  // The logo: three brush strokes on paper, drawn by www/brand.js (shared with the icon script).
   let markId = 0;
   function brandMark(size) {
-    const g = "rm" + markId++;
-    return '<svg class="brand-mark" width="' + size + '" height="' + size + '" viewBox="0 0 1024 1024" aria-hidden="true"><defs>' +
-      '<linearGradient id="' + g + 'b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFC45C"/><stop offset=".55" stop-color="#F59A3A"/><stop offset="1" stop-color="#E5672E"/></linearGradient>' +
-      '<radialGradient id="' + g + 'h" cx=".3" cy="0" r=".9"><stop offset="0" stop-color="#FFF" stop-opacity=".45"/><stop offset=".6" stop-color="#FFF" stop-opacity="0"/></radialGradient></defs>' +
-      '<rect width="1024" height="1024" rx="230" fill="url(#' + g + 'b)"/><rect width="1024" height="1024" rx="230" fill="url(#' + g + 'h)"/>' +
-      '<path d="M686 433A270 270 0 0 1 782 640" fill="none" stroke="#FFF" stroke-opacity=".42" stroke-width="92" stroke-linecap="round"/>' +
-      '<path d="M242 640A270 270 0 0 1 686 433" fill="none" stroke="#FFF" stroke-width="92" stroke-linecap="round"/>' +
-      '<circle cx="686" cy="433" r="122" fill="#FFF" fill-opacity=".28"/><circle cx="686" cy="433" r="80" fill="#FFF"/></svg>';
+    return '<svg class="brand-mark" width="' + size + '" height="' + size + '" viewBox="0 0 1024 1024" aria-hidden="true">' + window.RojBrand.logo("rm" + markId++) + "</svg>";
   }
+
 
 
   // ---------- Today: the Day Arc ----------
@@ -916,19 +908,11 @@
   }
 
   function welcome() {
-    return '<div class="welcome"><div class="welcome-art">' + welcomeArc() + "</div>" +
+    return '<div class="welcome"><div class="welcome-art">' + brandMark(132) + "</div>" +
       '<p class="eyebrow">Welcome to</p><h1>' + APP_NAME + '</h1><p class="welcome-sub">Small habits, every single day.<br>Watch your day fill up, from sunrise to night.</p>' +
       '<div class="welcome-btns"><button class="btn" data-action="start-sample">' + ICON.sparkle(18) + 'Start with examples</button><button class="btn secondary" data-action="start-empty">Start empty</button></div></div>';
   }
-  function welcomeArc() {
-    const cx = 150, cy = 140, r = 120;
-    const pts = [7, 9.5, 13, 15.5, 19, 21].map((hr, i) => ({ p: arcPoint(hr, cx, cy, r), c: COLORS[i].hex, e: ["😴", "🧘", "🚶", "🏃", "📚", "✍️"][i] }));
-    const s = arcPoint(ARC_START, cx, cy, r), e = arcPoint(ARC_END, cx, cy, r), sun = arcPoint(17.2, cx, cy, r);
-    return '<svg class="arc-svg" viewBox="0 0 300 160" aria-hidden="true"><path d="M' + s.x + " " + s.y + " A" + r + " " + r + " 0 0 1 " + e.x + " " + e.y + '" class="arc-track"/>' +
-      '<path d="M' + s.x + " " + s.y + " A" + r + " " + r + " 0 0 1 " + sun.x + " " + sun.y + '" class="arc-lit"/>' +
-      pts.map((x, i) => '<g class="arc-mark' + (i < 4 ? " done" : "") + '" style="--c:' + x.c + ";animation-delay:" + (0.2 + i * 0.09) + 's"><circle cx="' + x.p.x + '" cy="' + x.p.y + '" r="15" class="am-bg"/><text x="' + x.p.x + '" y="' + (x.p.y + 0.5) + '">' + x.e + "</text></g>").join("") +
-      '<circle cx="' + sun.x + '" cy="' + sun.y + '" r="15" class="sun-glow"/><circle cx="' + sun.x + '" cy="' + sun.y + '" r="7.5" class="sun"/></svg>';
-  }
+
 
   // ---------- render ----------
   const app = document.getElementById("app");

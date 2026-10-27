@@ -63,6 +63,7 @@ habits/
     styles.css          design: rang, light/dark, phone + Mac layout
     fonts/              Inter font (SIL Open Font License), offline ke liye
     habit-icons.js      habit ke line icons, Lucide se (ISC License). scripts/habit-icons.js banata hai
+    brand.js            logo: teen brush strokes (enso), app aur saare icons isi se bante hain
   android/              Android project (Capacitor)
   electron/             Mac app: window, menu bar panel, menu
   test/core.test.js     core.js ke tests

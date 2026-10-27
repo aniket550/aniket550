@@ -13,6 +13,7 @@ const html = [
   '<div id="app"></div>',
   "<script>window.ROZ_DEMO = true;</script>",
   "<script>" + www("habit-icons.js") + "</script>",
+  "<script>" + www("brand.js") + "</script>",
   "<script>" + www("core.js") + "</script>",
   "<script>" + www("app.js") + "</script>"
 ].join("\n");

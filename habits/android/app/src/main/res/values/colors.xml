@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="roz_background">#F4F1EC</color>
-    <color name="roz_sun">#F2903A</color>
+    <color name="roz_paper">#F4EEE3</color>
 </resources>
