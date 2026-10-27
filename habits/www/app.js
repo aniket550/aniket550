@@ -3,6 +3,7 @@
   "use strict";
 
   const C = window.HabitCore;
+  if (!window.HABIT_ICONS) window.HABIT_ICONS = {}; // without the icon file, habits fall back to their emoji
   const capCore = window.capacitorExports;
   const native = !!(capCore && capCore.Capacitor.isNativePlatform());
   const desktop = window.rozDesktop || null; // set by the Electron preload
