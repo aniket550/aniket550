@@ -1,9 +1,9 @@
 {
   "name": "habits",
-  "productName": "Roz",
+  "productName": "Roj Habit",
   "version": "1.0.0",
   "private": true,
-  "description": "Roz: a habit tracker for Android and Mac (iOS later)",
+  "description": "Roj Habit: a habit tracker for Android and Mac (iOS later)",
   "author": "Aniket",
   "main": "electron/main.js",
   "scripts": {
@@ -31,7 +31,7 @@
   },
   "build": {
     "appId": "com.aniket.habits",
-    "productName": "Roz",
+    "productName": "Roj Habit",
     "files": [
       "electron/**",
       "www/**",
@@ -44,7 +44,7 @@
       "category": "public.app-category.productivity",
       "icon": "build/icon.png",
       "identity": "-",
-      "artifactName": "Roz-${version}-mac-${arch}.${ext}",
+      "artifactName": "RojHabit-${version}-mac-${arch}.${ext}",
       "hardenedRuntime": false,
       "gatekeeperAssess": false
     }

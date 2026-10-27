@@ -5,15 +5,14 @@ const fs = require("fs");
 const path = require("path");
 
 const root = path.join(__dirname, "..");
-const BLUE = "#3F82CC", CLAY = "#C96A42", SAGE = "#4F8C63";
+const INK = "#1B1C20", SUN = "#E8962E";
 
-// Three arcs of the Day Ring. r: radius, w: stroke, all in a 1024 box centred at c.
-function arcs(c, r, w, colors) {
-  const circ = 2 * Math.PI * r, seg = circ / 3 - (w + 0.07 * r);
-  return colors.map((col, i) => {
-    const off = -(i * circ / 3) - (circ / 3 - seg) / 2;
-    return `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="${seg} ${circ}" stroke-dashoffset="${off}" transform="rotate(-90 ${c} ${c})"/>`;
-  }).join("");
+// The Day Arc mark: a half circle (the day) with the sun on it. c = centre of the circle, all in a 1024 box.
+function mark(cx, cy, r, w, ink, sun, sunR) {
+  const a = (50 * Math.PI) / 180;
+  const sx = cx + r * Math.cos(a), sy = cy - r * Math.sin(a);
+  return `<path d="M${cx - r} ${cy} A${r} ${r} 0 0 1 ${cx + r} ${cy}" fill="none" stroke="${ink}" stroke-width="${w}" stroke-linecap="round"/>` +
+    `<circle cx="${sx}" cy="${sy}" r="${sunR + w * 0.35}" fill="#FBF9F5"/><circle cx="${sx}" cy="${sy}" r="${sunR}" fill="${sun}"/>`;
 }
 const paper = `<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FBF9F5"/><stop offset="1" stop-color="#ECE7DF"/></linearGradient></defs>`;
 
@@ -21,14 +20,15 @@ const icons = {
   // macOS: 824px rounded square on a 1024 canvas, with the system-style drop shadow.
   mac: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">${paper}
     <defs><filter id="s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="10" stdDeviation="14" flood-opacity="0.28"/></filter></defs>
-    <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#g)" filter="url(#s)"/>${arcs(512, 238, 76, [BLUE, CLAY, SAGE])}</svg>`,
+    <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#g)" filter="url(#s)"/>${mark(512, 640, 250, 74, INK, SUN, 66)}</svg>`,
   // Android legacy icon (rounded square) and round icon.
-  square: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">${paper}<rect x="32" y="32" width="960" height="960" rx="220" fill="url(#g)"/>${arcs(512, 290, 90, [BLUE, CLAY, SAGE])}</svg>`,
-  round: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">${paper}<circle cx="512" cy="512" r="480" fill="url(#g)"/>${arcs(512, 270, 86, [BLUE, CLAY, SAGE])}</svg>`,
+  square: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">${paper}<rect x="32" y="32" width="960" height="960" rx="220" fill="url(#g)"/>${mark(512, 660, 300, 88, INK, SUN, 80)}</svg>`,
+  round: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">${paper}<circle cx="512" cy="512" r="480" fill="url(#g)"/>${mark(512, 650, 280, 84, INK, SUN, 74)}</svg>`,
   // Adaptive icon foreground: art must sit inside the central 66/108 safe zone.
-  foreground: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">${arcs(512, 248, 80, [BLUE, CLAY, SAGE])}</svg>`,
+  foreground: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">${mark(512, 620, 236, 70, INK, SUN, 62)}</svg>`,
   // Menu bar template image: black on transparent, macOS tints it.
-  tray: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">${arcs(512, 380, 150, ["#000", "#000", "#000"])}</svg>`
+  // Too small for a sun on the arc, so it rises inside it.
+  tray: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><path d="M132 820 A380 380 0 0 1 892 820" fill="none" stroke="#000" stroke-width="140" stroke-linecap="round"/><circle cx="512" cy="700" r="140" fill="#000"/></svg>`
 };
 
 const out = [

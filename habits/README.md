@@ -1,16 +1,28 @@
-# Roz
+# Roj Habit
 
-**Roz** ek habit tracker hai, Android aur Mac ke liye. iPhone wala app baad mein aayega, aur wo bhi isi code se banega.
+**Roj Habit** ek habit tracker hai, Android aur Mac ke liye. iPhone wala app baad mein aayega, aur wo bhi isi code se banega.
 
-Roz ki habits tick karo. Streak, Day Ring aur heatmap dekh kar pata chalta hai ki sab kitna jud raha hai.
+Roz ki habits tick karo. **Day Arc** pe dekho ki din kitna bhara: subah 6 se raat 10 tak suraj ka raasta, jis par har habit apne waqt pe baithi hai, aur aasmaan ka rang waqt ke saath badalta hai.
+
+## Kaise use karein
+
+| Kaam | Kaise |
+|---|---|
+| Nayi habit | Neeche gol **+** button (Mac: ⌘N). Upar ke suggestions se ek tap mein bhar jaati hai |
+| Tick karna | Left ka gola dabao, ya habit ko **right swipe** karo |
+| Undo | Habit ko **left swipe** karo |
+| Ginti wali habit (jaise 8 glass paani) | Gola dabane par +1 hota hai, aur moti (●●●○○) bharte jaate hain |
+| Edit / Delete | Habit ko **dabaa ke rakho** (Mac: right-click). Ya **Habits** tab → **Edit** → lal ⊖ dabao |
+| Galti se delete ho gaya | Neeche aane wale **Undo** button ko dabao (5 second tak rehta hai) |
+| Pichhla din theek karna | Upar hafte ki strip se din chuno, ya habit ke calendar mein us din pe tap karo |
 
 ## Download aur install
 
 Har push ke baad GitHub apne aap naye apps banata hai aur unhe ek release page pe daal deta hai:
-**https://github.com/aniket550/aniket550/releases/tag/roz-latest**
+**https://github.com/aniket550/aniket550/releases/tag/rojhabit-latest**
 
 ### 🤖 Android
-1. Phone mein upar wala link kholo aur `Roz-android.apk` download karo.
+1. Phone mein upar wala link kholo aur `RojHabit-android.apk` download karo.
 2. File kholo. Android pooche to us browser ko **"Install unknown apps"** ki permission do.
 3. **Install** dabao.
 
@@ -18,26 +30,27 @@ Naya APK purane ke upar install karoge to app **update** hoga, aur data waisa hi
 
 ### 💻 Mac
 1. Apne Mac ke hisaab se DMG download karo:
-   - M1, M2, M3, M4 (Apple chip): `Roz-1.0.0-mac-arm64.dmg`
-   - Intel Mac: `Roz-1.0.0-mac-x64.dmg`
+   - M1, M2, M3, M4 (Apple chip): `RojHabit-1.0.0-mac-arm64.dmg`
+   - Intel Mac: `RojHabit-1.0.0-mac-x64.dmg`
    - Pata nahi kaunsa hai? Apple menu  → About This Mac → "Chip" ya "Processor" dekho.
-2. DMG kholo aur **Roz** ko **Applications** folder mein drag karo.
+2. DMG kholo aur **Roj Habit** ko **Applications** folder mein drag karo.
 3. Pehli baar kholne par macOS rokega, kyunki app pe Apple ka paid developer signature nahi hai. Tab:
-   **System Settings → Privacy & Security** mein neeche jao → "Roz was blocked" ke saamne **Open Anyway** dabao.
+   **System Settings → Privacy & Security** mein neeche jao → "Roj Habit was blocked" ke saamne **Open Anyway** dabao.
    Ye sirf ek baar karna padta hai.
 
-Mac pe Roz **menu bar** mein bhi rehta hai (upar right mein chhota ring icon). Click karo aur aaj ki habits wahin tick kar do.
+Mac pe Roj Habit **menu bar** mein bhi rehta hai (upar right mein chhota arc icon). Click karo aur aaj ki habits wahin tick kar do.
 
 | Shortcut | Kaam |
 |---|---|
 | ⌘N | Nayi habit |
 | ⌘1 / ⌘2 / ⌘3 / ⌘, | Today / Progress / Habits / Settings |
+| ⌫ | Khuli hui habit delete (⌘Z se undo) |
 | ⌘[ / ⌘] ya ← / → | Pichhla / agla din |
 | ⌘E | Backup export |
 
 ## Data kahan rehta hai
 
-Data **sirf aapke device pe** rehta hai (Android pe app storage, Mac pe `~/Library/Application Support/Roz`). Phone aur Mac abhi sync nahi hote. Data ek device se doosre pe le jaana ho to:
+Data **sirf aapke device pe** rehta hai (Android pe app storage, Mac pe `~/Library/Application Support/Roj Habit`). Phone aur Mac abhi sync nahi hote. Data ek device se doosre pe le jaana ho to:
 **Settings → Export backup** karo, phir doosre device pe **Settings → Import backup**.
 
 ## Code kaise bana hai
@@ -56,7 +69,7 @@ habits/
     vendor.js           Capacitor plugins ko www/vendor/ mein jodta hai
     preview.js          design dekhne ke liye ek single HTML file banata hai
     icons.js            saare app icons banata hai (Playwright chahiye)
-../.github/workflows/roz-apps.yml   APK + DMG build aur release
+../.github/workflows/rojhabit-apps.yml   APK + DMG build aur release
 ```
 
 **Ek code, do dabbe:** `www/` ka code Android pe **Capacitor** chalata hai, aur Mac pe **Electron**. iPhone ke liye baad mein bas `npx cap add ios` karna hoga (Mac + Xcode chahiye).

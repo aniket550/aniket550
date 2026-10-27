@@ -1,16 +1,16 @@
-name: Roz apps
+name: Roj Habit apps
 
 # Builds the Android APK and the Mac DMGs for the habit tracker in habits/,
-# then puts them on one GitHub release page ("roz-latest") for easy download.
+# then puts them on one GitHub release page ("rojhabit-latest") for easy download.
 on:
   push:
     paths:
       - "habits/**"
-      - ".github/workflows/roz-apps.yml"
+      - ".github/workflows/rojhabit-apps.yml"
   workflow_dispatch:
 
 concurrency:
-  group: roz-apps-${{ github.ref }}
+  group: rojhabit-apps-${{ github.ref }}
   cancel-in-progress: true
 
 defaults:
@@ -70,16 +70,16 @@ jobs:
             echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/roz.keystore"
             export ROZ_KEYSTORE="$RUNNER_TEMP/roz.keystore"
             ./gradlew assembleRelease --no-daemon
-            cp app/build/outputs/apk/release/app-release.apk ../dist/Roz-android.apk
+            cp app/build/outputs/apk/release/app-release.apk ../dist/RojHabit-android.apk
           else
             echo "::warning::No ROZ_KEYSTORE_B64 secret, so this is a debug APK. See habits/README.md, Android signing."
             ./gradlew assembleDebug --no-daemon
-            cp app/build/outputs/apk/debug/app-debug.apk ../dist/Roz-android.apk
+            cp app/build/outputs/apk/debug/app-debug.apk ../dist/RojHabit-android.apk
           fi
       - uses: actions/upload-artifact@v4
         with:
-          name: Roz-android
-          path: habits/dist/Roz-android.apk
+          name: RojHabit-android
+          path: habits/dist/RojHabit-android.apk
           if-no-files-found: error
 
   mac:
@@ -99,7 +99,7 @@ jobs:
       - run: npm run build:mac
       - uses: actions/upload-artifact@v4
         with:
-          name: Roz-mac
+          name: RojHabit-mac
           path: habits/dist/*.dmg
           if-no-files-found: error
 
@@ -113,22 +113,23 @@ jobs:
         with:
           path: out
           merge-multiple: true
-      - name: Publish the roz-latest release
+      - name: Publish the rojhabit-latest release
         working-directory: out
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
           ls -la
-          gh release delete roz-latest --cleanup-tag --yes || true
-          gh release create roz-latest Roz-android.apk *.dmg \
+          gh release delete roz-latest --cleanup-tag --yes || true  # the app's old name
+          gh release delete rojhabit-latest --cleanup-tag --yes || true
+          gh release create rojhabit-latest RojHabit-android.apk *.dmg \
             --target "${{ github.sha }}" \
             --prerelease \
-            --title "Roz: latest build" \
+            --title "Roj Habit: latest build" \
             --notes "Build ${{ github.run_number }} from ${{ github.ref_name }}.
 
-          - Android: download Roz-android.apk on your phone and install it.
-          - Mac with Apple chip (M1 and later): Roz-1.0.0-mac-arm64.dmg
-          - Intel Mac: Roz-1.0.0-mac-x64.dmg
+          - Android: download RojHabit-android.apk on your phone and install it.
+          - Mac with Apple chip (M1 and later): RojHabit-1.0.0-mac-arm64.dmg
+          - Intel Mac: RojHabit-1.0.0-mac-x64.dmg
 
           Install steps are in habits/README.md."

@@ -1,4 +1,4 @@
-// Roz for Mac: the main window, the menu bar panel and the app menu.
+// Roj Habit for Mac: the main window, the menu bar panel and the app menu.
 const { app, BrowserWindow, Menu, Tray, ipcMain, dialog, nativeImage, nativeTheme, protocol, net, screen, shell } = require("electron");
 const path = require("path");
 const fs = require("fs");
@@ -20,7 +20,7 @@ function createMain() {
     height: 780,
     minWidth: 920,
     minHeight: 600,
-    title: "Roz",
+    title: "Roj Habit",
     show: false,
     titleBarStyle: isMac ? "hiddenInset" : "default",
     trafficLightPosition: { x: 18, y: 18 },
@@ -45,7 +45,7 @@ function createTray() {
   const icon = nativeImage.createFromPath(path.join(__dirname, "trayTemplate.png"));
   icon.setTemplateImage(true);
   tray = new Tray(icon);
-  tray.setToolTip("Roz");
+  tray.setToolTip("Roj Habit");
   trayWin = new BrowserWindow({
     width: 340,
     height: 460,
@@ -119,7 +119,7 @@ ipcMain.handle("save-file", async (ev, name, text) => {
   const win = BrowserWindow.fromWebContents(ev.sender);
   const res = await dialog.showSaveDialog(win, {
     defaultPath: path.join(app.getPath("documents"), name),
-    filters: [{ name: "Roz backup", extensions: ["json"] }]
+    filters: [{ name: "Roj Habit backup", extensions: ["json"] }]
   });
   if (res.canceled || !res.filePath) return false;
   await fs.promises.writeFile(res.filePath, text, "utf8");
@@ -128,7 +128,7 @@ ipcMain.handle("save-file", async (ev, name, text) => {
 
 ipcMain.handle("open-file", async (ev) => {
   const win = BrowserWindow.fromWebContents(ev.sender);
-  const res = await dialog.showOpenDialog(win, { properties: ["openFile"], filters: [{ name: "Roz backup", extensions: ["json"] }] });
+  const res = await dialog.showOpenDialog(win, { properties: ["openFile"], filters: [{ name: "Roj Habit backup", extensions: ["json"] }] });
   if (res.canceled || !res.filePaths.length) return null;
   return fs.promises.readFile(res.filePaths[0], "utf8");
 });

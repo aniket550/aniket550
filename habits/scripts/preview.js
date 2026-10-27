@@ -7,7 +7,7 @@ const www = (f) => fs.readFileSync(path.join(__dirname, "..", "www", f));
 const font = "data:font/woff2;base64," + www("fonts/inter-latin.woff2").toString("base64");
 const css = www("styles.css").toString().replace('url("fonts/inter-latin.woff2")', 'url("' + font + '")');
 const html = [
-  "<title>Roz</title>",
+  "<title>Roj Habit</title>",
   '<meta name="claude:viewport-fit-sides" content="cover">',
   "<style>" + css + "</style>",
   '<div id="app"></div>',
