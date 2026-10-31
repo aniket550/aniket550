@@ -7,6 +7,7 @@ const http = require("http");
 const os = require("os");
 const crypto = require("crypto");
 const qrcode = require("qrcode-generator");
+const { execFile } = require("child_process");
 const { pathToFileURL } = require("url");
 
 const WWW = path.join(__dirname, "..", "www");
@@ -264,6 +265,53 @@ function handleSync(req, res) {
   });
 }
 
+// ---------- the Mac widget (WidgetKit, mac-widget/) ----------
+// The app writes today's habits to Widget/today.json for the widget to draw, and asks WidgetKit
+// to redraw through the RojWidgetReload helper. The widget leaves a note in Widget/ticks/ for
+// each habit checked off there; the app applies it to its data and deletes the note.
+const widgetDir = () => path.join(app.getPath("userData"), "Widget");
+let reloadTimer = null;
+
+function writeWidgetSnapshot(snap) {
+  fs.mkdirSync(path.join(widgetDir(), "ticks"), { recursive: true });
+  const file = path.join(widgetDir(), "today.json");
+  fs.writeFileSync(file + ".tmp", JSON.stringify(snap));
+  fs.renameSync(file + ".tmp", file);
+  clearTimeout(reloadTimer);
+  reloadTimer = setTimeout(() => {
+    const helper = path.join(path.dirname(process.execPath), "RojWidgetReload");
+    if (fs.existsSync(helper)) execFile(helper, () => {});
+  }, 400);
+}
+
+let ticksBusy = false;
+async function applyWidgetTicks() {
+  if (ticksBusy) return;
+  const dir = path.join(widgetDir(), "ticks");
+  let files = [];
+  try { files = fs.readdirSync(dir).filter((f) => f.endsWith(".json")).sort(); } catch (e) { return; }
+  const win = [mainWin, trayWin].find((w) => w && !w.isDestroyed());
+  if (!files.length || !win) return;
+  ticksBusy = true;
+  const ticks = [];
+  files.forEach((f) => {
+    try { ticks.push(JSON.parse(fs.readFileSync(path.join(dir, f), "utf8"))); } catch (e) { /* half written: next time */ }
+  });
+  try {
+    await win.webContents.executeJavaScript("window.rojWidgetTicks(" + JSON.stringify(JSON.stringify(ticks)) + ")");
+    files.forEach((f) => { try { fs.unlinkSync(path.join(dir, f)); } catch (e) { /* already gone */ } });
+  } catch (e) { /* the window is not ready yet: the notes stay for the next try */ }
+  ticksBusy = false;
+}
+
+function watchWidgetTicks() {
+  const dir = path.join(widgetDir(), "ticks");
+  fs.mkdirSync(dir, { recursive: true });
+  let timer = null;
+  fs.watch(dir, () => { clearTimeout(timer); timer = setTimeout(applyWidgetTicks, 150); });
+  setInterval(applyWidgetTicks, 30000); // in case a change was missed
+}
+
 function send(cmd) {
   showMain();
   mainWin.webContents.send("command", cmd);
@@ -341,6 +389,10 @@ ipcMain.on("open-main", () => {
   showMain();
 });
 
+ipcMain.on("widget-snapshot", (ev, snap) => {
+  try { writeWidgetSnapshot(snap); } catch (e) { /* the widget just keeps its last picture */ }
+});
+
 ipcMain.handle("sync-info", () => syncInfo());
 ipcMain.handle("sync-set", async (ev, on) => {
   saveSyncPrefs({ on: !!on });
@@ -381,8 +433,19 @@ app.whenReady().then(() => {
   createMain();
   if (isMac) createTray();
   if (widgetPrefs().show) createWidget();
+  if (isMac) {
+    watchWidgetTicks();
+    // check-offs made on the widget while the app was closed
+    setTimeout(applyWidgetTicks, 3000);
+  }
   if (syncPrefs().on) startSync().then(() => mainWin && mainWin.webContents.send("command", "sync-changed"));
   app.on("activate", showMain);
+});
+
+// Clicking the Mac widget opens the app (rojhabit://open).
+app.on("open-url", (ev) => {
+  ev.preventDefault();
+  if (app.isReady()) showMain();
 });
 
 // On a Mac the app keeps running in the menu bar after the window closes.

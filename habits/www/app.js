@@ -8,7 +8,7 @@
   const native = !!(capCore && capCore.Capacitor.isNativePlatform());
   const desktop = window.rozDesktop || null; // set by the Electron preload
   const trayMode = location.hash === "#tray"; // Mac menu bar panel
-  const widgetMode = location.hash.indexOf("#widget") === 0; // Mac desktop widget: #widget/small, /medium or /large
+  const widgetMode = location.hash.indexOf("#widget") === 0; // Mac floating widget: #widget/small, /medium or /large
   const widgetSize = widgetMode ? location.hash.split("/")[1] || "medium" : "";
   const compact = trayMode || widgetMode;
   // The Android home screen widget (android/.../RojWidget.java) reads the saved state; this tells it to redraw.
@@ -148,6 +148,7 @@
     save(state, quiet) {
       const raw = JSON.stringify(state);
       if (!quiet) queueSync();
+      pushWidgetSnapshot();
       if (native) capacitorPreferences.Preferences.set({ key: STORE_KEY, value: raw }).then(() => homeWidget && homeWidget.refresh()).catch(() => {});
       else try { localStorage.setItem(STORE_KEY, raw); } catch (e) { /* private mode: keep going in memory */ }
     }
@@ -312,7 +313,7 @@
         '<div class="tip-head"><span class="tip-badge">New here?</span><button class="tip-ok" data-action="tip-done">Got it</button></div>' +
         '<div class="tip-row"><span class="tip-ico ok">' + ICON.check(16) + '</span><p><b>Click the circle</b> to mark a habit done. Click again to undo</p></div>' +
         '<div class="tip-row"><span class="tip-ico hold"><i></i></span><p><b>Right-click</b> a habit to edit or delete it</p></div>' +
-        '<div class="tip-row"><span class="tip-ico undo">' + ICON.widget(16) + '</span><p>Turn on the <b>desktop widget</b> in Settings, or use the menu bar icon</p></div>' +
+        '<div class="tip-row"><span class="tip-ico undo">' + ICON.widget(16) + '</span><p>Add the <b>Roj Habit widget</b>: right-click the desktop → Edit Widgets</p></div>' +
         '<p class="tip-foot">⌘N adds a habit. ⌘[ and ⌘] move between days.</p></section>';
     }
     return '<section class="swipe-tip" role="note" aria-label="How to use habits">' +
@@ -703,11 +704,16 @@
       '<section class="about">' + brandMark(40) + "<p><b>" + APP_NAME + '</b> · version ' + esc(window.ROJ_VERSION || "") + '</p><p class="muted small">Small habits, every single day.</p></section>';
   }
 
-  // Android: put the widget on the home screen. Mac: show or hide the desktop widget.
+  // Android: put the widget on the home screen. Mac: how to add the widget, and the floating card.
   function widgetSettings() {
     let row = "";
     if (homeWidget) row = '<button class="list-row" data-action="pin-widget"><span class="tile" style="--c:#3F8F8C">' + ICON.widget(18) + '</span><span class="lr-text"><span class="lr-title">Add widget to home screen</span><span class="lr-sub">See today\'s habits and check them off without opening the app</span></span></button>';
-    else if (desktop && desktop.toggleWidget) row = '<button class="list-row" data-action="desk-widget" role="switch" aria-checked="' + !!ui.deskWidget + '"><span class="tile" style="--c:#3F8F8C">' + ICON.widget(18) + '</span><span class="lr-text"><span class="lr-title">Desktop widget</span><span class="lr-sub">Today\'s habits in a small card on your desktop</span></span><span class="switch' + (ui.deskWidget ? " on" : "") + '"><i></i></span></button>';
+    else if (desktop && desktop.toggleWidget) {
+      // WidgetKit widgets need macOS 14 (Sonoma); older Macs get the floating card only.
+      const sonoma = parseInt(desktop.macVersion || "0", 10) >= 14;
+      if (sonoma) row = '<div class="list-row"><span class="tile" style="--c:#C2704B">' + ICON.widget(18) + '</span><span class="lr-text"><span class="lr-title">Mac widget</span><span class="lr-sub wrap">Right-click the desktop → <b>Edit Widgets…</b> → search <b>Roj Habit</b>, then drag it to the desktop or Notification Center. Small, medium and large.</span></span></div>';
+      row += '<button class="list-row" data-action="desk-widget" role="switch" aria-checked="' + !!ui.deskWidget + '"><span class="tile" style="--c:#3F8F8C">' + ICON.widget(18) + '</span><span class="lr-text"><span class="lr-title">Floating widget</span><span class="lr-sub">A small card that stays where you put it' + (sonoma ? ", on top of windows if you like" : "") + '</span></span><span class="switch' + (ui.deskWidget ? " on" : "") + '"><i></i></span></button>';
+    }
     return row ? '<section class="settings-group"><p class="caption">Widgets</p><div class="list card">' + row + "</div></section>" : "";
   }
 
@@ -1017,15 +1023,30 @@
       '<div class="rows">' + (st.items.length ? st.items.map(habitRow).join("") : '<p class="muted small">Nothing planned today.</p>') + "</div></div>";
   }
 
-  // The Mac desktop widget, in Apple's three widget sizes. Small: the ring, the count and the next
+  // The Mac floating widget (a window, for Macs before Sonoma too), in Apple's three widget sizes. Small: the ring, the count and the next
   // habit. Medium: the ring beside a checklist. Large: the count on top, the checklist, this week.
   // Rows share the height evenly; open habits come first.
+  // Today's habits for the widgets: open ones first, each group in the order of the day.
+  function widgetItems(st) {
+    const order = (it) => (it.satisfied ? 10 : 0) + TIMES.findIndex((t) => t.id === it.habit.time);
+    return st.items.slice().sort((a, b) => order(a) - order(b));
+  }
+  // Monday to Sunday of this week: full = every habit done, some, none, rest = nothing due, later.
+  function weekStates() {
+    const today = todayKey(), start = C.weekStart(today), out = [];
+    for (let i = 0; i < 7; i++) {
+      const k = C.addDays(start, i);
+      const st = k <= today ? dayStats(k) : null;
+      out.push({ key: k, l: fmt(k, { weekday: "narrow" }), s: !st ? "later" : !st.total ? "rest" : st.done === st.total ? "full" : st.done ? "some" : "none", now: k === today });
+    }
+    return out;
+  }
+
   function widgetView() {
     const today = todayKey();
     ui.day = today;
     const st = dayStats(today);
-    const order = (it) => (it.satisfied ? 10 : 0) + TIMES.findIndex((t) => t.id === it.habit.time);
-    const items = st.items.slice().sort((a, b) => order(a) - order(b));
+    const items = widgetItems(st);
     const title = !st.total ? "Nothing today" : st.done === st.total ? "All done" : '<b class="num">' + st.done + "</b> of " + st.total + " done";
     const ring = (size, stroke) => '<div class="m-ring wg-ring" style="width:' + size + "px;height:" + size + 'px">' + segRing(st.items, size, stroke) +
       '<span class="m-pct num">' + pct(st.done, st.total) + "<small>%</small></span></div>";
@@ -1060,15 +1081,30 @@
   }
   // Monday to Sunday: full dot = every habit done, ring = some, faint ring = none, faint dot = to come.
   function weekDots() {
-    const today = todayKey(), start = C.weekStart(today);
-    let out = "";
-    for (let i = 0; i < 7; i++) {
-      const k = C.addDays(start, i);
-      const st = k <= today ? dayStats(k) : null;
-      const state = !st ? "later" : !st.total ? "rest" : st.done === st.total ? "full" : st.done ? "some" : "none";
-      out += '<div class="wg-day ' + state + (k === today ? " now" : "") + '"><span>' + fmt(k, { weekday: "narrow" }) + "</span><i></i></div>";
-    }
-    return '<div class="wg-week">' + out + "</div>";
+    return '<div class="wg-week">' + weekStates().map((d) => '<div class="wg-day ' + d.s + (d.now ? " now" : "") + '"><span>' + d.l + "</span><i></i></div>").join("") + "</div>";
+  }
+
+  // The Mac widget (mac-widget/, WidgetKit) draws this picture of today, written to a file by
+  // electron/main.js. It holds what the widget shows, already worked out, so the Swift side
+  // needs none of the habit rules.
+  let snapTimer = null;
+  function pushWidgetSnapshot() {
+    if (!desktop || !desktop.widgetSnapshot || !desktop.macVersion || compact && !trayMode) return;
+    clearTimeout(snapTimer);
+    snapTimer = setTimeout(() => {
+      const today = todayKey(), st = dayStats(today);
+      desktop.widgetSnapshot({
+        v: 1, day: today,
+        date: fmt(today, { weekday: "long", day: "numeric", month: "short" }).toUpperCase(),
+        short: fmt(today, { weekday: "short", day: "numeric" }).toUpperCase(),
+        items: widgetItems(st).map((it) => {
+          const h = it.habit;
+          return { id: h.id, name: h.name, color: colorOf(h), done: it.satisfied, weekMet: it.satisfied && !it.done, count: it.count, target: h.target, frac: it.frac,
+            meta: h.target > 1 ? it.count + "/" + h.target : h.schedule.type === "weekly" ? Math.min(it.weekDone, h.schedule.times) + "/" + h.schedule.times + " wk" : null };
+        }),
+        week: weekStates().map((d) => ({ l: d.l, s: d.s, now: d.now }))
+      });
+    }, 300);
   }
 
   function mainScreen() {
@@ -1596,6 +1632,7 @@
   // Roll over to the new day at midnight, and keep the sun moving.
   function checkDay() {
     const t = todayKey();
+    if (checkDay.last && checkDay.last !== t) pushWidgetSnapshot();
     if (checkDay.last && checkDay.last !== t && ui.day === checkDay.last) ui.day = t;
     checkDay.last = t;
   }
@@ -1623,6 +1660,21 @@
   let markReady;
   const ready = new Promise((resolve) => { markReady = resolve; });
   if (desktop) {
+    // Habits checked off on the Mac widget (notes from electron/main.js): the same rule as the
+    // check button, add one until the goal, then back to zero. Old days' notes are dropped.
+    window.rojWidgetTicks = async (json) => {
+      await ready;
+      let changed = false;
+      JSON.parse(json).forEach((t) => {
+        const h = t && habitById(t.id);
+        if (!h || t.day !== todayKey()) return;
+        const n = C.countOn(data, h.id, t.day);
+        C.setCount(data, h.id, t.day, n >= h.target ? 0 : n + 1);
+        changed = true;
+      });
+      if (changed) { Store.save(data); if (!ui.sheet && !ui.menu) render(); }
+      return changed;
+    };
     window.rojMerge = async (json) => {
       await ready;
       const v = C.validate(JSON.parse(json));
@@ -1635,7 +1687,7 @@
     };
   }
 
-  // The desktop widget changes size by changing its address.
+  // The floating widget changes size by changing its address.
   if (widgetMode) window.addEventListener("hashchange", () => location.reload());
 
   // Another window (the Mac menu bar panel) changed the data.
@@ -1722,6 +1774,7 @@
     render();
     document.documentElement.classList.add("ready");
     markReady();
+    pushWidgetSnapshot();
     if (native) {
       const launch = await capacitorApp.App.getLaunchUrl().catch(() => null);
       if (launch && launch.url) pairFromUrl(launch.url);

@@ -3,6 +3,11 @@
 Har update ke saath version badhta hai (`npm run bump`) aur yahan ek line judti hai.
 Version ka matlab: **1.2.3** → 1 = bada badlav, 2 = naya feature ya design, 3 = chhota sudhaar.
 
+## 1.5.0
+- **Asli Mac widget** (macOS 14 Sonoma se): baaki apps ki tarah desktop pe right-click → Edit Widgets → Roj Habit. Small, Medium, Large. Gole pe click karke wahin habit tick, aur widget pe click karne se app khulta hai
+- Widget Apple ke WidgetKit (Swift) se bana hai aur macOS ke sandbox mein chalta hai. App har badlav pe widget ko naya data deta hai
+- Purana kheenchne wala card ab "Floating widget" hai, purane macOS ke liye bhi
+
 ## 1.4.0
 - **Sync aa gaya: Mac ↔ Android, same Wi‑Fi pe.** Mac pe Settings → Sync with your phone ON karo, phone ke camera se QR scan karo, bas. Koi account nahi, koi cloud nahi
 - Phone pe app khulte hi aur har badlav ke thodi der baad sync hota hai. Settings mein "Sync now" aur "Stop syncing"

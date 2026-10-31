@@ -1,7 +1,7 @@
 {
   "name": "habits",
   "productName": "Roj Habit",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "private": true,
   "description": "Roj Habit: a habit tracker for Android and Mac (iOS later)",
   "author": "Aniket",
@@ -50,6 +50,16 @@
       "artifactName": "RojHabit-${version}-mac-${arch}.${ext}",
       "hardenedRuntime": false,
       "gatekeeperAssess": false
-    }
+    },
+    "afterPack": "./scripts/mac-widget-pack.js",
+    "afterSign": "./scripts/mac-widget-sign.js",
+    "protocols": [
+      {
+        "name": "Roj Habit",
+        "schemes": [
+          "rojhabit"
+        ]
+      }
+    ]
   }
 }

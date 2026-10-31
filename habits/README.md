@@ -21,9 +21,10 @@ Roz ki habits tick karo. Home page pe aaj ka ring batata hai ki din kahan khada 
 | Kahan | Kaise lagayein | Kya karta hai |
 |---|---|---|
 | 🤖 Android home screen | **Settings → Add widget to home screen**. Ya home screen pe khaali jagah dabaa ke rakho → **Widgets** → **Roj Habit** | Size ke hisaab se layout badalta hai. **Chhota (2×2):** ring, "2 of 5 done" aur agli habit. **Chauda (4×2):** bagal mein ring, saath mein list. **Bada:** upar ginti aur ring, beech mein list, neeche is hafte ke din. List ki **poori line pe tap** karo to habit tick ho jaati hai. Upar ring pe tap karo to app khulta hai |
-| 💻 Mac desktop | **Settings → Desktop widget** ON karo, ya menu **Window → Desktop Widget** | Apple jaise teen size: **Small**, **Medium**, **Large** (widget pe right-click → size chuno). Kheench ke kahin bhi rakho, aur gole pe click karke wahin tick karo. Right-click mein **Keep on Top** aur **Hide Widget** bhi hain |
+| 💻 Mac widget (asli, macOS 14 Sonoma se) | Roj Habit ek baar kholo. Phir desktop pe right-click → **Edit Widgets…** → **Roj Habit** search karo → widget ko desktop ya Notification Center mein kheencho | Baaki Mac widgets jaisa: **Small**, **Medium**, **Large**. Gole pe click karo to habit wahin tick, baaki jagah click karo to app khulta hai. Light/dark apne aap |
+| 💻 Floating widget | **Settings → Floating widget** ya menu **Window → Desktop Widget** | Ek chhoti window jo kahin bhi rakh sakte ho (purane macOS pe bhi chalti hai). Right-click: size, **Keep on Top**, **Hide** |
 
-Mac ke asli Notification Center widgets (WidgetKit) ke liye app pe Apple ka paid developer signature chahiye, isliye abhi Roj Habit apna khud ka desktop widget deta hai.
+**Mac widget kaise kaam karta hai:** Electron khud widget nahi bana sakta, isliye widget Apple ke **WidgetKit** (Swift) se bana hai, `mac-widget/` mein. App har badlav pe aaj ki habits `~/Library/Application Support/Roj Habit/Widget/today.json` mein likhta hai, aur widget wahi file dikhata hai. Widget pe tick karne se `Widget/ticks/` mein ek chhota note banta hai, jo app padhke apne data mein jod deta hai. Widget macOS ke sandbox mein chalta hai aur sirf isi ek folder ko chhoo sakta hai.
 
 ## Sync: Mac ↔ Android (same Wi‑Fi)
 
@@ -105,7 +106,8 @@ habits/
     brand.js            logo: teen brush strokes (enso), app aur saare icons isi se bante hain
   android/              Android project (Capacitor)
     .../RojWidget.java  home screen widget: wahi saved data padhta hai aur gole se tick karta hai
-  electron/             Mac app: window, menu bar panel, desktop widget, menu
+  electron/             Mac app: window, menu bar panel, floating widget, sync server, menu
+  mac-widget/           asli Mac widget (Swift, WidgetKit). CI XcodeGen + xcodebuild se banata hai
   test/core.test.js     core.js ke tests
   scripts/
     vendor.js           Capacitor plugins ko www/vendor/ mein jodta hai

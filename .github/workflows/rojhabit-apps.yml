@@ -106,7 +106,36 @@ jobs:
           cache: npm
           cache-dependency-path: habits/package-lock.json
       - run: npm ci
+      # The Mac widget is a WidgetKit extension (Swift), which Electron cannot make. It is built
+      # here and put inside the app by scripts/mac-widget-pack.js. If it fails, the DMGs still
+      # ship without it.
+      - name: Build the Mac widget
+        id: widget
+        continue-on-error: true
+        working-directory: habits/mac-widget
+        run: |
+          set -o pipefail
+          brew install xcodegen
+          xcodegen generate
+          xcodebuild -project RojWidget.xcodeproj -alltargets -configuration Release \
+            ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO SYMROOT="$PWD/build" \
+            MARKETING_VERSION="$(node -p "require('../package.json').version")" CURRENT_PROJECT_VERSION="${{ github.run_number }}" \
+            CODE_SIGN_IDENTITY=- build 2>&1 | tail -60
+          ls -la build/Release
       - run: npm run build:mac
+      - name: Check the widget inside the app
+        continue-on-error: true
+        run: |
+          APP="$(ls -d dist/mac-arm64/*.app | head -1)"
+          WIDGET="$APP/Contents/PlugIns/RojWidget.appex"
+          ls -la "$WIDGET/Contents" "$WIDGET/Contents/Resources" || true
+          codesign -d --entitlements - "$WIDGET"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          plutil -p "$WIDGET/Contents/Info.plist"
+          cp -R "$APP" /Applications/
+          /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "/Applications/$(basename "$APP")"
+          pluginkit -a "/Applications/$(basename "$APP")/Contents/PlugIns/RojWidget.appex" || true
+          pluginkit -m -v -i com.aniket.habits.widget
       - uses: actions/upload-artifact@v4
         with:
           name: RojHabit-mac

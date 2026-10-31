@@ -13,7 +13,9 @@ contextBridge.exposeInMainWorld("rozDesktop", {
   widgetMenu: () => ipcRenderer.send("widget-menu"),
   syncInfo: () => ipcRenderer.invoke("sync-info"),
   setSync: (on) => ipcRenderer.invoke("sync-set", on),
-  newSyncCode: () => ipcRenderer.invoke("sync-newcode")
+  newSyncCode: () => ipcRenderer.invoke("sync-newcode"),
+  widgetSnapshot: (snap) => ipcRenderer.send("widget-snapshot", snap),
+  macVersion: process.platform === "darwin" && process.getSystemVersion ? process.getSystemVersion() : ""
 });
 
 if (process.platform === "darwin") {

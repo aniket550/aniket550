@@ -538,6 +538,8 @@ html.scrolled .brand-row {
 .lr-text { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
 .lr-title { font-size: 16px; font-weight: 600; color: var(--label); }
 .lr-sub { font-size: 13px; color: var(--secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lr-sub.wrap { white-space: normal; line-height: 1.45; }
+.lr-sub b { color: var(--label-2); font-weight: 650; }
 .list-row.danger .lr-title { color: var(--danger); }
 .settings-group { display: flex; flex-direction: column; gap: 8px; }
 .settings-group > .caption { padding: 0 4px; }
