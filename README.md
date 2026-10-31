@@ -2,6 +2,8 @@
 
 **30 din mein English bolna shuru karo.** Hindi bolne waale beginners ke liye ek app. User ko roz ek task milta hai, aur har rule ke saath uska **"kyun" (reason)** bhi diya jaata hai, taaki ratna na pade, samajh aaye.
 
+> Is repo mein ek aur app hai: **Roj Habit**, habit tracker (Android + Mac). Dekho [`habits/README.md`](habits/README.md).
+
 ## Prototype chalao
 
 Koi install nahi chahiye. `app/index.html` ko browser mein kholo, ya local server chalao:

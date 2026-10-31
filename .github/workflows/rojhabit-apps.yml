@@ -1,0 +1,181 @@
+name: Roj Habit apps
+
+# Builds the Android APK and the Mac DMGs for the habit tracker in habits/,
+# then puts them on one GitHub release page ("rojhabit-latest") for easy download.
+on:
+  push:
+    paths:
+      - "habits/**"
+      - ".github/workflows/rojhabit-apps.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: rojhabit-apps-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: habits
+
+env:
+  ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: habits/package-lock.json
+      - run: npm ci
+      - run: npm test
+
+  android:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: habits/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npm run android:sync
+      # Without a signing secret the APK is a debug build. Its key is made once and kept in
+      # the cache, so new builds install as updates while the cache lives (7 days unused).
+      # The runner's own debug key lives outside ~/.android, so the build is pointed at ours.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.roz/debug.keystore
+          key: roz-debug-keystore-v2
+      - name: Make the debug key once
+        run: |
+          if [ ! -f ~/.roz/debug.keystore ]; then
+            mkdir -p ~/.roz
+            keytool -genkeypair -keystore ~/.roz/debug.keystore -storepass android -alias androiddebugkey \
+              -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          fi
+          keytool -list -v -keystore ~/.roz/debug.keystore -storepass android | grep -m1 "SHA256:"
+      - name: Build APK
+        working-directory: habits/android
+        env:
+          ROZ_VERSION_CODE: ${{ github.run_number }}
+          KEYSTORE_B64: ${{ secrets.ROZ_KEYSTORE_B64 }}
+          ROZ_KEYSTORE_PASSWORD: ${{ secrets.ROZ_KEYSTORE_PASSWORD }}
+          ROZ_KEY_ALIAS: ${{ secrets.ROZ_KEY_ALIAS }}
+          ROZ_KEY_PASSWORD: ${{ secrets.ROZ_KEY_PASSWORD }}
+        run: |
+          chmod +x gradlew
+          mkdir -p ../dist
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/roz.keystore"
+            export ROZ_KEYSTORE="$RUNNER_TEMP/roz.keystore"
+            ./gradlew assembleRelease --no-daemon
+            cp app/build/outputs/apk/release/app-release.apk ../dist/RojHabit-android.apk
+          else
+            echo "::warning::No ROZ_KEYSTORE_B64 secret, so this is a debug APK. See habits/README.md, Android signing."
+            export ROZ_DEBUG_KEYSTORE="$HOME/.roz/debug.keystore"
+            ./gradlew assembleDebug --no-daemon
+            cp app/build/outputs/apk/debug/app-debug.apk ../dist/RojHabit-android.apk
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RojHabit-android
+          path: habits/dist/RojHabit-android.apk
+          if-no-files-found: error
+
+  mac:
+    needs: test
+    runs-on: macos-latest
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: ""
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: habits/package-lock.json
+      - run: npm ci
+      # The Mac widget is a WidgetKit extension (Swift), which Electron cannot make. It is built
+      # here and put inside the app by scripts/mac-widget-pack.js. If it fails, the DMGs still
+      # ship without it.
+      - name: Build the Mac widget
+        id: widget
+        continue-on-error: true
+        working-directory: habits/mac-widget
+        run: |
+          set -o pipefail
+          brew install xcodegen
+          xcodegen generate
+          xcodebuild -project RojWidget.xcodeproj -alltargets -configuration Release \
+            ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO SYMROOT="$PWD/build" \
+            MARKETING_VERSION="$(node -p "require('../package.json').version")" CURRENT_PROJECT_VERSION="${{ github.run_number }}" \
+            CODE_SIGN_IDENTITY=- build 2>&1 | tail -60
+          ls -la build/Release
+      - run: npm run build:mac
+      - name: Check the widget inside the app
+        continue-on-error: true
+        run: |
+          APP="$(ls -d dist/mac-arm64/*.app | head -1)"
+          WIDGET="$APP/Contents/PlugIns/RojWidget.appex"
+          ls -la "$WIDGET/Contents" "$WIDGET/Contents/Resources" || true
+          codesign -d --entitlements - "$WIDGET"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          plutil -p "$WIDGET/Contents/Info.plist"
+          cp -R "$APP" /Applications/
+          /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "/Applications/$(basename "$APP")"
+          pluginkit -a "/Applications/$(basename "$APP")/Contents/PlugIns/RojWidget.appex" || true
+          pluginkit -m -v -i com.aniket.habits.widget
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RojHabit-mac
+          path: habits/dist/*.dmg
+          if-no-files-found: error
+
+  release:
+    needs: [android, mac]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: habits/package.json
+          sparse-checkout-cone-mode: false
+          path: src
+      - name: Publish the rojhabit-latest release
+        working-directory: out
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          ls -la
+          VERSION=$(node -p "require('../src/habits/package.json').version")
+          ARM=$(ls *arm64.dmg); X64=$(ls *x64.dmg)
+          gh release delete roz-latest --cleanup-tag --yes || true  # the app's old name
+          gh release delete rojhabit-latest --cleanup-tag --yes || true
+          gh release create rojhabit-latest RojHabit-android.apk *.dmg \
+            --target "${{ github.sha }}" \
+            --prerelease \
+            --title "Roj Habit $VERSION" \
+            --notes "Version $VERSION, build ${{ github.run_number }} from ${{ github.ref_name }}.
+
+          - Android: download RojHabit-android.apk on your phone and install it.
+          - Mac with Apple chip (M1 and later): $ARM
+          - Intel Mac: $X64
+
+          What changed: habits/CHANGELOG.md. Install steps: habits/README.md."

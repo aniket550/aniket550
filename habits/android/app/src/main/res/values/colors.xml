@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="roz_background">#F4F1EC</color>
+    <color name="roz_paper">#F4EEE3</color>
+    <!-- home screen widget -->
+    <color name="widget_bg">#FCFAF6</color>
+    <color name="widget_ink">#17181B</color>
+    <color name="widget_secondary">#77736B</color>
+    <color name="widget_tertiary">#A9A49B</color>
+    <color name="widget_accent">#E8962E</color>
+    <color name="widget_accent_text">#A85B0C</color>
+    <color name="widget_press">#1F3D2B1E</color>
+</resources>

@@ -1,0 +1,65 @@
+{
+  "name": "habits",
+  "productName": "Roj Habit",
+  "version": "1.6.0",
+  "private": true,
+  "description": "Roj Habit: a habit tracker for Android and Mac (iOS later)",
+  "author": "Aniket",
+  "main": "electron/main.js",
+  "scripts": {
+    "test": "node --test test/core.test.js",
+    "vendor": "node scripts/vendor.js",
+    "preview": "node scripts/preview.js",
+    "serve": "npm run vendor && python3 -m http.server 8000 --directory www",
+    "android:sync": "npm run vendor && cap sync android",
+    "mac": "npm run vendor && electron .",
+    "build:mac": "npm run vendor && electron-builder --mac dmg --arm64 --x64 --publish never",
+    "bump": "node scripts/bump.js"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.3",
+    "@capacitor/app": "8.1.2",
+    "@capacitor/core": "8.5.3",
+    "@capacitor/filesystem": "8.1.4",
+    "@capacitor/haptics": "8.0.2",
+    "@capacitor/preferences": "8.0.1",
+    "@capacitor/share": "8.0.3",
+    "qrcode-generator": "1.4.4"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.3",
+    "electron": "44.7.0",
+    "electron-builder": "26.17.0",
+    "lucide-static": "1.55.0"
+  },
+  "build": {
+    "appId": "com.aniket.habits",
+    "productName": "Roj Habit",
+    "files": [
+      "electron/**",
+      "www/**",
+      "package.json"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.png",
+      "identity": "-",
+      "artifactName": "RojHabit-${version}-mac-${arch}.${ext}",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
+    },
+    "afterPack": "./scripts/mac-widget-pack.js",
+    "afterSign": "./scripts/mac-widget-sign.js",
+    "protocols": [
+      {
+        "name": "Roj Habit",
+        "schemes": [
+          "rojhabit"
+        ]
+      }
+    ]
+  }
+}
