@@ -41,7 +41,7 @@ const html = `<!doctype html><html><head><style>
   .ring b { position: relative; font-size: 15px; color: #17181B; }
   .date { font-size: 11px; font-weight: 500; letter-spacing: .1em; color: #77736B; }
   .title { margin-top: 2px; font-size: 20px; font-weight: 700; letter-spacing: -.02em; color: #17181B; }
-  .title .d { color: #A85B0C; } .title .l { color: #A9A49B; }
+  .title .d { color: #A85B0C; }
   .rows { margin-top: 10px; }
   .row { display: flex; align-items: center; height: 34px; gap: 12px; }
   .row span { flex: 1; font-size: 14px; font-weight: 500; color: #17181B; }
@@ -49,7 +49,7 @@ const html = `<!doctype html><html><head><style>
   .row em { font-style: normal; font-size: 12px; font-weight: 500; color: #77736B; }
 </style></head><body><div class="w">
   <div class="head"><div class="ring"><svg width="60" height="60">${ring([0, 0, 0.62, 1, 1], 60, 6.5)}</svg><b>40%</b></div>
-  <div><div class="date">SATURDAY 31 OCT</div><div class="title"><span class="d">2</span> down, <span class="l">3</span> to go.</div></div></div>
+  <div><div class="date">SATURDAY 31 OCT</div><div class="title"><span class="d">2</span> of 5 done</div></div></div>
   <div class="rows">${habits.map((h) => `<div class="row${h[2] === "done" ? " done" : ""}">${bubble(h[1], h[2])}<span>${h[0]}</span>${h[3] ? `<em>${h[3]}</em>` : ""}</div>`).join("")}</div>
 </div></body></html>`;
 

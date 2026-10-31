@@ -2,7 +2,7 @@
 
 **Roj Habit** ek habit tracker hai, Android aur Mac ke liye. iPhone wala app baad mein aayega, aur wo bhi isi code se banega.
 
-Roz ki habits tick karo. Home page seedha batata hai ki din kahan khada hai ("2 down, 4 to go."), saath mein aaj ka ring. Mac pe iske bagal mein chhote widget cards hain: **Up next** (ab kaunsi habit baaki hai), **Streaks** aur **This week**.
+Roz ki habits tick karo. Home page pe aaj ka ring batata hai ki din kahan khada hai ("2 of 5"). Mac pe iske bagal mein chhote widget cards hain: **Up next** (ab kaunsi habit baaki hai), **Streaks** aur **This week**.
 
 ## Kaise use karein
 
@@ -20,7 +20,7 @@ Roz ki habits tick karo. Home page seedha batata hai ki din kahan khada hai ("2 
 
 | Kahan | Kaise lagayein | Kya karta hai |
 |---|---|---|
-| 🤖 Android home screen | **Settings → Add widget to home screen**. Ya home screen pe khaali jagah dabaa ke rakho → **Widgets** → **Roj Habit** | Aaj ka ring, "2 down, 3 to go." aur habits ki list. Gole pe tap karo to habit wahin tick ho jaati hai, app khole bina. Chhota (2×2) karoge to sirf ring dikhega |
+| 🤖 Android home screen | **Settings → Add widget to home screen**. Ya home screen pe khaali jagah dabaa ke rakho → **Widgets** → **Roj Habit** | Aaj ka ring, "2 of 5 done" aur habits ki list. Gole pe tap karo to habit wahin tick ho jaati hai, app khole bina. Chhota (2×2) karoge to sirf ring dikhega |
 | 💻 Mac desktop | **Settings → Desktop widget** ON karo, ya menu **Window → Desktop Widget** | Desktop pe chhota kaanch jaisa card. Use kheench ke kahin bhi rakho. Right-click: **Keep on Top**, **Hide Widget** |
 
 Mac ke asli Notification Center widgets (WidgetKit) ke liye app pe Apple ka paid developer signature chahiye, isliye abhi Roj Habit apna khud ka desktop widget deta hai.

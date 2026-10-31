@@ -288,16 +288,14 @@ public class RojWidget extends AppWidgetProvider {
         mgr.updateAppWidget(widgetId, v);
     }
 
-    // "2 down, 3 to go." like the app's Today, with the numbers in colour.
+    // "2 of 5 done", with the done count in colour.
     static CharSequence headline(Context c, JSONObject state, int done, int total) {
-        if (state == null) return "Small habits, every day.";
-        if (total == 0) return "A quiet day.";
-        if (done == total) return "All done.";
+        if (state == null) return "Small habits, every day";
+        if (total == 0) return "Nothing today";
+        if (done == total) return "All done";
         SpannableStringBuilder b = new SpannableStringBuilder();
         appendColored(b, String.valueOf(done), c.getColor(R.color.widget_accent_text));
-        b.append(" down, ");
-        appendColored(b, String.valueOf(total - done), c.getColor(R.color.widget_tertiary));
-        b.append(" to go.");
+        b.append(" of ").append(String.valueOf(total)).append(" done");
         return b;
     }
 

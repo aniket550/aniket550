@@ -3,6 +3,10 @@
 Har update ke saath version badhta hai (`npm run bump`) aur yahan ek line judti hai.
 Version ka matlab: **1.2.3** → 1 = bada badlav, 2 = naya feature ya design, 3 = chhota sudhaar.
 
+## 1.2.1
+- "1 down, 4 to go." wali badi line hata di. Phone pe ab date ke neeche bas ek chhoti si line hai, aur Mac pe "Good morning". Ginti progress ring wale card mein hai
+- Widgets mein bhi ab "2 of 5 done" likha aata hai
+
 ## 1.2.0
 - **Widgets aa gaye.** Android pe home screen widget: aaj ka ring, "2 down, 3 to go." aur habits, gole pe tap karke wahin tick. Settings → Add widget to home screen
 - Mac pe **desktop widget**: chhota kaanch jaisa card, kahin bhi kheench ke rakho, wahin se tick karo. Settings → Desktop widget, ya Window → Desktop Widget

@@ -364,19 +364,13 @@
     return '<svg class="seg-ring" width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + " " + size + '" aria-hidden="true"><g transform="rotate(-90 ' + c + " " + c + ')">' + arcs + "</g></svg>";
   }
 
-  // The headline says where the day stands, in plain words.
-  function headline(st, isToday) {
-    const left = st.total - st.done;
-    if (!isToday) return { a: fmt(ui.day, { weekday: "long" }) + ",", b: fmt(ui.day, { day: "numeric", month: "long" }) + ".", sub: st.done + " of " + st.total + " done that day. Tap any habit to fix it." };
-    if (!st.total) return { a: "A quiet day.", b: "Nothing planned.", sub: "Rest counts too." };
-    if (!left) return { a: "That's the day.", b: "All done.", sub: "Every habit checked. See you tomorrow." };
-    if (!st.done) return { na: 0, a: " down,", nb: left, b: " to go.", sub: "" };
-    return { na: st.done, a: " down,", nb: left, b: " to go.", sub: st.done / st.total >= 0.5 ? "More than halfway. Keep it rolling." : "Good start. One more?" };
-  }
-
-  function headlineHtml(hl) {
-    const num = (n, cls) => '<span class="hl-num ' + cls + (prev("hl:" + cls + ui.day, n) !== n ? " bump" : "") + ' num">' + n + "</span>";
-    return '<h1 class="headline">' + (hl.na != null ? num(hl.na, "done") : "") + esc(hl.a) + "<br>" + (hl.nb != null ? num(hl.nb, "left") : "") + esc(hl.b) + "</h1>";
+  // One plain line under the date about where the day stands; the ring card carries the numbers.
+  function dayLine(st, isToday) {
+    if (!isToday) return st.done + " of " + st.total + " done that day. Tap any habit to fix it.";
+    if (!st.total) return "Nothing planned today. Rest counts too.";
+    if (st.done === st.total) return "Every habit checked. See you tomorrow.";
+    if (!st.done) return "";
+    return st.done / st.total >= 0.5 ? "More than halfway. Keep it rolling." : "Good start. One more?";
   }
   function bestStreak() {
     return data.habits.map((h) => ({ h: h, s: C.streak(data, h, todayKey()) })).filter((x) => x.s.current >= 2).sort((a, b) => b.s.current - a.s.current)[0];
@@ -394,13 +388,13 @@
   }
 
   function phoneToday(st, isToday) {
-    const hl = headline(st, isToday);
+    const line = dayLine(st, isToday);
     // Glass top bar: clear at the top of the page, frosted once the page scrolls under it.
     let html = '<header class="brand-row"><span class="brand-logo">' + brandMark(40) + '</span><b class="brand-name">' + APP_NAME + "</b>" +
       '<button class="glass-btn" data-action="tab" data-v="settings" aria-label="Settings">' + ICON.settings(19) + "</button>" +
       '<button class="glass-btn add" data-action="add" aria-label="New habit">' + ICON.plus(21) + "</button></header>";
-    html += '<section class="hero"><p class="kicker">' + fmt(ui.day, { weekday: "long", day: "numeric", month: "long" }) + "</p>" + headlineHtml(hl) +
-      (hl.sub ? '<p class="lede">' + esc(hl.sub) + "</p>" : "") +
+    html += '<section class="hero"><p class="kicker">' + fmt(ui.day, { weekday: "long", day: "numeric", month: "long" }) + "</p>" +
+      (line ? '<p class="lede">' + esc(line) + "</p>" : "") +
       (isToday ? "" : '<button class="pill-btn" data-action="go-today">Back to today</button>') + "</section>";
     if (data.habits.length) html += momentumCard(st, isToday);
     html += '<div class="sec-head"><p class="kicker">This week</p><p class="sec-meta">' + fmt(ui.day, { month: "short", year: "numeric" }) + "</p></div>" + weekStrip();
@@ -411,13 +405,13 @@
     return html;
   }
 
-  // Mac Today: the phone's headline and ring side by side, the week, then the habits with widget cards beside them.
+  // Mac Today: greeting and ring side by side, the week, then the habits with widget cards beside them.
   function deskToday(st, isToday) {
-    const hl = headline(st, isToday);
-    let html = '<header class="desk-head"><p class="kicker">' + (isToday ? greeting() + " · " : "") + fmt(ui.day, { weekday: "long", day: "numeric", month: "long" }) + "</p>" +
+    const line = dayLine(st, isToday);
+    let html = '<header class="desk-head"><p class="kicker">' + (isToday ? "Today · " : "") + fmt(ui.day, { weekday: "long", day: "numeric", month: "long" }) + "</p>" +
       '<div class="head-tools">' + (isToday ? "" : '<button class="pill-btn" data-action="go-today">Back to today</button>') +
       '<button class="text-btn strong" data-action="add">' + ICON.plus(16) + "New habit</button></div></header>";
-    html += '<div class="desk-hero"><section class="hero">' + headlineHtml(hl) + (hl.sub ? '<p class="lede">' + esc(hl.sub) + "</p>" : "") + "</section>" +
+    html += '<div class="desk-hero"><section class="hero"><h1 class="large-title">' + (isToday ? greeting() : fmt(ui.day, { weekday: "long" })) + "</h1>" + (line ? '<p class="lede">' + esc(line) + "</p>" : "") + "</section>" +
       (data.habits.length ? momentumCard(st, isToday) : "") + "</div>";
     html += weekStrip();
     if (!data.habits.length) return html + listView(st);
@@ -926,7 +920,7 @@
     const order = (it) => (it.satisfied ? 10 : 0) + TIMES.findIndex((t) => t.id === it.habit.time);
     const items = st.items.slice().sort((a, b) => order(a) - order(b));
     const left = st.total - st.done;
-    const title = !st.total ? "Nothing today." : !left ? "All done." : '<b class="num">' + st.done + "</b> down, " + '<b class="num left">' + left + "</b> to go.";
+    const title = !st.total ? "Nothing today" : !left ? "All done" : '<b class="num">' + st.done + "</b> of " + st.total + " done";
     const rows = items.map((it) => {
       const h = it.habit, counter = h.target > 1 && !it.done;
       return '<div class="wg-row' + (it.satisfied ? " done" : "") + '" style="--c:' + colorOf(h) + '">' +
