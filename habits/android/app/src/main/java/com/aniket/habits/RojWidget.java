@@ -44,12 +44,9 @@ public class RojWidget extends AppWidgetProvider {
     static final String[] TIMES = { "morning", "afternoon", "evening", "anytime" };
 
     static final int[] ROWS = { R.id.w_row0, R.id.w_row1, R.id.w_row2, R.id.w_row3, R.id.w_row4, R.id.w_row5 };
-    static final int[] CHECKS = { R.id.w_c0, R.id.w_c1, R.id.w_c2, R.id.w_c3, R.id.w_c4, R.id.w_c5 };
     static final int[] BUBBLES = { R.id.w_b0, R.id.w_b1, R.id.w_b2, R.id.w_b3, R.id.w_b4, R.id.w_b5 };
     static final int[] NAMES = { R.id.w_n0, R.id.w_n1, R.id.w_n2, R.id.w_n3, R.id.w_n4, R.id.w_n5 };
     static final int[] METAS = { R.id.w_m0, R.id.w_m1, R.id.w_m2, R.id.w_m3, R.id.w_m4, R.id.w_m5 };
-    static final int[] STRIP = { R.id.w_s0, R.id.w_s1, R.id.w_s2, R.id.w_s3, R.id.w_s4, R.id.w_s5, R.id.w_s6, R.id.w_s7 };
-    static final int[] STRIP_IMG = { R.id.w_si0, R.id.w_si1, R.id.w_si2, R.id.w_si3, R.id.w_si4, R.id.w_si5, R.id.w_si6, R.id.w_si7 };
 
     static class Item {
         String id, name, time, meta;
@@ -174,7 +171,7 @@ public class RojWidget extends AppWidgetProvider {
                 int got = 0;
                 for (String k : week) if (k.compareTo(created) >= 0 && countOn(log, k, it.id) >= it.target) got++;
                 if (got >= times) it.satisfied = true;
-                it.meta = got + "/" + times + " wk";
+                it.meta = Math.min(got, times) + "/" + times + " wk";
             }
             if (it.target > 1) it.meta = it.count + "/" + it.target;
             it.frac = it.satisfied ? 1f : Math.min(1f, it.count / (float) it.target);
@@ -218,6 +215,10 @@ public class RojWidget extends AppWidgetProvider {
     }
 
     // ---------- drawing ----------
+    // Three layouts, picked by size like Apple's widget families: small is one glance and one tap
+    // (opens the app); medium puts the ring beside a checklist; large has the count on top, the
+    // checklist, and this week at the bottom when there is room. Checklist rows share the height
+    // in even slots, and a tap anywhere on a row checks that habit off.
     static void draw(Context c, AppWidgetManager mgr, int widgetId) {
         Bundle o = mgr.getAppWidgetOptions(widgetId);
         int w = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0);
@@ -230,27 +231,40 @@ public class RojWidget extends AppWidgetProvider {
         int total = items.size(), done = 0;
         for (Item it : items) if (it.satisfied) done++;
         boolean small = w < 200;
-
-        RemoteViews v = new RemoteViews(c.getPackageName(), small ? R.layout.widget_small : R.layout.widget_today);
-        v.setOnClickPendingIntent(android.R.id.background, openApp(c));
-        v.setImageViewBitmap(R.id.w_ring, ring(c, items, done, small ? 76 : 60));
+        boolean medium = !small && h < 200;
+        String date = new SimpleDateFormat(medium ? "EEE d MMM" : "EEEE d MMM", Locale.ENGLISH).format(now.getTime()).toUpperCase(Locale.ENGLISH);
 
         if (small) {
-            v.setTextViewText(R.id.w_title, total == 0 ? "Nothing today" : done == total ? "All done" : done + " of " + total + " done");
+            RemoteViews v = new RemoteViews(c.getPackageName(), R.layout.widget_small);
+            v.setOnClickPendingIntent(android.R.id.background, openApp(c));
+            v.setImageViewBitmap(R.id.w_ring, ring(c, items, done, 58));
+            v.setTextViewText(R.id.w_title, headline(c, state, done, total));
+            Item next = null;
+            for (Item it : items) if (!it.satisfied && next == null) next = it;
+            v.setTextViewText(R.id.w_next, next != null ? "Next: " + next.name : total > 0 ? "Every habit checked" : date);
             mgr.updateAppWidget(widgetId, v);
             return;
         }
 
-        v.setTextViewText(R.id.w_date, new SimpleDateFormat("EEEE d MMM", Locale.ENGLISH).format(now.getTime()).toUpperCase(Locale.ENGLISH));
+        RemoteViews v = new RemoteViews(c.getPackageName(), medium ? R.layout.widget_medium : R.layout.widget_today);
+        v.setOnClickPendingIntent(R.id.w_open, openApp(c));
+        v.setImageViewBitmap(R.id.w_ring, ring(c, items, done, medium ? 64 : 52));
         v.setTextViewText(R.id.w_title, headline(c, state, done, total));
+        v.setTextViewText(R.id.w_date, date);
 
-        // Rows fit under the header; with no room for rows, a strip of checks takes their place.
-        int below = h - 32 - 60 - 10;
-        int rows = Math.max(0, Math.min(ROWS.length, below / 34));
-        boolean more = total > rows && rows >= 2;
-        if (more) rows -= 1;
+        // Height left for the checklist, cut into slots of at least 40dp (36dp in medium).
+        int avail = medium ? h - 28 : h - 32 - 56 - 8;
+        int slots = Math.max(1, Math.min(ROWS.length, avail / (medium ? 36 : 40)));
+        // With two or more slots to spare, the large widget shows this week instead.
+        boolean week = !medium && total > 0 && total + 2 <= slots;
+        if (week) slots -= 2;
+        // A few habits spread over the space (rows up to 64dp tall) instead of leaving a gap at the bottom.
+        int listDp = week ? avail - 52 : avail;
+        if (total > 0 && total < slots && listDp / total <= 64) slots = total;
+        boolean more = total > slots;
+        int shown = more ? slots - 1 : total;
         for (int i = 0; i < ROWS.length; i++) {
-            if (i < rows && i < total) {
+            if (i < shown) {
                 Item it = items.get(i);
                 v.setViewVisibility(ROWS[i], View.VISIBLE);
                 v.setImageViewBitmap(BUBBLES[i], bubble(c, it, 22));
@@ -258,34 +272,86 @@ public class RojWidget extends AppWidgetProvider {
                 v.setTextColor(NAMES[i], c.getColor(it.satisfied ? R.color.widget_secondary : R.color.widget_ink));
                 v.setTextViewText(METAS[i], it.meta == null ? "" : it.meta);
                 v.setViewVisibility(METAS[i], it.meta == null ? View.GONE : View.VISIBLE);
-                v.setOnClickPendingIntent(CHECKS[i], toggleIntent(c, it.id));
-                v.setContentDescription(CHECKS[i], (it.satisfied ? "Undo " : "Check off ") + it.name);
+                v.setOnClickPendingIntent(ROWS[i], toggleIntent(c, it.id));
+                v.setContentDescription(ROWS[i], (it.satisfied ? "Undo " : "Check off ") + it.name);
             } else {
-                v.setViewVisibility(ROWS[i], View.GONE);
+                // Empty slots keep their share of the height so rows stay the same size.
+                v.setViewVisibility(ROWS[i], i < slots ? View.INVISIBLE : View.GONE);
             }
         }
-        v.setViewVisibility(R.id.w_list, rows > 0 && total > 0 ? View.VISIBLE : View.GONE);
         v.setViewVisibility(R.id.w_more, more ? View.VISIBLE : View.GONE);
-        if (more) v.setTextViewText(R.id.w_more, "+" + (total - rows) + " more");
-
-        int strip = rows == 0 && below >= 26 ? Math.min(STRIP.length, Math.max(0, (w - 32) / 34)) : 0;
-        for (int i = 0; i < STRIP.length; i++) {
-            if (i < strip && i < total) {
-                Item it = items.get(i);
-                v.setViewVisibility(STRIP[i], View.VISIBLE);
-                v.setImageViewBitmap(STRIP_IMG[i], bubble(c, it, 24));
-                v.setOnClickPendingIntent(STRIP[i], toggleIntent(c, it.id));
-                v.setContentDescription(STRIP[i], (it.satisfied ? "Undo " : "Check off ") + it.name);
-            } else {
-                v.setViewVisibility(STRIP[i], View.GONE);
-            }
+        if (more) {
+            v.setTextViewText(R.id.w_more, "+" + (total - shown) + " more");
+            v.setOnClickPendingIntent(R.id.w_more, openApp(c));
         }
-        v.setViewVisibility(R.id.w_strip, strip > 0 && total > 0 ? View.VISIBLE : View.GONE);
-
-        boolean empty = total == 0 && below >= 26;
-        v.setViewVisibility(R.id.w_empty, empty ? View.VISIBLE : View.GONE);
-        if (empty) v.setTextViewText(R.id.w_empty, state == null || state.optJSONArray("habits") == null || state.optJSONArray("habits").length() == 0 ? "Tap to add your first habit." : "Rest counts too.");
+        v.setViewVisibility(R.id.w_list, total > 0 ? View.VISIBLE : View.GONE);
+        v.setViewVisibility(R.id.w_empty, total > 0 ? View.GONE : View.VISIBLE);
+        if (total == 0) {
+            JSONArray habits = state == null ? null : state.optJSONArray("habits");
+            v.setTextViewText(R.id.w_empty, habits == null || habits.length() == 0 ? "Tap to add your first habit" : "Nothing planned today");
+            v.setOnClickPendingIntent(R.id.w_empty, openApp(c));
+        }
+        if (!medium) {
+            v.setViewVisibility(R.id.w_week, week ? View.VISIBLE : View.GONE);
+            if (week) v.setImageViewBitmap(R.id.w_week, weekStrip(c, state, now, w - 32));
+        }
         mgr.updateAppWidget(widgetId, v);
+    }
+
+    // Monday to Sunday: the day's letter and a dot. Full marigold dot = every habit done, ring = some,
+    // faint ring = none, faint dot = still to come. Today's letter is in marigold.
+    static Bitmap weekStrip(Context c, JSONObject state, Calendar now, int widthDp) {
+        float d = c.getResources().getDisplayMetrics().density;
+        int wpx = Math.max(1, Math.round(widthDp * d)), hpx = Math.round(46 * d);
+        Bitmap bmp = Bitmap.createBitmap(wpx, hpx, Bitmap.Config.ARGB_8888);
+        Canvas cv = new Canvas(bmp);
+        int accent = c.getColor(R.color.widget_accent), secondary = c.getColor(R.color.widget_secondary);
+        Paint line = new Paint(Paint.ANTI_ALIAS_FLAG);
+        line.setColor(alpha(secondary, 0.18f));
+        line.setStrokeWidth(Math.max(1, d));
+        cv.drawLine(0, d, wpx, d, line);
+        Paint letter = new Paint(Paint.ANTI_ALIAS_FLAG);
+        letter.setTextSize(11 * d);
+        letter.setTextAlign(Paint.Align.CENTER);
+        Paint dot = new Paint(Paint.ANTI_ALIAS_FLAG);
+        String today = dateKey(now);
+        int dow = now.get(Calendar.DAY_OF_WEEK) - 1;
+        Calendar day = (Calendar) now.clone();
+        day.add(Calendar.DAY_OF_MONTH, -((dow + 6) % 7));
+        String[] names = { "M", "T", "W", "T", "F", "S", "S" };
+        float col = wpx / 7f, r = 5 * d;
+        for (int i = 0; i < 7; i++) {
+            String k = dateKey(day);
+            float cx = col * i + col / 2;
+            boolean isToday = k.equals(today), future = k.compareTo(today) > 0;
+            letter.setColor(isToday ? accent : secondary);
+            letter.setTypeface(Typeface.create("sans-serif-medium", isToday ? Typeface.BOLD : Typeface.NORMAL));
+            cv.drawText(names[i], cx, 20 * d, letter);
+            float cy = 34 * d;
+            dot.setStyle(Paint.Style.FILL);
+            if (future) {
+                dot.setColor(alpha(secondary, 0.18f));
+                cv.drawCircle(cx, cy, r * 0.6f, dot);
+            } else {
+                List<Item> its = items(state, day);
+                int got = 0;
+                for (Item it : its) if (it.satisfied) got++;
+                if (its.isEmpty()) {
+                    dot.setColor(alpha(secondary, 0.25f));
+                    cv.drawCircle(cx, cy, r * 0.45f, dot);
+                } else if (got == its.size()) {
+                    dot.setColor(accent);
+                    cv.drawCircle(cx, cy, r, dot);
+                } else {
+                    dot.setStyle(Paint.Style.STROKE);
+                    dot.setStrokeWidth(1.6f * d);
+                    dot.setColor(got > 0 ? accent : alpha(secondary, 0.45f));
+                    cv.drawCircle(cx, cy, r - 0.8f * d, dot);
+                }
+            }
+            day.add(Calendar.DAY_OF_MONTH, 1);
+        }
+        return bmp;
     }
 
     // "2 of 5 done", with the done count in colour.

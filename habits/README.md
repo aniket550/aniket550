@@ -20,8 +20,8 @@ Roz ki habits tick karo. Home page pe aaj ka ring batata hai ki din kahan khada 
 
 | Kahan | Kaise lagayein | Kya karta hai |
 |---|---|---|
-| 🤖 Android home screen | **Settings → Add widget to home screen**. Ya home screen pe khaali jagah dabaa ke rakho → **Widgets** → **Roj Habit** | Aaj ka ring, "2 of 5 done" aur habits ki list. Gole pe tap karo to habit wahin tick ho jaati hai, app khole bina. Chhota (2×2) karoge to sirf ring dikhega |
-| 💻 Mac desktop | **Settings → Desktop widget** ON karo, ya menu **Window → Desktop Widget** | Desktop pe chhota kaanch jaisa card. Use kheench ke kahin bhi rakho. Right-click: **Keep on Top**, **Hide Widget** |
+| 🤖 Android home screen | **Settings → Add widget to home screen**. Ya home screen pe khaali jagah dabaa ke rakho → **Widgets** → **Roj Habit** | Size ke hisaab se layout badalta hai. **Chhota (2×2):** ring, "2 of 5 done" aur agli habit. **Chauda (4×2):** bagal mein ring, saath mein list. **Bada:** upar ginti aur ring, beech mein list, neeche is hafte ke din. List ki **poori line pe tap** karo to habit tick ho jaati hai. Upar ring pe tap karo to app khulta hai |
+| 💻 Mac desktop | **Settings → Desktop widget** ON karo, ya menu **Window → Desktop Widget** | Apple jaise teen size: **Small**, **Medium**, **Large** (widget pe right-click → size chuno). Kheench ke kahin bhi rakho, aur gole pe click karke wahin tick karo. Right-click mein **Keep on Top** aur **Hide Widget** bhi hain |
 
 Mac ke asli Notification Center widgets (WidgetKit) ke liye app pe Apple ka paid developer signature chahiye, isliye abhi Roj Habit apna khud ka desktop widget deta hai.
 

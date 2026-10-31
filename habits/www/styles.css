@@ -865,26 +865,49 @@ html.wide .pane.main.desk { padding-left: max(40px, calc((100% - 1040px) / 2)); 
 .switch.on { background: var(--good); }
 .switch.on i { transform: translateX(18px); }
 
-/* ---------- Mac desktop widget ---------- */
+/* ---------- Mac desktop widget ----------
+   Apple's widget sizes (small 170 x 170, medium 364 x 170, large 364 x 382), 16px margins,
+   22px corners. The window is clear; the card is drawn here so its corners can be round. */
 html.widget-mode, html.widget-mode body { background: transparent; min-height: 0; overflow: hidden; }
 html.widget-mode #app { min-height: 0; }
-.wg { display: flex; flex-direction: column; gap: 10px; padding: 16px 14px 14px; -webkit-app-region: drag; -webkit-user-select: none; user-select: none; }
+.wg {
+  position: fixed; inset: 0; display: flex; flex-direction: column; gap: 10px; padding: 16px; overflow: hidden;
+  border-radius: 22px; background: color-mix(in srgb, var(--bg) 94%, transparent);
+  box-shadow: inset 0 0 0 0.5px var(--line), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  -webkit-app-region: drag; -webkit-user-select: none; user-select: none; cursor: default;
+}
 .wg button { -webkit-app-region: no-drag; }
-.wg-head { display: flex; align-items: center; gap: 12px; padding: 0 2px; }
-.wg-ring { width: 58px; height: 58px; }
+.wg .kicker { font-size: 10.5px; letter-spacing: 0.1em; }
+.wg-ring { flex-shrink: 0; }
 .wg-ring .m-pct { font-size: 15px; }
 .wg-ring .m-pct small { font-size: 10px; }
-.wg-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.wg-text .kicker { font-size: 10.5px; letter-spacing: 0.1em; }
-.wg-title { font-family: var(--font-display); font-size: 19px; font-weight: 760; letter-spacing: -0.035em; line-height: 1.1; }
+.wg-title { font-family: var(--font-display); font-size: 19px; font-weight: 760; letter-spacing: -0.035em; line-height: 1.15; white-space: nowrap; }
 .wg-title b { color: var(--marigold-text); font-weight: 750; }
-.wg-open { width: 26px; height: 26px; align-self: flex-start; border-radius: 13px; display: grid; place-items: center; color: var(--secondary); opacity: 0; transition: opacity 0.2s, background 0.2s; }
-.wg:hover .wg-open { opacity: 1; }
-.wg-open:hover { background: color-mix(in srgb, var(--label) 8%, transparent); }
-.wg-rows { display: flex; flex-direction: column; gap: 2px; padding-top: 8px; border-top: 1px solid var(--line); }
-.wg-row { display: flex; align-items: center; gap: 10px; min-height: 32px; padding: 0 4px; border-radius: 10px; }
+.wg-sub, .wg-empty { font-size: 12.5px; color: var(--secondary); }
+.wg-empty { flex: 1; display: grid; place-items: center; text-align: center; padding: 0 8px; }
+/* small */
+.wg.small { gap: 0; }
+.wg-top { display: flex; align-items: flex-start; justify-content: space-between; flex: 1; }
+.wg.small .wg-title { font-size: 17px; margin-bottom: 4px; }
+.wg.small .wg-row { margin: 0 -6px; }
+/* medium */
+.wg.medium { flex-direction: row; gap: 14px; }
+.wg-side { width: 104px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-align: center; }
+.wg-side .wg-ring { margin-bottom: 6px; }
+.wg-side .wg-ring .m-pct { font-size: 18px; }
+.wg-side .wg-title { font-size: 15px; }
+.wg.medium .wg-rows, .wg.medium .wg-empty { flex: 1; min-width: 0; }
+/* large */
+.wg-head { display: flex; align-items: center; gap: 12px; }
+.wg-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.wg.large .wg-title { font-size: 22px; }
+.wg.large .wg-rows { flex: 1; min-height: 0; }
+/* checklist */
+.wg-rows { display: grid; align-content: stretch; }
+.wg-row { display: flex; align-items: center; gap: 10px; min-height: 0; padding: 0 6px; margin: 0 -6px; border-radius: 10px; }
 .wg-row:hover { background: color-mix(in srgb, var(--label) 5%, transparent); }
 .wg-check { position: relative; width: 22px; height: 22px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center; color: transparent; box-shadow: inset 0 0 0 1.8px color-mix(in srgb, var(--c) 70%, transparent); transition: transform 0.25s var(--spring), background 0.2s; }
+.wg-check:hover { background: color-mix(in srgb, var(--c) 12%, transparent); }
 .wg-check:active { transform: scale(0.82); }
 .wg-check.counter { box-shadow: none; color: var(--label); }
 .wg-check.counter .mini-ring { position: absolute; inset: 0; }
@@ -893,7 +916,19 @@ html.widget-mode #app { min-height: 0; }
 .wg-name { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 560; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .wg-row.done .wg-name { color: var(--secondary); }
 .wg-meta { font-size: 12px; font-weight: 650; color: var(--secondary); }
-.wg-empty { padding: 4px 4px 2px; font-size: 13px; color: var(--secondary); }
+.wg-more { justify-self: start; padding: 0 0 0 32px; font-size: 12px; font-weight: 600; color: var(--secondary); }
+.wg-more:hover { color: var(--label); }
+/* this week */
+.wg-week { display: grid; grid-template-columns: repeat(7, 1fr); padding-top: 10px; border-top: 1px solid var(--line); }
+.wg-day { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.wg-day span { font-size: 11px; font-weight: 600; color: var(--secondary); }
+.wg-day.now span { color: var(--marigold-text); font-weight: 750; }
+.wg-day i { width: 10px; height: 10px; border-radius: 50%; }
+.wg-day.full i { background: var(--marigold); }
+.wg-day.some i { box-shadow: inset 0 0 0 1.6px var(--marigold); }
+.wg-day.none i { box-shadow: inset 0 0 0 1.6px var(--tertiary); }
+.wg-day.rest i { transform: scale(0.45); background: var(--tertiary); }
+.wg-day.later i { transform: scale(0.6); background: var(--track); }
 
 /* ---------- Mac menu bar panel ---------- */
 html.tray-mode, html.tray-mode body { background: transparent; }

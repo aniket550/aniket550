@@ -10,7 +10,6 @@ contextBridge.exposeInMainWorld("rozDesktop", {
   onCommand: (cb) => ipcRenderer.on("command", (ev, cmd) => cb(cmd)),
   widgetState: () => ipcRenderer.invoke("widget-state"),
   toggleWidget: () => ipcRenderer.invoke("widget-toggle"),
-  widgetSize: (height) => ipcRenderer.send("widget-size", height),
   widgetMenu: () => ipcRenderer.send("widget-menu")
 });
 

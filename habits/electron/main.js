@@ -76,7 +76,7 @@ function createTray() {
   });
 }
 
-// Desktop widget: a small glass card with today's habits. It remembers where it was put and
+// Desktop widget: a small card with today's habits, in three sizes. It remembers its size, where it was put and
 // whether it was on, in widget.json next to the app's data.
 const widgetFile = () => path.join(app.getPath("userData"), "widget.json");
 function widgetPrefs() {
@@ -86,8 +86,13 @@ function saveWidgetPrefs(change) {
   try { fs.writeFileSync(widgetFile(), JSON.stringify(Object.assign(widgetPrefs(), change))); } catch (e) { /* not worth stopping for */ }
 }
 
+// Apple's widget sizes on the Mac.
+const WIDGET_SIZES = { small: [170, 170], medium: [364, 170], large: [364, 382] };
+const widgetSize = (p) => (WIDGET_SIZES[p.size] ? p.size : "medium");
+
 function createWidget() {
   const p = widgetPrefs();
+  const [w, h] = WIDGET_SIZES[widgetSize(p)];
   const area = screen.getPrimaryDisplay().workArea;
   // A saved spot on a screen that is no longer attached would leave the widget out of sight.
   const onScreen = p.x != null && screen.getAllDisplays().some((d) => {
@@ -95,9 +100,9 @@ function createWidget() {
     return p.x + 40 > a.x && p.x + 40 < a.x + a.width && p.y + 20 > a.y && p.y + 20 < a.y + a.height;
   });
   widgetWin = new BrowserWindow({
-    width: 300,
-    height: 240,
-    x: onScreen ? p.x : area.x + area.width - 320,
+    width: w,
+    height: h,
+    x: onScreen ? p.x : area.x + area.width - w - 20,
     y: onScreen ? p.y : area.y + 20,
     show: false,
     frame: false,
@@ -107,19 +112,31 @@ function createWidget() {
     fullscreenable: false,
     skipTaskbar: true,
     alwaysOnTop: !!p.onTop,
-    vibrancy: isMac ? "popover" : undefined,
-    visualEffectState: "active",
-    backgroundColor: isMac ? "#00000000" : "#F4F1EC",
+    // Clear window: the page draws the card, so it can have widget-round corners.
+    transparent: true,
+    hasShadow: true,
+    backgroundColor: "#00000000",
     webPreferences: { preload: path.join(__dirname, "preload.js"), contextIsolation: true, sandbox: true }
   });
   if (isMac) widgetWin.setVisibleOnAllWorkspaces(true, { skipTransformProcessType: true });
-  widgetWin.loadURL("app://roz/index.html#widget");
-  widgetWin.once("ready-to-show", () => widgetWin.showInactive());
+  widgetWin.loadURL("app://roz/index.html#widget/" + widgetSize(p));
+  widgetWin.once("ready-to-show", () => {
+    widgetWin.showInactive();
+    if (isMac) widgetWin.invalidateShadow();
+  });
   widgetWin.on("moved", () => {
     const [x, y] = widgetWin.getPosition();
     saveWidgetPrefs({ x: x, y: y });
   });
   widgetWin.on("closed", () => { widgetWin = null; });
+}
+
+function resizeWidget(size) {
+  if (!widgetWin || !WIDGET_SIZES[size]) return;
+  saveWidgetPrefs({ size: size });
+  widgetWin.setContentSize(WIDGET_SIZES[size][0], WIDGET_SIZES[size][1]);
+  widgetWin.loadURL("app://roz/index.html#widget/" + size);
+  if (isMac) setTimeout(() => widgetWin && widgetWin.invalidateShadow(), 300);
 }
 
 function setWidget(on) {
@@ -212,17 +229,14 @@ ipcMain.on("open-main", () => {
 ipcMain.handle("widget-state", () => !!widgetWin);
 ipcMain.handle("widget-toggle", () => setWidget(!widgetWin));
 
-// The widget page reports its height so the window fits the list.
-ipcMain.on("widget-size", (ev, height) => {
-  if (!widgetWin || ev.sender !== widgetWin.webContents) return;
-  const h = Math.max(120, Math.min(640, Math.round(Number(height) || 0)));
-  widgetWin.setContentSize(300, h);
-});
-
 ipcMain.on("widget-menu", (ev) => {
   if (!widgetWin || ev.sender !== widgetWin.webContents) return;
+  const size = widgetSize(widgetPrefs());
   Menu.buildFromTemplate([
     { label: "Open Roj Habit", click: showMain },
+    { type: "separator" },
+    ...["small", "medium", "large"].map((s) => ({ label: s[0].toUpperCase() + s.slice(1), type: "radio", checked: size === s, click: () => resizeWidget(s) })),
+    { type: "separator" },
     { label: "Keep on Top", type: "checkbox", checked: widgetWin.isAlwaysOnTop(), click: (item) => { widgetWin.setAlwaysOnTop(item.checked); saveWidgetPrefs({ onTop: item.checked }); } },
     { type: "separator" },
     { label: "Hide Widget", click: () => setWidget(false) }

@@ -7,4 +7,5 @@
     <color name="widget_tertiary">#5F5D59</color>
     <color name="widget_accent">#F2A645</color>
     <color name="widget_accent_text">#F5B565</color>
+    <color name="widget_press">#29FFFFFF</color>
 </resources>

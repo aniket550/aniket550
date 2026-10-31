@@ -3,6 +3,12 @@
 Har update ke saath version badhta hai (`npm run bump`) aur yahan ek line judti hai.
 Version ka matlab: **1.2.3** → 1 = bada badlav, 2 = naya feature ya design, 3 = chhota sudhaar.
 
+## 1.3.0
+- Android widget naya: size ke hisaab se teen layout (chhota, chauda, bada), jaise Apple aur Google ke widgets hote hain. Ab neeche faltu khaali jagah nahi rehti. Habits poori jagah mein barabar bant jaati hain, aur jagah bache to neeche is hafte ke din dikhte hain
+- Android widget mein habit ki **poori line pe tap** karo to tick ho jaati hai, app nahi khulta. App kholna ho to upar ring pe tap karo. Tap karne pe halka sa highlight bhi aata hai
+- "4/3 wk" jaisi ulti ginti theek ki, ab "3/3 wk"
+- Mac desktop widget naya: Apple ke teen size (Small, Medium, Large), gol kone, aur Large mein is hafte ke din. Right-click se size badlo
+
 ## 1.2.1
 - "1 down, 4 to go." wali badi line hata di. Phone pe ab date ke neeche bas ek chhoti si line hai, aur Mac pe "Good morning". Ginti progress ring wale card mein hai
 - Widgets mein bhi ab "2 of 5 done" likha aata hai

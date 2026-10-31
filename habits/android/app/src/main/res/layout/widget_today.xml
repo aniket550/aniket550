@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Home screen widget, medium and large: ring and headline, then today's habits (RojWidget.java fills it in). -->
+<!-- Home screen widget, large: ring and count on top, a checklist that fills the height in even
+     slots, and this week's days at the bottom when there is room (RojWidget.java fills it in). -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@android:id/background"
     android:layout_width="match_parent"
@@ -9,21 +10,15 @@
     android:padding="16dp">
 
     <LinearLayout
+        android:id="@+id/w_open"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <ImageView
-            android:id="@+id/w_ring"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:importantForAccessibility="no" />
-
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="14dp"
             android:layout_weight="1"
             android:orientation="vertical">
 
@@ -44,169 +39,59 @@
                 android:layout_marginTop="2dp"
                 android:fontFamily="sans-serif"
                 android:letterSpacing="-0.02"
-                android:maxLines="2"
+                android:singleLine="true"
                 android:text="@string/app_name"
                 android:textColor="@color/widget_ink"
-                android:textSize="20sp"
+                android:textSize="22sp"
                 android:textStyle="bold" />
         </LinearLayout>
-    </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/w_strip"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="-5dp"
-        android:layout_marginTop="8dp"
-        android:orientation="horizontal"
-        android:visibility="gone">
-
-        <FrameLayout
-            android:id="@+id/w_s0"
-            android:layout_width="34dp"
-            android:layout_height="34dp">
-
-            <ImageView
-                android:id="@+id/w_si0"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_gravity="center"
-                android:importantForAccessibility="no" />
-        </FrameLayout>
-
-        <FrameLayout
-            android:id="@+id/w_s1"
-            android:layout_width="34dp"
-            android:layout_height="34dp">
-
-            <ImageView
-                android:id="@+id/w_si1"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_gravity="center"
-                android:importantForAccessibility="no" />
-        </FrameLayout>
-
-        <FrameLayout
-            android:id="@+id/w_s2"
-            android:layout_width="34dp"
-            android:layout_height="34dp">
-
-            <ImageView
-                android:id="@+id/w_si2"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_gravity="center"
-                android:importantForAccessibility="no" />
-        </FrameLayout>
-
-        <FrameLayout
-            android:id="@+id/w_s3"
-            android:layout_width="34dp"
-            android:layout_height="34dp">
-
-            <ImageView
-                android:id="@+id/w_si3"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_gravity="center"
-                android:importantForAccessibility="no" />
-        </FrameLayout>
-
-        <FrameLayout
-            android:id="@+id/w_s4"
-            android:layout_width="34dp"
-            android:layout_height="34dp">
-
-            <ImageView
-                android:id="@+id/w_si4"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_gravity="center"
-                android:importantForAccessibility="no" />
-        </FrameLayout>
-
-        <FrameLayout
-            android:id="@+id/w_s5"
-            android:layout_width="34dp"
-            android:layout_height="34dp">
-
-            <ImageView
-                android:id="@+id/w_si5"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_gravity="center"
-                android:importantForAccessibility="no" />
-        </FrameLayout>
-
-        <FrameLayout
-            android:id="@+id/w_s6"
-            android:layout_width="34dp"
-            android:layout_height="34dp">
-
-            <ImageView
-                android:id="@+id/w_si6"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_gravity="center"
-                android:importantForAccessibility="no" />
-        </FrameLayout>
-
-        <FrameLayout
-            android:id="@+id/w_s7"
-            android:layout_width="34dp"
-            android:layout_height="34dp">
-
-            <ImageView
-                android:id="@+id/w_si7"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_gravity="center"
-                android:importantForAccessibility="no" />
-        </FrameLayout>
-
+        <ImageView
+            android:id="@+id/w_ring"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:importantForAccessibility="no" />
     </LinearLayout>
 
     <LinearLayout
         android:id="@+id/w_list"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:orientation="vertical"
-        android:visibility="gone">
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
 
         <LinearLayout
             android:id="@+id/w_row0"
             android:layout_width="match_parent"
-            android:layout_height="34dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="-8dp"
+            android:layout_marginEnd="-8dp"
+            android:background="@drawable/widget_row_bg"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:visibility="gone">
 
-            <FrameLayout
-                android:id="@+id/w_c0"
-                android:layout_width="38dp"
-                android:layout_height="match_parent"
-                android:layout_marginStart="-8dp">
-
-                <ImageView
-                    android:id="@+id/w_b0"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_gravity="center"
-                    android:importantForAccessibility="no" />
-            </FrameLayout>
+            <ImageView
+                android:id="@+id/w_b0"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:importantForAccessibility="no" />
 
             <TextView
                 android:id="@+id/w_n0"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
                 android:layout_weight="1"
-                android:layout_marginStart="4dp"
                 android:ellipsize="end"
                 android:fontFamily="sans-serif-medium"
                 android:singleLine="true"
                 android:textColor="@color/widget_ink"
-                android:textSize="14sp" />
+                android:textSize="15sp" />
 
             <TextView
                 android:id="@+id/w_m0"
@@ -221,35 +106,34 @@
         <LinearLayout
             android:id="@+id/w_row1"
             android:layout_width="match_parent"
-            android:layout_height="34dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="-8dp"
+            android:layout_marginEnd="-8dp"
+            android:background="@drawable/widget_row_bg"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:visibility="gone">
 
-            <FrameLayout
-                android:id="@+id/w_c1"
-                android:layout_width="38dp"
-                android:layout_height="match_parent"
-                android:layout_marginStart="-8dp">
-
-                <ImageView
-                    android:id="@+id/w_b1"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_gravity="center"
-                    android:importantForAccessibility="no" />
-            </FrameLayout>
+            <ImageView
+                android:id="@+id/w_b1"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:importantForAccessibility="no" />
 
             <TextView
                 android:id="@+id/w_n1"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
                 android:layout_weight="1"
-                android:layout_marginStart="4dp"
                 android:ellipsize="end"
                 android:fontFamily="sans-serif-medium"
                 android:singleLine="true"
                 android:textColor="@color/widget_ink"
-                android:textSize="14sp" />
+                android:textSize="15sp" />
 
             <TextView
                 android:id="@+id/w_m1"
@@ -264,35 +148,34 @@
         <LinearLayout
             android:id="@+id/w_row2"
             android:layout_width="match_parent"
-            android:layout_height="34dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="-8dp"
+            android:layout_marginEnd="-8dp"
+            android:background="@drawable/widget_row_bg"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:visibility="gone">
 
-            <FrameLayout
-                android:id="@+id/w_c2"
-                android:layout_width="38dp"
-                android:layout_height="match_parent"
-                android:layout_marginStart="-8dp">
-
-                <ImageView
-                    android:id="@+id/w_b2"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_gravity="center"
-                    android:importantForAccessibility="no" />
-            </FrameLayout>
+            <ImageView
+                android:id="@+id/w_b2"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:importantForAccessibility="no" />
 
             <TextView
                 android:id="@+id/w_n2"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
                 android:layout_weight="1"
-                android:layout_marginStart="4dp"
                 android:ellipsize="end"
                 android:fontFamily="sans-serif-medium"
                 android:singleLine="true"
                 android:textColor="@color/widget_ink"
-                android:textSize="14sp" />
+                android:textSize="15sp" />
 
             <TextView
                 android:id="@+id/w_m2"
@@ -307,35 +190,34 @@
         <LinearLayout
             android:id="@+id/w_row3"
             android:layout_width="match_parent"
-            android:layout_height="34dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="-8dp"
+            android:layout_marginEnd="-8dp"
+            android:background="@drawable/widget_row_bg"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:visibility="gone">
 
-            <FrameLayout
-                android:id="@+id/w_c3"
-                android:layout_width="38dp"
-                android:layout_height="match_parent"
-                android:layout_marginStart="-8dp">
-
-                <ImageView
-                    android:id="@+id/w_b3"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_gravity="center"
-                    android:importantForAccessibility="no" />
-            </FrameLayout>
+            <ImageView
+                android:id="@+id/w_b3"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:importantForAccessibility="no" />
 
             <TextView
                 android:id="@+id/w_n3"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
                 android:layout_weight="1"
-                android:layout_marginStart="4dp"
                 android:ellipsize="end"
                 android:fontFamily="sans-serif-medium"
                 android:singleLine="true"
                 android:textColor="@color/widget_ink"
-                android:textSize="14sp" />
+                android:textSize="15sp" />
 
             <TextView
                 android:id="@+id/w_m3"
@@ -350,35 +232,34 @@
         <LinearLayout
             android:id="@+id/w_row4"
             android:layout_width="match_parent"
-            android:layout_height="34dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="-8dp"
+            android:layout_marginEnd="-8dp"
+            android:background="@drawable/widget_row_bg"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:visibility="gone">
 
-            <FrameLayout
-                android:id="@+id/w_c4"
-                android:layout_width="38dp"
-                android:layout_height="match_parent"
-                android:layout_marginStart="-8dp">
-
-                <ImageView
-                    android:id="@+id/w_b4"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_gravity="center"
-                    android:importantForAccessibility="no" />
-            </FrameLayout>
+            <ImageView
+                android:id="@+id/w_b4"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:importantForAccessibility="no" />
 
             <TextView
                 android:id="@+id/w_n4"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
                 android:layout_weight="1"
-                android:layout_marginStart="4dp"
                 android:ellipsize="end"
                 android:fontFamily="sans-serif-medium"
                 android:singleLine="true"
                 android:textColor="@color/widget_ink"
-                android:textSize="14sp" />
+                android:textSize="15sp" />
 
             <TextView
                 android:id="@+id/w_m4"
@@ -393,35 +274,34 @@
         <LinearLayout
             android:id="@+id/w_row5"
             android:layout_width="match_parent"
-            android:layout_height="34dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="-8dp"
+            android:layout_marginEnd="-8dp"
+            android:background="@drawable/widget_row_bg"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:visibility="gone">
 
-            <FrameLayout
-                android:id="@+id/w_c5"
-                android:layout_width="38dp"
-                android:layout_height="match_parent"
-                android:layout_marginStart="-8dp">
-
-                <ImageView
-                    android:id="@+id/w_b5"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:layout_gravity="center"
-                    android:importantForAccessibility="no" />
-            </FrameLayout>
+            <ImageView
+                android:id="@+id/w_b5"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:importantForAccessibility="no" />
 
             <TextView
                 android:id="@+id/w_n5"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
                 android:layout_weight="1"
-                android:layout_marginStart="4dp"
                 android:ellipsize="end"
                 android:fontFamily="sans-serif-medium"
                 android:singleLine="true"
                 android:textColor="@color/widget_ink"
-                android:textSize="14sp" />
+                android:textSize="15sp" />
 
             <TextView
                 android:id="@+id/w_m5"
@@ -433,25 +313,37 @@
                 android:textSize="12sp" />
         </LinearLayout>
 
+
+        <TextView
+            android:id="@+id/w_more"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center_vertical"
+            android:paddingStart="36dp"
+            android:textColor="@color/widget_secondary"
+            android:textSize="12sp"
+            android:visibility="gone" />
+
     </LinearLayout>
 
     <TextView
-        android:id="@+id/w_more"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="34dp"
-        android:layout_marginTop="2dp"
-        android:fontFamily="sans-serif-medium"
-        android:textColor="@color/widget_secondary"
-        android:textSize="12sp"
-        android:visibility="gone" />
-
-    <TextView
         android:id="@+id/w_empty"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
         android:textColor="@color/widget_secondary"
         android:textSize="13sp"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/w_week"
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        android:layout_marginTop="6dp"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY"
         android:visibility="gone" />
 </LinearLayout>

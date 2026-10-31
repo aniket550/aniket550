@@ -8,7 +8,8 @@
   const native = !!(capCore && capCore.Capacitor.isNativePlatform());
   const desktop = window.rozDesktop || null; // set by the Electron preload
   const trayMode = location.hash === "#tray"; // Mac menu bar panel
-  const widgetMode = location.hash === "#widget"; // Mac desktop widget
+  const widgetMode = location.hash.indexOf("#widget") === 0; // Mac desktop widget: #widget/small, /medium or /large
+  const widgetSize = widgetMode ? location.hash.split("/")[1] || "medium" : "";
   const compact = trayMode || widgetMode;
   // The Android home screen widget (android/.../RojWidget.java) reads the saved state; this tells it to redraw.
   const homeWidget = native && capCore.registerPlugin ? capCore.registerPlugin("RojWidget") : null;
@@ -912,27 +913,58 @@
       '<div class="rows">' + (st.items.length ? st.items.map(habitRow).join("") : '<p class="muted small">Nothing planned today.</p>') + "</div></div>";
   }
 
-  // The Mac desktop widget: today's ring and habits in a small glass card. Habits are checked from here.
+  // The Mac desktop widget, in Apple's three widget sizes. Small: the ring, the count and the next
+  // habit. Medium: the ring beside a checklist. Large: the count on top, the checklist, this week.
+  // Rows share the height evenly; open habits come first.
   function widgetView() {
     const today = todayKey();
     ui.day = today;
     const st = dayStats(today);
     const order = (it) => (it.satisfied ? 10 : 0) + TIMES.findIndex((t) => t.id === it.habit.time);
     const items = st.items.slice().sort((a, b) => order(a) - order(b));
-    const left = st.total - st.done;
-    const title = !st.total ? "Nothing today" : !left ? "All done" : '<b class="num">' + st.done + "</b> of " + st.total + " done";
-    const rows = items.map((it) => {
+    const title = !st.total ? "Nothing today" : st.done === st.total ? "All done" : '<b class="num">' + st.done + "</b> of " + st.total + " done";
+    const ring = (size, stroke) => '<div class="m-ring wg-ring" style="width:' + size + "px;height:" + size + 'px">' + segRing(st.items, size, stroke) +
+      '<span class="m-pct num">' + pct(st.done, st.total) + "<small>%</small></span></div>";
+    const row = (it) => {
       const h = it.habit, counter = h.target > 1 && !it.done;
       return '<div class="wg-row' + (it.satisfied ? " done" : "") + '" style="--c:' + colorOf(h) + '">' +
         '<button class="wg-check' + (counter ? " counter" : "") + '" data-action="toggle-today" data-id="' + h.id + '" aria-label="' + esc((it.done ? "Undo " : counter ? "Add one to " : "Check off ") + h.name) + '">' +
         (counter ? miniRing(it.frac, 22, "var(--c)", 2.5) + '<b class="num">' + it.count + "</b>" : ICON.check(11)) + "</button>" +
         '<span class="wg-name">' + esc(h.name) + "</span>" +
-        (h.target > 1 ? '<span class="wg-meta num">' + it.count + "/" + h.target + "</span>" : h.schedule.type === "weekly" ? '<span class="wg-meta num">' + it.weekDone + "/" + h.schedule.times + " wk</span>" : "") + "</div>";
-    }).join("");
-    return '<div class="wg"><header class="wg-head"><div class="m-ring wg-ring">' + segRing(st.items, 58, 6) + '<span class="m-pct num">' + pct(st.done, st.total) + "<small>%</small></span></div>" +
-      '<div class="wg-text"><p class="kicker">' + fmt(today, { weekday: "long", day: "numeric", month: "short" }) + '</p><p class="wg-title">' + title + "</p></div>" +
-      '<button class="wg-open" data-action="open-main" aria-label="Open ' + APP_NAME + '">' + ICON.open(15) + "</button></header>" +
-      (rows ? '<div class="wg-rows">' + rows + "</div>" : '<p class="wg-empty">' + (data.habits.length ? "Rest counts too." : "Add a habit in " + APP_NAME + ".") + "</p>") + "</div>";
+        (h.target > 1 ? '<span class="wg-meta num">' + it.count + "/" + h.target + "</span>" : h.schedule.type === "weekly" ? '<span class="wg-meta num">' + Math.min(it.weekDone, h.schedule.times) + "/" + h.schedule.times + " wk</span>" : "") + "</div>";
+    };
+    // slots: rows that fit; a few habits spread out (rows up to 48px) instead of leaving a gap.
+    const list = (slots, height) => {
+      if (!items.length) return '<p class="wg-empty">' + (data.habits.length ? "Nothing planned today. Rest counts too." : "Add a habit in " + APP_NAME + ".") + "</p>";
+      const more = items.length > slots;
+      const shown = more ? items.slice(0, slots - 1) : items;
+      const n = more ? slots : height / items.length <= 48 ? items.length : slots;
+      return '<div class="wg-rows" style="grid-template-rows:repeat(' + n + ',minmax(0,1fr))">' + shown.map(row).join("") +
+        (more ? '<button class="wg-more" data-action="open-main">+' + (items.length - shown.length) + " more</button>" : "") + "</div>";
+    };
+    if (widgetSize === "small") {
+      const next = items.find((i) => !i.satisfied);
+      return '<div class="wg small"><div class="wg-top">' + ring(54, 6) + '<p class="kicker">' + fmt(today, { weekday: "short", day: "numeric" }) + "</p></div>" +
+        '<p class="wg-title">' + title + "</p>" + (next ? row(next) : '<p class="wg-sub">' + (st.total ? "Every habit checked" : "Rest counts too") + "</p>") + "</div>";
+    }
+    if (widgetSize === "large") {
+      return '<div class="wg large"><header class="wg-head"><div class="wg-text"><p class="kicker">' + fmt(today, { weekday: "long", day: "numeric", month: "short" }) + '</p><p class="wg-title">' + title + "</p></div>" + ring(52, 6) + "</header>" +
+        list(6, 228) + weekDots() + "</div>";
+    }
+    return '<div class="wg medium"><div class="wg-side">' + ring(72, 7) + '<p class="wg-title">' + title + '</p><p class="kicker">' + fmt(today, { weekday: "short", day: "numeric", month: "short" }) + "</p></div>" +
+      list(4, 138) + "</div>";
+  }
+  // Monday to Sunday: full dot = every habit done, ring = some, faint ring = none, faint dot = to come.
+  function weekDots() {
+    const today = todayKey(), start = C.weekStart(today);
+    let out = "";
+    for (let i = 0; i < 7; i++) {
+      const k = C.addDays(start, i);
+      const st = k <= today ? dayStats(k) : null;
+      const state = !st ? "later" : !st.total ? "rest" : st.done === st.total ? "full" : st.done ? "some" : "none";
+      out += '<div class="wg-day ' + state + (k === today ? " now" : "") + '"><span>' + fmt(k, { weekday: "narrow" }) + "</span><i></i></div>";
+    }
+    return '<div class="wg-week">' + out + "</div>";
   }
 
   function mainScreen() {
@@ -1002,7 +1034,6 @@
     ui.enter = false;
     ui.flash = null;
     playMotion();
-    if (widgetMode && desktop && desktop.widgetSize) { const wg = app.querySelector(".wg"); if (wg) desktop.widgetSize(Math.ceil(wg.getBoundingClientRect().height)); }
     if (ui.celebrate && !ui.celebrate.shown) { ui.celebrate.shown = true; countUp(app.querySelector(".cb-num")); }
     applyTheme();
   }
@@ -1445,6 +1476,9 @@
     // Habits may have been checked off on the home screen widget while the app was away.
     if (homeWidget && !ui.sheet) Store.load().then((saved) => { const v = saved && C.validate(saved); if (v && !ui.sheet) { data = normalize(v); render(); } });
   });
+
+  // The desktop widget changes size by changing its address.
+  if (widgetMode) window.addEventListener("hashchange", () => location.reload());
 
   // Another window (the Mac menu bar panel) changed the data.
   window.addEventListener("storage", (ev) => {

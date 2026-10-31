@@ -32,25 +32,35 @@ const habits = [
   ["Sleep by 11", "#626875", "done"]
 ];
 
+const week = [["M", "some"], ["T", "full"], ["W", "some"], ["T", "full"], ["F", "full"], ["S", "now"], ["S", "later"]];
+const dot = (st) => st === "full" ? '<i style="background:#E8962E"></i>' : st === "later" ? '<i style="transform:scale(.6);background:rgba(119,115,107,.18)"></i>' :
+  '<i style="box-shadow:inset 0 0 0 1.6px #E8962E"></i>';
+
 const html = `<!doctype html><html><head><style>
   body { margin: 0; background: transparent; font-family: Roboto, "Inter", system-ui, sans-serif; }
-  .w { width: 330px; padding: 16px; border-radius: 26px; background: #FCFAF6; box-sizing: border-box; }
-  .head { display: flex; align-items: center; gap: 14px; }
-  .ring { position: relative; width: 60px; height: 60px; display: grid; place-items: center; }
+  .w { width: 330px; height: 380px; padding: 16px; border-radius: 26px; background: #FCFAF6; box-sizing: border-box; display: flex; flex-direction: column; }
+  .head { display: flex; align-items: center; gap: 12px; }
+  .head > div:first-child { flex: 1; }
+  .ring { position: relative; width: 52px; height: 52px; display: grid; place-items: center; }
   .ring svg { position: absolute; inset: 0; }
-  .ring b { position: relative; font-size: 15px; color: #17181B; }
+  .ring b { position: relative; font-size: 13px; color: #17181B; }
   .date { font-size: 11px; font-weight: 500; letter-spacing: .1em; color: #77736B; }
-  .title { margin-top: 2px; font-size: 20px; font-weight: 700; letter-spacing: -.02em; color: #17181B; }
+  .title { margin-top: 2px; font-size: 22px; font-weight: 700; letter-spacing: -.02em; color: #17181B; }
   .title .d { color: #A85B0C; }
-  .rows { margin-top: 10px; }
-  .row { display: flex; align-items: center; height: 34px; gap: 12px; }
-  .row span { flex: 1; font-size: 14px; font-weight: 500; color: #17181B; }
+  .rows { flex: 1; display: grid; grid-template-rows: repeat(5, 1fr); margin-top: 8px; }
+  .row { display: flex; align-items: center; gap: 14px; }
+  .row span { flex: 1; font-size: 15px; font-weight: 500; color: #17181B; }
   .row.done span { color: #77736B; }
   .row em { font-style: normal; font-size: 12px; font-weight: 500; color: #77736B; }
+  .week { display: grid; grid-template-columns: repeat(7, 1fr); border-top: 1px solid rgba(119,115,107,.18); padding-top: 8px; margin-top: 6px; }
+  .week div { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; font-weight: 500; color: #77736B; }
+  .week div.now { color: #E8962E; font-weight: 700; }
+  .week i { width: 10px; height: 10px; border-radius: 50%; }
 </style></head><body><div class="w">
-  <div class="head"><div class="ring"><svg width="60" height="60">${ring([0, 0, 0.62, 1, 1], 60, 6.5)}</svg><b>40%</b></div>
-  <div><div class="date">SATURDAY 31 OCT</div><div class="title"><span class="d">2</span> of 5 done</div></div></div>
+  <div class="head"><div><div class="date">SATURDAY 31 OCT</div><div class="title"><span class="d">2</span> of 5 done</div></div>
+  <div class="ring"><svg width="52" height="52">${ring([0, 0, 0.62, 1, 1], 52, 5.6)}</svg><b>40%</b></div></div>
   <div class="rows">${habits.map((h) => `<div class="row${h[2] === "done" ? " done" : ""}">${bubble(h[1], h[2])}<span>${h[0]}</span>${h[3] ? `<em>${h[3]}</em>` : ""}</div>`).join("")}</div>
+  <div class="week">${week.map((d) => `<div class="${d[1] === "now" ? "now" : ""}">${d[0]}${dot(d[1])}</div>`).join("")}</div>
 </div></body></html>`;
 
 (async () => {
