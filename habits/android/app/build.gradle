@@ -21,7 +21,18 @@ android {
     // Release builds are signed with your own key, passed in by CI from GitHub secrets.
     // The same key must sign every build, or the APK will not install as an update.
     def keystore = System.getenv("ROZ_KEYSTORE")
+    // Without that key CI builds a debug APK, signed with a debug key it keeps in its cache
+    // (ROZ_DEBUG_KEYSTORE), so those builds also install over each other.
+    def debugKeystore = System.getenv("ROZ_DEBUG_KEYSTORE")
     signingConfigs {
+        if (debugKeystore) {
+            debug {
+                storeFile file(debugKeystore)
+                storePassword "android"
+                keyAlias "androiddebugkey"
+                keyPassword "android"
+            }
+        }
         if (keystore) {
             roz {
                 storeFile file(keystore)

@@ -124,4 +124,4 @@ Har naya APK purane ke upar tabhi update hota hai jab dono **ek hi key** se sign
 1. GitHub pe repo kholo → **Settings → Secrets and variables → Actions → New repository secret**
 2. Ye 4 secrets banao: `ROZ_KEYSTORE_B64` (keystore file, base64 mein), `ROZ_KEYSTORE_PASSWORD`, `ROZ_KEY_ALIAS`, `ROZ_KEY_PASSWORD`
 
-Jab tak secrets nahi hain, CI ek **debug APK** banata hai. Wo bhi theek se install aur kaam karta hai. Uski key CI ke cache mein rehti hai, isliye updates tab tak chalte hain jab tak har 7 din mein kam se kam ek build hota rahe. Key badli to Android "App not installed" bolega. Tab pehle **backup export** karo, purana app hatao, naya install karo, aur backup import kar lo.
+Jab tak secrets nahi hain, CI ek **debug APK** banata hai. Wo bhi theek se install aur kaam karta hai. Uski key CI pehli baar khud banata hai aur cache mein rakhta hai (`~/.roz/debug.keystore`), isliye updates tab tak chalte hain jab tak har 7 din mein kam se kam ek build hota rahe. Key badli to Android "App not installed" bolega. Tab pehle **backup export** karo, purana app hatao, naya install karo, aur backup import kar lo.

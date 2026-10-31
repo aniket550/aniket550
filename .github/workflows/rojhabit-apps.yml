@@ -49,12 +49,21 @@ jobs:
           java-version: 21
       - run: npm ci
       - run: npm run android:sync
-      # Without a signing secret the APK is a debug build. Keeping the debug key in the
-      # cache lets new builds install as updates while the cache lives (7 days unused).
+      # Without a signing secret the APK is a debug build. Its key is made once and kept in
+      # the cache, so new builds install as updates while the cache lives (7 days unused).
+      # The runner's own debug key lives outside ~/.android, so the build is pointed at ours.
       - uses: actions/cache@v4
         with:
-          path: ~/.android/debug.keystore
-          key: roz-debug-keystore
+          path: ~/.roz/debug.keystore
+          key: roz-debug-keystore-v2
+      - name: Make the debug key once
+        run: |
+          if [ ! -f ~/.roz/debug.keystore ]; then
+            mkdir -p ~/.roz
+            keytool -genkeypair -keystore ~/.roz/debug.keystore -storepass android -alias androiddebugkey \
+              -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          fi
+          keytool -list -v -keystore ~/.roz/debug.keystore -storepass android | grep -m1 "SHA256:"
       - name: Build APK
         working-directory: habits/android
         env:
@@ -73,6 +82,7 @@ jobs:
             cp app/build/outputs/apk/release/app-release.apk ../dist/RojHabit-android.apk
           else
             echo "::warning::No ROZ_KEYSTORE_B64 secret, so this is a debug APK. See habits/README.md, Android signing."
+            export ROZ_DEBUG_KEYSTORE="$HOME/.roz/debug.keystore"
             ./gradlew assembleDebug --no-daemon
             cp app/build/outputs/apk/debug/app-debug.apk ../dist/RojHabit-android.apk
           fi

@@ -3,6 +3,9 @@
 Har update ke saath version badhta hai (`npm run bump`) aur yahan ek line judti hai.
 Version ka matlab: **1.2.3** → 1 = bada badlav, 2 = naya feature ya design, 3 = chhota sudhaar.
 
+## 1.3.1
+- Android: "App not installed… conflicts" theek kiya. Har build nayi key se sign ho raha tha, isliye naya APK purane ke upar install nahi hota tha. Ab ek hi key rehti hai. Is version pe aane ke liye ek baar purana app hatana padega (pehle backup export kar lo), uske baad updates seedhe install honge
+
 ## 1.3.0
 - Android widget naya: size ke hisaab se teen layout (chhota, chauda, bada), jaise Apple aur Google ke widgets hote hain. Ab neeche faltu khaali jagah nahi rehti. Habits poori jagah mein barabar bant jaati hain, aur jagah bache to neeche is hafte ke din dikhte hain
 - Android widget mein habit ki **poori line pe tap** karo to tick ho jaati hai, app nahi khulta. App kholna ho to upar ring pe tap karo. Tap karne pe halka sa highlight bhi aata hai
