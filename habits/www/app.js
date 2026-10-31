@@ -7,7 +7,11 @@
   const capCore = window.capacitorExports;
   const native = !!(capCore && capCore.Capacitor.isNativePlatform());
   const desktop = window.rozDesktop || null; // set by the Electron preload
-  const trayMode = location.hash === "#tray";
+  const trayMode = location.hash === "#tray"; // Mac menu bar panel
+  const widgetMode = location.hash === "#widget"; // Mac desktop widget
+  const compact = trayMode || widgetMode;
+  // The Android home screen widget (android/.../RojWidget.java) reads the saved state; this tells it to redraw.
+  const homeWidget = native && capCore.registerPlugin ? capCore.registerPlugin("RojWidget") : null;
   const STORE_KEY = "rojhabit.state.v1";
   const APP_NAME = "Roj Habit";
   const MILESTONES = [7, 21, 30, 50, 100, 200, 365];
@@ -23,14 +27,12 @@
     "✍️": "notebook-pen", "🎸": "guitar", "🧠": "brain", "🚶": "footprints", "🏋️": "dumbbell", "🚴": "bike", "🧹": "brush-cleaning", "🌱": "sprout",
     "☀️": "sun", "📵": "phone-off", "🍎": "apple", "☕": "coffee", "🎨": "palette", "💻": "laptop", "🗣️": "languages", "💰": "piggy-bank",
     "🛏️": "bed", "🚿": "shower-head", "🎧": "music", "❤️": "heart", "✨": "sparkles" };
-  // Where each part of the day sits on the Day Arc (hours, 6 am to 10 pm).
   const TIMES = [
-    { id: "morning", label: "Morning", hint: "before noon", icon: "sunrise", hour: 8 },
-    { id: "afternoon", label: "Afternoon", hint: "noon to 5", icon: "sun", hour: 14 },
-    { id: "evening", label: "Evening", hint: "after 5", icon: "moon", hour: 19.5 },
-    { id: "anytime", label: "Anytime", hint: "whenever it fits", icon: "infinity", hour: null }
+    { id: "morning", label: "Morning", hint: "before noon", icon: "sunrise" },
+    { id: "afternoon", label: "Afternoon", hint: "noon to 5", icon: "sun" },
+    { id: "evening", label: "Evening", hint: "after 5", icon: "moon" },
+    { id: "anytime", label: "Anytime", hint: "whenever it fits", icon: "infinity" }
   ];
-  const ARC_START = 6, ARC_END = 22;
   const SUGGESTIONS = [
     { name: "Drink water", icon: "droplet", color: "sky", time: "anytime", target: 8, unit: "glasses" },
     { name: "Read 10 pages", icon: "book-open", color: "clay", time: "evening", target: 1, unit: "" },
@@ -73,6 +75,7 @@
     sparkle: (s) => svg('<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.7 1.8 1.8.7-1.8.7L19 21l-.7-1.8-1.8-.7 1.8-.7z"/>', s),
     clock: (s) => svg('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>', s),
     target: (s) => svg('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/>', s),
+    widget: (s) => svg('<rect x="3.5" y="3.5" width="17" height="10" rx="3"/><rect x="3.5" y="16" width="7.5" height="4.5" rx="2"/><rect x="13" y="16" width="7.5" height="4.5" rx="2"/>', s),
     open: (s) => svg('<path d="M14 4h6v6M20 4l-8.5 8.5M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/>', s)
   };
 
@@ -97,8 +100,7 @@
   const colorOf = (h) => (COLORS.find((c) => c.id === h.color) || COLORS[0]).hex;
   const uid = () => "h" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   const wideQuery = window.matchMedia("(min-width: 900px)");
-  const isWide = () => wideQuery.matches && !trayMode;
-  const nowHour = () => { const d = new Date(); return d.getHours() + d.getMinutes() / 60; };
+  const isWide = () => wideQuery.matches && !compact;
 
   function iconSvg(name, size) {
     return '<svg class="hicon" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + window.HABIT_ICONS[name] + "</svg>";
@@ -129,13 +131,6 @@
     if (h < 21) return "Good evening";
     return "Good night";
   }
-  function skyClass() {
-    const h = nowHour();
-    if (h >= 5 && h < 8.5) return "sky-dawn";
-    if (h >= 8.5 && h < 16.5) return "sky-day";
-    if (h >= 16.5 && h < 19.5) return "sky-dusk";
-    return "sky-night";
-  }
 
   // ---------- storage ----------
   const Store = {
@@ -149,7 +144,7 @@
     },
     save(state) {
       const raw = JSON.stringify(state);
-      if (native) capacitorPreferences.Preferences.set({ key: STORE_KEY, value: raw }).catch(() => {});
+      if (native) capacitorPreferences.Preferences.set({ key: STORE_KEY, value: raw }).then(() => homeWidget && homeWidget.refresh()).catch(() => {});
       else try { localStorage.setItem(STORE_KEY, raw); } catch (e) { /* private mode: keep going in memory */ }
     }
   };
@@ -240,48 +235,6 @@
 
 
 
-  // ---------- Today: the Day Arc ----------
-  // A sun path from 6 am to 10 pm. Habits sit at their part of the day, the sun shows now.
-  function arcPoint(hour, cx, cy, r) {
-    const f = Math.max(0, Math.min(1, (hour - ARC_START) / (ARC_END - ARC_START)));
-    const a = Math.PI * (1 - f);
-    return { x: cx + r * Math.cos(a), y: cy - r * Math.sin(a) };
-  }
-  function dayArc(st, isToday) {
-    const W = 340, H = 178, cx = W / 2, cy = 160, r = 138;
-    const hour = isToday ? nowHour() : ARC_END;
-    const sun = arcPoint(hour, cx, cy, r);
-    const start = arcPoint(ARC_START, cx, cy, r), end = arcPoint(ARC_END, cx, cy, r);
-    const track = "M" + start.x + " " + start.y + " A" + r + " " + r + " 0 0 1 " + end.x + " " + end.y;
-    const lit = "M" + start.x + " " + start.y + " A" + r + " " + r + " 0 0 1 " + sun.x + " " + sun.y;
-    let marks = "";
-    TIMES.forEach((t) => {
-      if (t.hour == null) return;
-      const items = st.items.filter((i) => i.habit.time === t.id);
-      items.forEach((it, j) => {
-        const p = arcPoint(t.hour + (j - (items.length - 1) / 2) * 1.5, cx, cy, r);
-        const c = colorOf(it.habit);
-        marks += '<g class="arc-mark' + (it.satisfied ? " done" : "") + '" style="--c:' + c + '">' +
-          '<circle cx="' + p.x + '" cy="' + p.y + '" r="15" class="am-bg"/>' +
-          (it.frac > 0 && it.frac < 1 ? '<circle cx="' + p.x + '" cy="' + p.y + '" r="15" class="am-part" stroke-dasharray="' + 2 * Math.PI * 15 * it.frac + ' 200" transform="rotate(-90 ' + p.x + " " + p.y + ')"/>' : "") +
-          (window.HABIT_ICONS[it.habit.icon] ? '<g class="am-icon" transform="translate(' + (p.x - 8) + " " + (p.y - 8) + ') scale(0.667)">' + window.HABIT_ICONS[it.habit.icon] + "</g>" : '<text x="' + p.x + '" y="' + (p.y + 0.5) + '">' + esc(it.habit.emoji) + "</text>") + "</g>";
-      });
-    });
-    const anytime = st.items.filter((i) => i.habit.time === "anytime");
-    const left = st.total - st.done;
-    let line;
-    if (!st.total) line = "Nothing planned";
-    else if (!left) line = "All done. Perfect day.";
-    else line = plural(left, "habit") + " left" + (isToday && nowHour() >= 20 && left ? ", still time" : "");
-    return '<section class="day-arc ' + (isToday ? skyClass() : "sky-past") + (st.total && !left ? " perfect" : "") + '">' +
-      '<svg class="arc-svg" viewBox="0 0 ' + W + " " + H + '" aria-hidden="true">' +
-      '<path d="' + track + '" class="arc-track"/>' + (isToday ? '<path d="' + lit + '" class="arc-lit"/>' : "") +
-      (isToday ? '<circle cx="' + sun.x + '" cy="' + sun.y + '" r="15" class="sun-glow"/><circle cx="' + sun.x + '" cy="' + sun.y + '" r="7.5" class="sun"/>' : "") +
-      marks + "</svg>" +
-      '<div class="arc-center"><p class="arc-num num">' + st.done + "<span>/" + st.total + '</span></p><p class="arc-line">' + line + "</p></div>" +
-      '<div class="arc-ends"><span>6 am</span>' + (anytime.length ? '<span class="anytime-dots">' + anytime.map((i) => '<i class="' + (i.satisfied ? "on" : "") + '" style="--c:' + colorOf(i.habit) + '" title="' + esc(i.habit.name) + '"></i>').join("") + "</span>" : "") + "<span>10 pm</span></div></section>";
-  }
-
   function weekStrip() {
     const today = todayKey();
     const start = C.weekStart(ui.day);
@@ -321,7 +274,7 @@
     if (it.done) cls.push("done");
     else if (it.satisfied) cls.push("met");
     if (ui.flash === h.id) cls.push("pop");
-    if (n === 0 && ui.tipRow) cls.push("demo");
+    if (n === 0 && ui.tipRow && !isWide()) cls.push("demo");
     const label = counter ? "Add one to " + h.name : (it.done ? "Mark " + h.name + " not done" : "Mark " + h.name + " done");
     const check = '<button class="check' + (counter && !it.done ? " counter" : "") + '" data-action="toggle" data-id="' + h.id + '" aria-label="' + esc(label) + '"' + (future ? " disabled" : "") + ">" +
       (counter && !it.done ? miniRing(it.frac, 32, "var(--c)", 3) + '<b class="num">' + it.count + "</b>" : ICON.check(15)) + "</button>";
@@ -336,7 +289,7 @@
     if (!data.habits.length) return emptyState();
     if (!st.total) return '<div class="empty-note">Nothing planned for this day.</div>';
     // First visit: explain the gestures and act them out on the first row.
-    ui.tipRow = !data.settings.swipeTip && ui.day === todayKey() && !trayMode;
+    ui.tipRow = !data.settings.swipeTip && ui.day === todayKey() && !compact;
     let n = 0;
     const groups = TIMES.map((t) => {
       const items = st.items.filter((i) => i.habit.time === t.id);
@@ -350,6 +303,14 @@
   }
 
   function swipeTip() {
+    if (isWide()) {
+      return '<section class="swipe-tip" role="note" aria-label="How to use habits">' +
+        '<div class="tip-head"><span class="tip-badge">New here?</span><button class="tip-ok" data-action="tip-done">Got it</button></div>' +
+        '<div class="tip-row"><span class="tip-ico ok">' + ICON.check(16) + '</span><p><b>Click the circle</b> to mark a habit done. Click again to undo</p></div>' +
+        '<div class="tip-row"><span class="tip-ico hold"><i></i></span><p><b>Right-click</b> a habit to edit or delete it</p></div>' +
+        '<div class="tip-row"><span class="tip-ico undo">' + ICON.widget(16) + '</span><p>Turn on the <b>desktop widget</b> in Settings, or use the menu bar icon</p></div>' +
+        '<p class="tip-foot">⌘N adds a habit. ⌘[ and ⌘] move between days.</p></section>';
+    }
     return '<section class="swipe-tip" role="note" aria-label="How to use habits">' +
       '<div class="tip-head"><span class="tip-badge">New here?</span><button class="tip-ok" data-action="tip-done">Got it</button></div>' +
       '<div class="tip-row"><span class="tip-ico ok">' + ICON.check(16) + '</span><p><b>Swipe right</b> on a habit to mark it done</p><span class="tip-arrow">' + ICON.right(16) + "</span></div>" +
@@ -413,57 +374,102 @@
     return { na: st.done, a: " down,", nb: left, b: " to go.", sub: st.done / st.total >= 0.5 ? "More than halfway. Keep it rolling." : "Good start. One more?" };
   }
 
-  // The day's score as one pill per habit, filling in the habit's own colour.
-  function scoreBar(st) {
-    return '<div class="score-bar" role="img" aria-label="' + st.done + " of " + st.total + ' habits done">' + st.items.map((it) =>
-      '<i style="--c:' + colorOf(it.habit) + '"' + (it.satisfied ? ' class="on"' : "") + '><b style="width:' + prev("pill:" + ui.day + ":" + it.habit.id, Math.round(it.frac * 100)) + '%" data-w="' + Math.round(it.frac * 100) + '%"></b></i>').join("") +
-      '<span class="num" data-count="' + pct(st.done, st.total) + '" data-from="' + prev("pct:" + ui.day, pct(st.done, st.total)) + '" data-suffix="%">' + pct(st.done, st.total) + "%</span></div>";
+  function headlineHtml(hl) {
+    const num = (n, cls) => '<span class="hl-num ' + cls + (prev("hl:" + cls + ui.day, n) !== n ? " bump" : "") + ' num">' + n + "</span>";
+    return '<h1 class="headline">' + (hl.na != null ? num(hl.na, "done") : "") + esc(hl.a) + "<br>" + (hl.nb != null ? num(hl.nb, "left") : "") + esc(hl.b) + "</h1>";
+  }
+  function bestStreak() {
+    return data.habits.map((h) => ({ h: h, s: C.streak(data, h, todayKey()) })).filter((x) => x.s.current >= 2).sort((a, b) => b.s.current - a.s.current)[0];
+  }
+  function momentumCard(st, isToday) {
+    const best = bestStreak();
+    const perfect = st.total && st.done === st.total;
+    return '<section class="momentum' + (perfect ? " perfect" : "") + '"><div class="m-text"><p class="kicker">' + (isToday ? "Today's progress" : "That day") + "</p>" +
+      '<p class="m-big num">' + st.done + "<span> of " + st.total + "</span></p>" +
+      '<p class="m-sub">' + (best ? '<span class="flame">' + ICON.flame(13) + "</span>" + esc(best.h.name) + " · " + plural(best.s.current, best.s.unit) : "Small steps add up.") + "</p></div>" +
+      '<div class="m-ring">' + segRing(st.items, 104, 9) + '<span class="m-pct num"><span data-count="' + pct(st.done, st.total) + '" data-from="' + prev("mpct:" + ui.day, pct(st.done, st.total)) + '">' + pct(st.done, st.total) + "</span><small>%</small></span></div></section>";
+  }
+  function viewToggle(size) {
+    return '<button class="icon-btn bare" data-action="view" aria-label="' + (ui.view === "list" ? "Show week grid" : "Show list") + '">' + (ui.view === "list" ? ICON.grid(size) : ICON.list(size)) + "</button>";
   }
 
   function phoneToday(st, isToday) {
     const hl = headline(st, isToday);
-    const best = data.habits.map((h) => ({ h: h, s: C.streak(data, h, todayKey()) })).filter((x) => x.s.current >= 2).sort((a, b) => b.s.current - a.s.current)[0];
     // Glass top bar: clear at the top of the page, frosted once the page scrolls under it.
     let html = '<header class="brand-row"><span class="brand-logo">' + brandMark(40) + '</span><b class="brand-name">' + APP_NAME + "</b>" +
       '<button class="glass-btn" data-action="tab" data-v="settings" aria-label="Settings">' + ICON.settings(19) + "</button>" +
       '<button class="glass-btn add" data-action="add" aria-label="New habit">' + ICON.plus(21) + "</button></header>";
-    const num = (n, cls) => '<span class="hl-num ' + cls + (prev("hl:" + cls + ui.day, n) !== n ? " bump" : "") + ' num">' + n + "</span>";
-    html += '<section class="hero"><p class="kicker">' + fmt(ui.day, { weekday: "long", day: "numeric", month: "long" }) + "</p>" +
-      '<h1 class="headline">' + (hl.na != null ? num(hl.na, "done") : "") + esc(hl.a) + "<br>" + (hl.nb != null ? num(hl.nb, "left") : "") + esc(hl.b) + "</h1>" +
-      (isToday && st.total ? scoreBar(st) : "") + (hl.sub ? '<p class="lede">' + esc(hl.sub) + "</p>" : "") +
+    html += '<section class="hero"><p class="kicker">' + fmt(ui.day, { weekday: "long", day: "numeric", month: "long" }) + "</p>" + headlineHtml(hl) +
+      (hl.sub ? '<p class="lede">' + esc(hl.sub) + "</p>" : "") +
       (isToday ? "" : '<button class="pill-btn" data-action="go-today">Back to today</button>') + "</section>";
-    if (data.habits.length) {
-      const perfect = st.total && st.done === st.total;
-      html += '<section class="momentum' + (perfect ? " perfect" : "") + '"><div class="m-text"><p class="kicker">' + (isToday ? "Today's progress" : "That day") + "</p>" +
-        '<p class="m-big num">' + st.done + "<span> of " + st.total + "</span></p>" +
-        '<p class="m-sub">' + (best ? '<span class="flame">' + ICON.flame(13) + "</span>" + esc(best.h.name) + " · " + plural(best.s.current, best.s.unit) : "Small steps add up.") + "</p></div>" +
-        '<div class="m-ring">' + segRing(st.items, 104, 9) + '<span class="m-pct num"><span data-count="' + pct(st.done, st.total) + '" data-from="' + prev("mpct:" + ui.day, pct(st.done, st.total)) + '">' + pct(st.done, st.total) + "</span><small>%</small></span></div></section>";
-    }
+    if (data.habits.length) html += momentumCard(st, isToday);
     html += '<div class="sec-head"><p class="kicker">This week</p><p class="sec-meta">' + fmt(ui.day, { month: "short", year: "numeric" }) + "</p></div>" + weekStrip();
     if (data.habits.length) {
-      html += '<div class="sec-head"><h2 class="sec-title">Your habits</h2><span class="sec-tools"><span class="kicker">' + plural(st.total, "habit") + "</span>" +
-        '<button class="icon-btn bare" data-action="view" aria-label="' + (ui.view === "list" ? "Show week grid" : "Show list") + '">' + (ui.view === "list" ? ICON.grid(18) : ICON.list(18)) + "</button></span></div>";
+      html += '<div class="sec-head"><h2 class="sec-title">Your habits</h2><span class="sec-tools"><span class="kicker">' + plural(st.total, "habit") + "</span>" + viewToggle(18) + "</span></div>";
     }
     html += ui.view === "grid" ? gridView() : listView(st);
     return html;
   }
 
-  function todayScreen() {
+  // Mac Today: the phone's headline and ring side by side, the week, then the habits with widget cards beside them.
+  function deskToday(st, isToday) {
+    const hl = headline(st, isToday);
+    let html = '<header class="desk-head"><p class="kicker">' + (isToday ? greeting() + " · " : "") + fmt(ui.day, { weekday: "long", day: "numeric", month: "long" }) + "</p>" +
+      '<div class="head-tools">' + (isToday ? "" : '<button class="pill-btn" data-action="go-today">Back to today</button>') +
+      '<button class="text-btn strong" data-action="add">' + ICON.plus(16) + "New habit</button></div></header>";
+    html += '<div class="desk-hero"><section class="hero">' + headlineHtml(hl) + (hl.sub ? '<p class="lede">' + esc(hl.sub) + "</p>" : "") + "</section>" +
+      (data.habits.length ? momentumCard(st, isToday) : "") + "</div>";
+    html += weekStrip();
+    if (!data.habits.length) return html + listView(st);
+    html += '<div class="desk-cols"><div class="desk-main"><div class="sec-head"><h2 class="sec-title">Your habits</h2><span class="sec-tools"><span class="kicker">' + plural(st.total, "habit") + "</span>" + viewToggle(18) + "</span></div>" +
+      (ui.view === "grid" ? gridView() : listView(st)) + "</div>" +
+      '<aside class="desk-side" aria-label="Widgets">' + (isToday ? nextCard(st) : "") + streakCard() + weekCard() + "</aside></div>";
+    return html;
+  }
+
+  // ---------- widget cards (Mac Today) ----------
+  // Up next: the first open habit from the part of the day we are in, then later parts, then anytime.
+  function nextCard(st) {
+    const hour = new Date().getHours();
+    const now = hour < 12 ? 0 : hour < 17 ? 1 : 2;
+    const rank = (t) => { const i = ["morning", "afternoon", "evening"].indexOf(t); return i === -1 ? 3 : i >= now ? i - now : 10 + i; };
+    const it = st.items.filter((i) => !i.satisfied).sort((a, b) => rank(a.habit.time) - rank(b.habit.time))[0];
+    if (!it) {
+      return '<section class="widget w-next clear"><p class="w-cap">' + ICON.check(13) + "Up next</p>" +
+        '<p class="w-title">' + (st.total ? "All clear for today." : "Nothing planned today.") + '</p><p class="w-sub">' + (st.total ? "Every habit is checked. Enjoy the evening." : "Rest counts too.") + "</p></section>";
+    }
+    const h = it.habit, t = TIMES.find((x) => x.id === h.time) || TIMES[3];
+    const counter = h.target > 1;
+    return '<section class="widget w-next" style="--c:' + colorOf(h) + '"><p class="w-cap">' + ICON.clock(13) + "Up next</p>" +
+      '<div class="w-next-row"><span class="w-ico big">' + habitIcon(h, 22) + "</span>" +
+      '<button class="w-next-text" data-action="open" data-id="' + h.id + '"><span class="w-title">' + esc(h.name) + '</span><span class="w-sub">' + t.label + (counter ? " · " + it.count + " of " + h.target + " " + esc(h.unit || "times") : "") + "</span></button>" +
+      '<button class="w-do" data-action="toggle" data-id="' + h.id + '" aria-label="' + esc((counter ? "Add one to " : "Mark done: ") + h.name) + '">' + (counter ? ICON.plus(18) : ICON.check(18)) + "</button></div></section>";
+  }
+  function streakCard() {
     const today = todayKey();
+    const top = data.habits.map((h) => ({ h: h, s: C.streak(data, h, today) })).filter((x) => x.s.current > 0).sort((a, b) => b.s.current - a.s.current).slice(0, 4);
+    return '<section class="widget"><p class="w-cap"><span class="flame">' + ICON.flame(13) + "</span>Streaks</p>" + (top.length ? '<div class="w-streaks">' + top.map((x) =>
+      '<button class="w-streak" data-action="open" data-id="' + x.h.id + '" style="--c:' + colorOf(x.h) + '"><span class="w-ico">' + habitIcon(x.h, 16) + '</span><span class="w-name">' + esc(x.h.name) + '</span><b class="num">' + x.s.current + "</b><small>" + (x.s.unit === "week" ? "wk" : "d") + "</small></button>").join("") + "</div>" :
+      '<p class="w-sub">Check off a habit two days running to start a streak.</p>') + "</section>";
+  }
+  function weekCard() {
+    const today = todayKey(), start = C.weekStart(today);
+    const r = rangeStats(start, today);
+    let bars = "";
+    for (let i = 0; i < 7; i++) {
+      const k = C.addDays(start, i);
+      const st = k <= today ? dayStats(k) : null;
+      const p = st && st.total ? pct(st.done, st.total) : 0;
+      bars += '<div class="w-bar' + (k === today ? " now" : "") + (k > today ? " later" : "") + (st && st.total && st.done === st.total ? " full" : "") + '" title="' + fmt(k, { weekday: "long" }) + (st && st.total ? ": " + p + "%" : "") + '"><i><b style="height:' + p + '%"></b></i><span>' + fmt(k, { weekday: "narrow" }) + "</span></div>";
+    }
+    return '<section class="widget"><p class="w-cap">' + ICON.progress(13) + 'This week</p><p class="w-big num">' + (r.pct == null ? "–" : r.pct + "<small>%</small>") + "</p>" +
+      '<p class="w-sub">' + (r.due ? r.done + " of " + r.due + " check-ins" : "Nothing due yet") + '</p><div class="w-bars">' + bars + "</div></section>";
+  }
+
+  function todayScreen() {
     const st = dayStats(ui.day);
-    const isToday = ui.day === today;
-    if (!isWide()) return phoneToday(st, isToday);
-    const eyebrow = fmt(ui.day, { weekday: "long", day: "numeric", month: "long" });
-    const title = isToday ? greeting() : fmt(ui.day, { weekday: "long" });
-    const tools = '<div class="head-tools">' +
-      (isToday ? "" : '<button class="pill-btn" data-action="go-today">Today</button>') +
-      (data.habits.length ? '<button class="icon-btn" data-action="view" aria-label="' + (ui.view === "list" ? "Show week grid" : "Show list") + '">' + (ui.view === "list" ? ICON.grid(20) : ICON.list(20)) + "</button>" : "") +
-      "</div>";
-    let body = '<header class="screen-head"><div><p class="eyebrow">' + (isToday ? "Today · " : "") + eyebrow + '</p><h1 class="large-title">' + title + "</h1></div>" + tools + "</header>" +
-      weekStrip();
-    if (data.habits.length) body += dayArc(st, isToday);
-    body += ui.view === "grid" ? gridView() : listView(st);
-    return body;
+    const isToday = ui.day === todayKey();
+    return isWide() ? deskToday(st, isToday) : phoneToday(st, isToday);
   }
 
   // ---------- Progress ----------
@@ -688,6 +694,7 @@
     const where = desktop ? "this Mac" : native ? "this phone" : "this browser";
     return '<header class="screen-head"><div><h1 class="large-title">Settings</h1></div></header>' +
       '<section class="settings-group"><p class="caption">Appearance</p><div class="segmented" role="group" aria-label="Theme">' + seg("system", "System") + seg("light", "Light") + seg("dark", "Dark") + "</div></section>" +
+      widgetSettings() +
       '<section class="settings-group"><p class="caption">Your data</p><div class="list card">' +
       '<button class="list-row" data-action="export"><span class="tile" style="--c:#3F82CC">' + ICON.upload(18) + '</span><span class="lr-text"><span class="lr-title">Export backup</span><span class="lr-sub">Save all habits and history as a file</span></span></button>' +
       '<button class="list-row" data-action="import"><span class="tile" style="--c:#4F8C63">' + ICON.download(18) + '</span><span class="lr-text"><span class="lr-title">Import backup</span><span class="lr-sub">Replace everything with a backup file</span></span></button>' +
@@ -696,6 +703,14 @@
       '<button class="list-row danger" data-action="reset"><span class="tile" style="--c:#C2413B">' + ICON.trash(18) + '</span><span class="lr-text"><span class="lr-title">Erase everything</span><span class="lr-sub">Delete all habits and history</span></span></button>' +
       '</div><p class="footnote">Your habits are stored only on ' + where + ". Export a backup to move them to another device.</p></section>" +
       '<section class="about">' + brandMark(40) + "<p><b>" + APP_NAME + '</b> · version ' + esc(window.ROJ_VERSION || "") + '</p><p class="muted small">Small habits, every single day.</p></section>';
+  }
+
+  // Android: put the widget on the home screen. Mac: show or hide the desktop widget.
+  function widgetSettings() {
+    let row = "";
+    if (homeWidget) row = '<button class="list-row" data-action="pin-widget"><span class="tile" style="--c:#3F8F8C">' + ICON.widget(18) + '</span><span class="lr-text"><span class="lr-title">Add widget to home screen</span><span class="lr-sub">See today\'s habits and check them off without opening the app</span></span></button>';
+    else if (desktop && desktop.toggleWidget) row = '<button class="list-row" data-action="desk-widget" role="switch" aria-checked="' + !!ui.deskWidget + '"><span class="tile" style="--c:#3F8F8C">' + ICON.widget(18) + '</span><span class="lr-text"><span class="lr-title">Desktop widget</span><span class="lr-sub">Today\'s habits in a small card on your desktop</span></span><span class="switch' + (ui.deskWidget ? " on" : "") + '"><i></i></span></button>';
+    return row ? '<section class="settings-group"><p class="caption">Widgets</p><div class="list card">' + row + "</div></section>" : "";
   }
 
   // ---------- detail ----------
@@ -903,6 +918,29 @@
       '<div class="rows">' + (st.items.length ? st.items.map(habitRow).join("") : '<p class="muted small">Nothing planned today.</p>') + "</div></div>";
   }
 
+  // The Mac desktop widget: today's ring and habits in a small glass card. Habits are checked from here.
+  function widgetView() {
+    const today = todayKey();
+    ui.day = today;
+    const st = dayStats(today);
+    const order = (it) => (it.satisfied ? 10 : 0) + TIMES.findIndex((t) => t.id === it.habit.time);
+    const items = st.items.slice().sort((a, b) => order(a) - order(b));
+    const left = st.total - st.done;
+    const title = !st.total ? "Nothing today." : !left ? "All done." : '<b class="num">' + st.done + "</b> down, " + '<b class="num left">' + left + "</b> to go.";
+    const rows = items.map((it) => {
+      const h = it.habit, counter = h.target > 1 && !it.done;
+      return '<div class="wg-row' + (it.satisfied ? " done" : "") + '" style="--c:' + colorOf(h) + '">' +
+        '<button class="wg-check' + (counter ? " counter" : "") + '" data-action="toggle-today" data-id="' + h.id + '" aria-label="' + esc((it.done ? "Undo " : counter ? "Add one to " : "Check off ") + h.name) + '">' +
+        (counter ? miniRing(it.frac, 22, "var(--c)", 2.5) + '<b class="num">' + it.count + "</b>" : ICON.check(11)) + "</button>" +
+        '<span class="wg-name">' + esc(h.name) + "</span>" +
+        (h.target > 1 ? '<span class="wg-meta num">' + it.count + "/" + h.target + "</span>" : h.schedule.type === "weekly" ? '<span class="wg-meta num">' + it.weekDone + "/" + h.schedule.times + " wk</span>" : "") + "</div>";
+    }).join("");
+    return '<div class="wg"><header class="wg-head"><div class="m-ring wg-ring">' + segRing(st.items, 58, 6) + '<span class="m-pct num">' + pct(st.done, st.total) + "<small>%</small></span></div>" +
+      '<div class="wg-text"><p class="kicker">' + fmt(today, { weekday: "long", day: "numeric", month: "short" }) + '</p><p class="wg-title">' + title + "</p></div>" +
+      '<button class="wg-open" data-action="open-main" aria-label="Open ' + APP_NAME + '">' + ICON.open(15) + "</button></header>" +
+      (rows ? '<div class="wg-rows">' + rows + "</div>" : '<p class="wg-empty">' + (data.habits.length ? "Rest counts too." : "Add a habit in " + APP_NAME + ".") + "</p>") + "</div>";
+  }
+
   function mainScreen() {
     const h = ui.detail && habitById(ui.detail);
     if (h && !isWide()) return detailView(h);
@@ -931,17 +969,19 @@
     const root = document.documentElement;
     root.classList.toggle("wide", wide);
     root.classList.toggle("tray-mode", trayMode);
+    root.classList.toggle("widget-mode", widgetMode);
     if (ui.tab === "settings" && !wide && ui.detail) ui.detail = null;
 
     let html;
-    if (trayMode) html = trayView();
+    if (widgetMode) html = widgetView();
+    else if (trayMode) html = trayView();
     else if (data.welcome) html = welcome();
     else {
       const detailHabit = wide && ui.detail && (ui.tab === "today" || ui.tab === "habits") ? habitById(ui.detail) : null;
       const phoneDetail = !wide && ui.detail && habitById(ui.detail);
       const hideDock = phoneDetail;
       html = '<div class="shell' + (detailHabit ? " has-detail" : "") + '">' + (wide ? sidebar() : "") +
-        '<main class="pane main' + (ui.enter ? " enter" : "") + (hideDock && !wide ? " no-dock" : "") + '" data-scroll="main">' + mainScreen() + "</main>" +
+        '<main class="pane main' + (ui.enter ? " enter" : "") + (hideDock && !wide ? " no-dock" : "") + (wide && ui.tab === "today" ? " desk" : "") + '" data-scroll="main">' + mainScreen() + "</main>" +
         (detailHabit ? '<aside class="pane side-detail" data-scroll="detail">' + detailView(detailHabit) + "</aside>" : "") + "</div>" +
         (!wide && !hideDock ? tabbar() : "");
     }
@@ -968,18 +1008,18 @@
     ui.enter = false;
     ui.flash = null;
     playMotion();
+    if (widgetMode && desktop && desktop.widgetSize) { const wg = app.querySelector(".wg"); if (wg) desktop.widgetSize(Math.ceil(wg.getBoundingClientRect().height)); }
     if (ui.celebrate && !ui.celebrate.shown) { ui.celebrate.shown = true; countUp(app.querySelector(".cb-num")); }
     applyTheme();
   }
 
   function playMotion() {
-    const fills = app.querySelectorAll(".sr-fill[data-len], .score-bar b[data-w], [data-count][data-from], .tab-glow[data-tab-to]");
+    const fills = app.querySelectorAll(".sr-fill[data-len], [data-count][data-from], .tab-glow[data-tab-to]");
     if (!fills.length && !ui.confetti) return;
     requestAnimationFrame(() => requestAnimationFrame(() => {
       fills.forEach((el) => {
         if (el.dataset.tabTo != null) el.style.transform = "translateX(" + el.dataset.tabTo + ")";
         else if (el.dataset.len != null) el.setAttribute("stroke-dasharray", el.dataset.len + " " + el.dataset.circ);
-        else if (el.dataset.w != null) el.style.width = el.dataset.w;
         else if (el.dataset.from !== el.dataset.count) tween(el, +el.dataset.from, +el.dataset.count, el.dataset.suffix || "");
       });
     }));
@@ -996,7 +1036,7 @@
   // Perfect day: a small burst of marigold and habit colours from the progress ring.
   function burst() {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const anchor = app.querySelector(".m-ring, .arc-center, .score-bar");
+    const anchor = app.querySelector(".m-ring");
     if (!anchor) return;
     const r = anchor.getBoundingClientRect();
     const box = document.createElement("div");
@@ -1274,6 +1314,11 @@
       case "start-sample": data = sampleData("system"); ui.enter = true; commit(); break;
       case "start-empty": delete data.welcome; ui.enter = true; commit(); break;
       case "open-main": if (desktop) desktop.openMain(); break;
+      case "desk-widget": desktop.toggleWidget().then((on) => { ui.deskWidget = on; render(); }); break;
+      case "pin-widget":
+        homeWidget.pin().then((r) => { if (!r || !r.asked) toast("Long-press your home screen, tap Widgets, then pick " + APP_NAME, 3600); })
+          .catch(() => toast("Long-press your home screen, tap Widgets, then pick " + APP_NAME, 3600));
+        break;
     }
     if (ev) ev.preventDefault();
   }
@@ -1354,6 +1399,7 @@
   // Right-click on the Mac opens the same menu.
   app.addEventListener("contextmenu", (ev) => {
     const row = ev.target.closest(".habit-row, .habit-card:not(.add-card), .side-habit");
+    if (widgetMode) { ev.preventDefault(); desktop.widgetMenu(); return; }
     if (!row || !row.dataset.id || trayMode) return;
     ev.preventDefault();
     if (gesture) { clearTimeout(gesture.timer); gesture = null; }
@@ -1372,7 +1418,7 @@
       render();
       return;
     }
-    if (typing || ui.sheet || ui.confirm || ui.menu || trayMode || data.welcome) return;
+    if (typing || ui.sheet || ui.confirm || ui.menu || compact || data.welcome) return;
     if ((ev.metaKey || ev.ctrlKey) && ev.key.toLowerCase() === "n") { ev.preventDefault(); onAction({ dataset: { action: "add" } }); return; }
     if ((ev.metaKey || ev.ctrlKey) && ev.key.toLowerCase() === "z" && ui.undo) { ev.preventDefault(); undoDelete(); return; }
     if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
@@ -1398,7 +1444,13 @@
     checkDay();
     if (!ui.sheet && !ui.menu && !gesture && !document.hidden && ui.tab === "today") render();
   }, 60000);
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) { checkDay(); render(); } });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) return;
+    checkDay();
+    render();
+    // Habits may have been checked off on the home screen widget while the app was away.
+    if (homeWidget && !ui.sheet) Store.load().then((saved) => { const v = saved && C.validate(saved); if (v && !ui.sheet) { data = normalize(v); render(); } });
+  });
 
   // Another window (the Mac menu bar panel) changed the data.
   window.addEventListener("storage", (ev) => {
@@ -1428,6 +1480,7 @@
       else if (TABS.some((t) => t[0] === cmd)) go(cmd);
       else if (cmd === "export") exportBackup();
       else if (cmd === "import") importBackup();
+      else if (cmd === "widget-on" || cmd === "widget-off") { ui.deskWidget = cmd === "widget-on"; render(); }
     });
   }
 
@@ -1475,6 +1528,7 @@
     else { data = C.emptyState(); data.welcome = true; }
     if (data.habits.length) delete data.welcome;
     loaded = true;
+    if (desktop && desktop.widgetState) ui.deskWidget = await desktop.widgetState();
     checkDay();
     render();
     document.documentElement.classList.add("ready");

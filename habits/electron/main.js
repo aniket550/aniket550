@@ -1,4 +1,4 @@
-// Roj Habit for Mac: the main window, the menu bar panel and the app menu.
+// Roj Habit for Mac: the main window, the menu bar panel, the desktop widget and the app menu.
 const { app, BrowserWindow, Menu, Tray, ipcMain, dialog, nativeImage, nativeTheme, protocol, net, screen, shell } = require("electron");
 const path = require("path");
 const fs = require("fs");
@@ -13,6 +13,7 @@ protocol.registerSchemesAsPrivileged([{ scheme: "app", privileges: { standard: t
 let mainWin = null;
 let trayWin = null;
 let tray = null;
+let widgetWin = null;
 
 function createMain() {
   mainWin = new BrowserWindow({
@@ -75,6 +76,62 @@ function createTray() {
   });
 }
 
+// Desktop widget: a small glass card with today's habits. It remembers where it was put and
+// whether it was on, in widget.json next to the app's data.
+const widgetFile = () => path.join(app.getPath("userData"), "widget.json");
+function widgetPrefs() {
+  try { return JSON.parse(fs.readFileSync(widgetFile(), "utf8")) || {}; } catch (e) { return {}; }
+}
+function saveWidgetPrefs(change) {
+  try { fs.writeFileSync(widgetFile(), JSON.stringify(Object.assign(widgetPrefs(), change))); } catch (e) { /* not worth stopping for */ }
+}
+
+function createWidget() {
+  const p = widgetPrefs();
+  const area = screen.getPrimaryDisplay().workArea;
+  // A saved spot on a screen that is no longer attached would leave the widget out of sight.
+  const onScreen = p.x != null && screen.getAllDisplays().some((d) => {
+    const a = d.workArea;
+    return p.x + 40 > a.x && p.x + 40 < a.x + a.width && p.y + 20 > a.y && p.y + 20 < a.y + a.height;
+  });
+  widgetWin = new BrowserWindow({
+    width: 300,
+    height: 240,
+    x: onScreen ? p.x : area.x + area.width - 320,
+    y: onScreen ? p.y : area.y + 20,
+    show: false,
+    frame: false,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    skipTaskbar: true,
+    alwaysOnTop: !!p.onTop,
+    vibrancy: isMac ? "popover" : undefined,
+    visualEffectState: "active",
+    backgroundColor: isMac ? "#00000000" : "#F4F1EC",
+    webPreferences: { preload: path.join(__dirname, "preload.js"), contextIsolation: true, sandbox: true }
+  });
+  if (isMac) widgetWin.setVisibleOnAllWorkspaces(true, { skipTransformProcessType: true });
+  widgetWin.loadURL("app://roz/index.html#widget");
+  widgetWin.once("ready-to-show", () => widgetWin.showInactive());
+  widgetWin.on("moved", () => {
+    const [x, y] = widgetWin.getPosition();
+    saveWidgetPrefs({ x: x, y: y });
+  });
+  widgetWin.on("closed", () => { widgetWin = null; });
+}
+
+function setWidget(on) {
+  saveWidgetPrefs({ show: on });
+  if (on && !widgetWin) createWidget();
+  if (!on && widgetWin) widgetWin.close();
+  const item = Menu.getApplicationMenu() && Menu.getApplicationMenu().getMenuItemById("widget");
+  if (item) item.checked = on;
+  if (mainWin) mainWin.webContents.send("command", on ? "widget-on" : "widget-off");
+  return on;
+}
+
 function send(cmd) {
   showMain();
   mainWin.webContents.send("command", cmd);
@@ -110,7 +167,17 @@ function buildMenu() {
         ...(app.isPackaged ? [] : [{ role: "toggleDevTools" }])
       ]
     },
-    { role: "windowMenu" }
+    {
+      role: "window",
+      submenu: [
+        { role: "minimize" },
+        { role: "zoom" },
+        { type: "separator" },
+        { label: "Desktop Widget", id: "widget", type: "checkbox", checked: !!widgetPrefs().show, click: (item) => setWidget(item.checked) },
+        { type: "separator" },
+        { role: "front" }
+      ]
+    }
   ];
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
@@ -142,6 +209,26 @@ ipcMain.on("open-main", () => {
   showMain();
 });
 
+ipcMain.handle("widget-state", () => !!widgetWin);
+ipcMain.handle("widget-toggle", () => setWidget(!widgetWin));
+
+// The widget page reports its height so the window fits the list.
+ipcMain.on("widget-size", (ev, height) => {
+  if (!widgetWin || ev.sender !== widgetWin.webContents) return;
+  const h = Math.max(120, Math.min(640, Math.round(Number(height) || 0)));
+  widgetWin.setContentSize(300, h);
+});
+
+ipcMain.on("widget-menu", (ev) => {
+  if (!widgetWin || ev.sender !== widgetWin.webContents) return;
+  Menu.buildFromTemplate([
+    { label: "Open Roj Habit", click: showMain },
+    { label: "Keep on Top", type: "checkbox", checked: widgetWin.isAlwaysOnTop(), click: (item) => { widgetWin.setAlwaysOnTop(item.checked); saveWidgetPrefs({ onTop: item.checked }); } },
+    { type: "separator" },
+    { label: "Hide Widget", click: () => setWidget(false) }
+  ]).popup({ window: widgetWin });
+});
+
 app.whenReady().then(() => {
   protocol.handle("app", (req) => {
     const { pathname } = new URL(req.url);
@@ -152,6 +239,7 @@ app.whenReady().then(() => {
   buildMenu();
   createMain();
   if (isMac) createTray();
+  if (widgetPrefs().show) createWidget();
   app.on("activate", showMain);
 });
 

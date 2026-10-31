@@ -2,7 +2,7 @@
 
 **Roj Habit** ek habit tracker hai, Android aur Mac ke liye. iPhone wala app baad mein aayega, aur wo bhi isi code se banega.
 
-Roz ki habits tick karo. Phone pe home page seedha batata hai ki din kahan khada hai ("2 down, 4 to go."), aur Mac pe **Day Arc** dikhata hai: subah 6 se raat 10 tak suraj ka raasta, jis par har habit apne waqt pe baithi hai.
+Roz ki habits tick karo. Home page seedha batata hai ki din kahan khada hai ("2 down, 4 to go."), saath mein aaj ka ring. Mac pe iske bagal mein chhote widget cards hain: **Up next** (ab kaunsi habit baaki hai), **Streaks** aur **This week**.
 
 ## Kaise use karein
 
@@ -15,6 +15,15 @@ Roz ki habits tick karo. Phone pe home page seedha batata hai ki din kahan khada
 | Edit / Delete | Habit ko **dabaa ke rakho** (Mac: right-click). Ya **Habits** tab → **Edit** → lal ⊖ dabao |
 | Galti se delete ho gaya | Neeche aane wale **Undo** button ko dabao (5 second tak rehta hai) |
 | Pichhla din theek karna | Upar hafte ki strip se din chuno, ya habit ke calendar mein us din pe tap karo |
+
+## Widgets
+
+| Kahan | Kaise lagayein | Kya karta hai |
+|---|---|---|
+| 🤖 Android home screen | **Settings → Add widget to home screen**. Ya home screen pe khaali jagah dabaa ke rakho → **Widgets** → **Roj Habit** | Aaj ka ring, "2 down, 3 to go." aur habits ki list. Gole pe tap karo to habit wahin tick ho jaati hai, app khole bina. Chhota (2×2) karoge to sirf ring dikhega |
+| 💻 Mac desktop | **Settings → Desktop widget** ON karo, ya menu **Window → Desktop Widget** | Desktop pe chhota kaanch jaisa card. Use kheench ke kahin bhi rakho. Right-click: **Keep on Top**, **Hide Widget** |
+
+Mac ke asli Notification Center widgets (WidgetKit) ke liye app pe Apple ka paid developer signature chahiye, isliye abhi Roj Habit apna khud ka desktop widget deta hai.
 
 ## Download aur install
 
@@ -30,8 +39,8 @@ Naya APK purane ke upar install karoge to app **update** hoga, aur data waisa hi
 
 ### 💻 Mac
 1. Apne Mac ke hisaab se DMG download karo:
-   - M1, M2, M3, M4 (Apple chip): `RojHabit-1.0.0-mac-arm64.dmg`
-   - Intel Mac: `RojHabit-1.0.0-mac-x64.dmg`
+   - M1, M2, M3, M4 (Apple chip): `RojHabit-<version>-mac-arm64.dmg`
+   - Intel Mac: `RojHabit-<version>-mac-x64.dmg`
    - Pata nahi kaunsa hai? Apple menu  → About This Mac → "Chip" ya "Processor" dekho.
 2. DMG kholo aur **Roj Habit** ko **Applications** folder mein drag karo.
 3. Pehli baar kholne par macOS rokega, kyunki app pe Apple ka paid developer signature nahi hai. Tab:
@@ -75,12 +84,14 @@ habits/
     habit-icons.js      habit ke line icons, Lucide se (ISC License). scripts/habit-icons.js banata hai
     brand.js            logo: teen brush strokes (enso), app aur saare icons isi se bante hain
   android/              Android project (Capacitor)
-  electron/             Mac app: window, menu bar panel, menu
+    .../RojWidget.java  home screen widget: wahi saved data padhta hai aur gole se tick karta hai
+  electron/             Mac app: window, menu bar panel, desktop widget, menu
   test/core.test.js     core.js ke tests
   scripts/
     vendor.js           Capacitor plugins ko www/vendor/ mein jodta hai
     preview.js          design dekhne ke liye ek single HTML file banata hai
     icons.js            saare app icons banata hai (Playwright chahiye)
+    widget-preview.js   Android widget picker wali preview image banata hai
 ../.github/workflows/rojhabit-apps.yml   APK + DMG build aur release
 ```
 

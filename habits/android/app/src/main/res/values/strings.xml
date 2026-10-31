@@ -4,4 +4,5 @@
     <string name="title_activity_main">Roj Habit</string>
     <string name="package_name">com.aniket.habits</string>
     <string name="custom_url_scheme">com.aniket.habits</string>
+    <string name="widget_description">Today\'s habits. Tap a circle to check one off.</string>
 </resources>

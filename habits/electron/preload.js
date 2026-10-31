@@ -7,7 +7,11 @@ contextBridge.exposeInMainWorld("rozDesktop", {
   openFile: () => ipcRenderer.invoke("open-file"),
   setTheme: (theme) => ipcRenderer.send("set-theme", theme),
   openMain: () => ipcRenderer.send("open-main"),
-  onCommand: (cb) => ipcRenderer.on("command", (ev, cmd) => cb(cmd))
+  onCommand: (cb) => ipcRenderer.on("command", (ev, cmd) => cb(cmd)),
+  widgetState: () => ipcRenderer.invoke("widget-state"),
+  toggleWidget: () => ipcRenderer.invoke("widget-toggle"),
+  widgetSize: (height) => ipcRenderer.send("widget-size", height),
+  widgetMenu: () => ipcRenderer.send("widget-menu")
 });
 
 if (process.platform === "darwin") {

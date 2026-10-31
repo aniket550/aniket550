@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="roz_background">#0D0E11</color>
+    <color name="widget_bg">#1A1B20</color>
+    <color name="widget_ink">#F2F1EE</color>
+    <color name="widget_secondary">#908D87</color>
+    <color name="widget_tertiary">#5F5D59</color>
+    <color name="widget_accent">#F2A645</color>
+    <color name="widget_accent_text">#F5B565</color>
 </resources>

@@ -22,6 +22,7 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        registerPlugin(WidgetPlugin.class);
         super.onCreate(savedInstanceState);
         if (getBridge() == null) return;
         EdgeToEdge.enable(this);

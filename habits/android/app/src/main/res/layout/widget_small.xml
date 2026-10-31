@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Home screen widget, small (2 x 2): the ring and how many are done. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <ImageView
+        android:id="@+id/w_ring"
+        android:layout_width="76dp"
+        android:layout_height="76dp"
+        android:importantForAccessibility="no" />
+
+    <TextView
+        android:id="@+id/w_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:fontFamily="sans-serif-medium"
+        android:singleLine="true"
+        android:text="@string/app_name"
+        android:textColor="@color/widget_ink"
+        android:textSize="13sp" />
+</LinearLayout>

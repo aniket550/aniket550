@@ -3,6 +3,13 @@
 Har update ke saath version badhta hai (`npm run bump`) aur yahan ek line judti hai.
 Version ka matlab: **1.2.3** → 1 = bada badlav, 2 = naya feature ya design, 3 = chhota sudhaar.
 
+## 1.2.0
+- **Widgets aa gaye.** Android pe home screen widget: aaj ka ring, "2 down, 3 to go." aur habits, gole pe tap karke wahin tick. Settings → Add widget to home screen
+- Mac pe **desktop widget**: chhota kaanch jaisa card, kahin bhi kheench ke rakho, wahin se tick karo. Settings → Desktop widget, ya Window → Desktop Widget
+- Mac ka Today naya: phone jaisa "2 down, 3 to go." headline aur ring bagal mein, aur habits ke saath widget cards (Up next, Streaks, This week). Suraj wala Arc hata diya
+- Mac pe "New here?" tips ab click aur right-click ki baat karte hain, swipe ki nahi
+- Phone ke headline ke neeche wali rangeen line hata di
+
 ## 1.1.4
 - Habit edit karte waqt koi bhi button dabane pe sheet ab upar nahi bhaagti, wahin rehti hai
 - Repeat mein din ke button ab Every day pe bhi dikhte hain. Saare 7 din chuno to apne aap Every day ho jaata hai, ek din hatao to Some days

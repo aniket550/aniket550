@@ -42,14 +42,6 @@
   --shadow: 0 1px 2px rgba(48, 36, 12, 0.04), 0 6px 20px rgba(48, 36, 12, 0.05);
   --shadow-lift: 0 2px 6px rgba(48, 36, 12, 0.06), 0 18px 48px rgba(48, 36, 12, 0.16);
 
-  /* the sky behind the Day Arc */
-  --sky-dawn: linear-gradient(180deg, #FBE3CC 0%, #F7D3C2 55%, #FFF6EE 100%);
-  --sky-day: linear-gradient(180deg, #CFE4F7 0%, #E4EFF8 60%, #FBFCFD 100%);
-  --sky-dusk: linear-gradient(180deg, #F2BFA0 0%, #E7B5C4 50%, #FBEFEA 100%);
-  --sky-night: linear-gradient(180deg, #1C2340 0%, #2C3159 60%, #3A3B63 100%);
-  --sky-past: linear-gradient(180deg, #FFFFFF 0%, #FBF9F5 100%);
-  --sky-ink: #1B1C20;
-
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, system-ui, sans-serif;
   --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, sans-serif;
   --font-round: ui-rounded, "SF Pro Rounded", -apple-system, "Inter", system-ui, sans-serif;
@@ -99,12 +91,6 @@
     --scrim: rgba(0, 0, 0, 0.55);
     --shadow: 0 0 0 1px rgba(255, 255, 255, 0.045);
     --shadow-lift: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 24px 60px rgba(0, 0, 0, 0.6);
-    --sky-dawn: linear-gradient(180deg, #3B2A35 0%, #2A2230 60%, #1A1B20 100%);
-    --sky-day: linear-gradient(180deg, #1D2B3D 0%, #1B2230 60%, #1A1B20 100%);
-    --sky-dusk: linear-gradient(180deg, #3E2633 0%, #2B2131 60%, #1A1B20 100%);
-    --sky-night: linear-gradient(180deg, #121733 0%, #161A30 60%, #1A1B20 100%);
-    --sky-past: linear-gradient(180deg, #1E1F25 0%, #1A1B20 100%);
-    --sky-ink: #F2F1EE;
     color-scheme: dark;
   }
 }
@@ -139,12 +125,6 @@
   --scrim: rgba(0, 0, 0, 0.55);
   --shadow: 0 0 0 1px rgba(255, 255, 255, 0.045);
   --shadow-lift: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 24px 60px rgba(0, 0, 0, 0.6);
-  --sky-dawn: linear-gradient(180deg, #3B2A35 0%, #2A2230 60%, #1A1B20 100%);
-  --sky-day: linear-gradient(180deg, #1D2B3D 0%, #1B2230 60%, #1A1B20 100%);
-  --sky-dusk: linear-gradient(180deg, #3E2633 0%, #2B2131 60%, #1A1B20 100%);
-  --sky-night: linear-gradient(180deg, #121733 0%, #161A30 60%, #1A1B20 100%);
-  --sky-past: linear-gradient(180deg, #1E1F25 0%, #1A1B20 100%);
-  --sky-ink: #F2F1EE;
   color-scheme: dark;
 }
 
@@ -233,49 +213,6 @@ h1, h2, p { margin: 0; }
 .wk-day.sel .wk-dot.some, .wk-day.sel .wk-dot.none { box-shadow: inset 0 0 0 1.5px var(--on-ink); }
 .wk-day.future { opacity: 0.32; }
 
-/* ---------- Day Arc ---------- */
-.day-arc {
-  position: relative; overflow: hidden; border-radius: 28px; padding: 18px 16px 14px; color: var(--sky-ink);
-  box-shadow: var(--shadow); isolation: isolate;
-}
-.day-arc.sky-dawn { background: var(--sky-dawn); }
-.day-arc.sky-day { background: var(--sky-day); }
-.day-arc.sky-dusk { background: var(--sky-dusk); }
-.day-arc.sky-night { background: var(--sky-night); --sky-ink: #F2F1EE; }
-.day-arc.sky-past { background: var(--sky-past); }
-.day-arc.sky-night::before {
-  content: ""; position: absolute; inset: 0; z-index: -1; opacity: 0.7;
-  background-image: radial-gradient(1px 1px at 12% 22%, #FFF, transparent), radial-gradient(1px 1px at 30% 10%, #FFF, transparent),
-    radial-gradient(1.5px 1.5px at 74% 18%, #FFF, transparent), radial-gradient(1px 1px at 88% 34%, #FFF, transparent),
-    radial-gradient(1px 1px at 56% 8%, #FFF, transparent), radial-gradient(1px 1px at 8% 48%, #FFF, transparent);
-}
-.arc-svg { display: block; width: 100%; height: auto; overflow: visible; }
-.arc-track { fill: none; stroke: currentColor; stroke-opacity: 0.2; stroke-width: 2; stroke-dasharray: 2 7; stroke-linecap: round; }
-.arc-lit { fill: none; stroke: var(--marigold); stroke-width: 3; stroke-linecap: round; opacity: 0.85; }
-.sun { fill: var(--marigold); }
-.sun-glow { fill: var(--marigold); opacity: 0.22; animation: sun-pulse 3.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
-@keyframes sun-pulse { 50% { transform: scale(1.35); opacity: 0.1; } }
-.arc-mark { animation: mark-in 0.5s var(--spring) backwards; transform-box: fill-box; transform-origin: center; }
-@keyframes mark-in { from { opacity: 0; transform: scale(0.4); } }
-.am-bg { fill: var(--card); stroke: var(--c); stroke-width: 2; stroke-opacity: 0.5; }
-.arc-mark.done .am-bg { fill: var(--c); stroke: var(--card); stroke-opacity: 1; stroke-width: 2.5; }
-.am-part { fill: none; stroke: var(--c); stroke-width: 2.5; stroke-linecap: round; }
-.arc-mark text { font-size: 14px; text-anchor: middle; dominant-baseline: central; }
-.am-icon { fill: none; stroke: var(--c); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
-.arc-mark.done .am-icon { stroke: #FFFFFF; }
-.arc-center { position: absolute; left: 0; right: 0; bottom: 34px; display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
-.arc-num { font-size: 46px; font-weight: 700; letter-spacing: -0.04em; line-height: 1; }
-.arc-num span { font-size: 24px; opacity: 0.45; font-weight: 650; }
-.arc-line { font-size: 14px; font-weight: 550; opacity: 0.75; }
-.arc-ends { display: flex; justify-content: space-between; align-items: center; margin-top: 2px; padding: 0 4px; font-size: 11px; font-weight: 600; }
-.arc-ends > span:not(.anytime-dots) { opacity: 0.55; }
-.anytime-dots { display: inline-flex; gap: 4px; }
-.anytime-dots i { width: 8px; height: 8px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--c); }
-.anytime-dots i.on { background: var(--c); box-shadow: none; }
-.day-arc.perfect .arc-lit { stroke-width: 4; opacity: 1; }
-.day-arc.perfect .arc-num { color: var(--marigold-text); }
-.day-arc.sky-night.perfect .arc-num { color: var(--marigold); }
-
 /* ---------- phone Today ---------- */
 /* The top bar sticks to the top: clear at first, frosted glass once content scrolls beneath it. */
 .brand-row {
@@ -325,11 +262,6 @@ html.scrolled .brand-row {
 .hl-num.done { color: var(--marigold-text); }
 .hl-num.left { color: var(--tertiary); }
 @keyframes num-in { 0% { opacity: 0.2; transform: translateY(10px) scale(0.8); } 60% { transform: translateY(-3px) scale(1.08); } 100% { opacity: 1; transform: none; } }
-.score-bar { display: flex; align-items: center; gap: 5px; width: 100%; margin: 6px 0 2px; }
-.score-bar i { flex: 1; height: 8px; border-radius: 4px; overflow: hidden; background: color-mix(in srgb, var(--c) 18%, transparent); transition: box-shadow 0.4s; }
-.score-bar i b { display: block; height: 100%; border-radius: 4px; background: var(--c); transition: width 0.6s var(--ease); }
-.score-bar i.on { box-shadow: 0 0 10px color-mix(in srgb, var(--c) 35%, transparent); }
-.score-bar span { flex-shrink: 0; margin-left: 6px; font-size: 14px; font-weight: 700; color: var(--secondary); }
 .lede { font-size: 16px; color: var(--secondary); }
 .hero .pill-btn { margin-top: 4px; }
 .momentum {
@@ -846,7 +778,6 @@ html.wide .pane { height: 100dvh; overflow-y: auto; }
 html.wide .pane.main { padding: 34px max(36px, calc((100% - 760px) / 2)) 48px; background: var(--bg); }
 html.wide .side-detail { padding: 22px 22px 40px; background: var(--bg-2); border-left: 1px solid var(--line); }
 html.wide .side-detail .detail-hero h2 { font-size: 22px; }
-html.wide .arc-svg { max-width: 500px; margin: 0 auto; }
 html.wide .habit-grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
 /* On the Mac the window is translucent: the sidebar shows the system's frosted glass. */
 html.mac-app, html.mac-app body { background: transparent; }
@@ -877,6 +808,101 @@ html.wide .sheet::before { display: none; }
 html.wide .sheet.enter { animation: confirm-in 0.35s var(--spring); }
 html.wide .row-main:hover .row-title { text-decoration: underline; text-decoration-color: var(--tertiary); text-underline-offset: 3px; }
 
+/* ---------- Mac Today: headline and ring side by side, widget cards beside the habits ---------- */
+html.wide .pane.main { container-type: inline-size; }
+html.wide .pane.main.desk { padding-left: max(40px, calc((100% - 1040px) / 2)); padding-right: max(40px, calc((100% - 1040px) / 2)); }
+.desk-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; }
+.desk-head .text-btn { display: inline-flex; align-items: center; gap: 6px; }
+.desk-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); align-items: center; gap: 32px; }
+.desk-hero .hero { padding: 0; }
+.desk-hero .headline { font-size: 58px; letter-spacing: -0.05em; }
+.desk-hero .lede { font-size: 17px; }
+.desk-cols { display: grid; grid-template-columns: minmax(0, 1fr) 300px; align-items: start; gap: 28px; margin-top: 4px; }
+.desk-main { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.desk-side { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 14px; }
+@container (max-width: 820px) {
+  .desk-hero { grid-template-columns: 1fr; gap: 18px; }
+  .desk-hero .headline { font-size: 46px; }
+  .desk-cols { grid-template-columns: 1fr; }
+  .desk-side { position: static; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); align-items: start; order: -1; }
+}
+
+/* Widget cards: small glanceable tiles, like the ones on a Mac desktop. */
+.widget {
+  display: flex; flex-direction: column; gap: 6px; padding: 16px 16px 15px; border-radius: 22px;
+  background: var(--card); box-shadow: var(--shadow); animation: fade-up 0.5s var(--ease) backwards;
+}
+.desk-side .widget:nth-child(2) { animation-delay: 0.06s; }
+.desk-side .widget:nth-child(3) { animation-delay: 0.12s; }
+.w-cap { display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--secondary); }
+.w-cap .flame { margin: 0; }
+.w-title { font-size: 16px; font-weight: 700; letter-spacing: -0.02em; color: var(--label); }
+.w-sub { font-size: 13px; color: var(--secondary); }
+.w-big { font-size: 34px; font-weight: 700; letter-spacing: -0.04em; line-height: 1.05; }
+.w-big small { font-size: 17px; color: var(--secondary); margin-left: 1px; }
+.w-ico { width: 30px; height: 30px; flex-shrink: 0; border-radius: 10px; display: grid; place-items: center; color: var(--c); background: color-mix(in srgb, var(--c) 14%, transparent); }
+.w-ico.big { width: 46px; height: 46px; border-radius: 15px; }
+.w-next { background: color-mix(in srgb, var(--c, var(--marigold)) 10%, var(--card)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c, var(--marigold)) 18%, transparent); }
+.w-next-row { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+.w-next-text { flex: 1; min-width: 0; display: flex; flex-direction: column; text-align: left; }
+.w-next-text .w-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.w-do { width: 40px; height: 40px; flex-shrink: 0; border-radius: 20px; display: grid; place-items: center; color: var(--on-color); background: var(--c); box-shadow: 0 4px 12px color-mix(in srgb, var(--c) 35%, transparent); transition: transform 0.2s var(--spring); }
+.w-do:hover { transform: scale(1.06); }
+.w-do:active { transform: scale(0.9); }
+.w-next.clear .w-title { color: var(--marigold-text); }
+.w-streaks { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
+.w-streak { display: flex; align-items: center; gap: 10px; padding: 5px 6px; margin: 0 -6px; border-radius: 12px; text-align: left; transition: background 0.2s; }
+.w-streak:hover { background: var(--card-2); }
+.w-name { flex: 1; min-width: 0; font-size: 14px; font-weight: 550; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.w-streak b { font-size: 17px; font-weight: 700; }
+.w-streak small { width: 16px; font-size: 12px; font-weight: 600; color: var(--secondary); }
+.w-bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; margin-top: 8px; }
+.w-bar { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.w-bar i { position: relative; width: 100%; height: 54px; border-radius: 8px; overflow: hidden; background: var(--track); }
+.w-bar b { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 8px; background: color-mix(in srgb, var(--label) 72%, transparent); }
+.w-bar.full b { background: var(--marigold); }
+.w-bar.now b { background: var(--marigold); }
+.w-bar.later i { background: none; box-shadow: inset 0 0 0 1.5px var(--track); }
+.w-bar span { font-size: 11px; font-weight: 650; color: var(--tertiary); }
+.w-bar.now span { color: var(--marigold-text); }
+
+/* Settings switch */
+.switch { position: relative; width: 44px; height: 26px; flex-shrink: 0; border-radius: 13px; background: var(--track); transition: background 0.25s var(--ease); }
+.switch i { position: absolute; top: 2px; left: 2px; width: 22px; height: 22px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.18); transition: transform 0.3s var(--spring); }
+.switch.on { background: var(--good); }
+.switch.on i { transform: translateX(18px); }
+
+/* ---------- Mac desktop widget ---------- */
+html.widget-mode, html.widget-mode body { background: transparent; min-height: 0; overflow: hidden; }
+html.widget-mode #app { min-height: 0; }
+.wg { display: flex; flex-direction: column; gap: 10px; padding: 16px 14px 14px; -webkit-app-region: drag; -webkit-user-select: none; user-select: none; }
+.wg button { -webkit-app-region: no-drag; }
+.wg-head { display: flex; align-items: center; gap: 12px; padding: 0 2px; }
+.wg-ring { width: 58px; height: 58px; }
+.wg-ring .m-pct { font-size: 15px; }
+.wg-ring .m-pct small { font-size: 10px; }
+.wg-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.wg-text .kicker { font-size: 10.5px; letter-spacing: 0.1em; }
+.wg-title { font-family: var(--font-display); font-size: 19px; font-weight: 760; letter-spacing: -0.035em; line-height: 1.1; }
+.wg-title b { color: var(--marigold-text); font-weight: 750; }
+.wg-title b.left { color: var(--tertiary); }
+.wg-open { width: 26px; height: 26px; align-self: flex-start; border-radius: 13px; display: grid; place-items: center; color: var(--secondary); opacity: 0; transition: opacity 0.2s, background 0.2s; }
+.wg:hover .wg-open { opacity: 1; }
+.wg-open:hover { background: color-mix(in srgb, var(--label) 8%, transparent); }
+.wg-rows { display: flex; flex-direction: column; gap: 2px; padding-top: 8px; border-top: 1px solid var(--line); }
+.wg-row { display: flex; align-items: center; gap: 10px; min-height: 32px; padding: 0 4px; border-radius: 10px; }
+.wg-row:hover { background: color-mix(in srgb, var(--label) 5%, transparent); }
+.wg-check { position: relative; width: 22px; height: 22px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center; color: transparent; box-shadow: inset 0 0 0 1.8px color-mix(in srgb, var(--c) 70%, transparent); transition: transform 0.25s var(--spring), background 0.2s; }
+.wg-check:active { transform: scale(0.82); }
+.wg-check.counter { box-shadow: none; color: var(--label); }
+.wg-check.counter .mini-ring { position: absolute; inset: 0; }
+.wg-check.counter b { position: relative; font-size: 10.5px; font-weight: 700; }
+.wg-row.done .wg-check { background: var(--c); color: #FFFFFF; box-shadow: none; }
+.wg-name { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 560; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wg-row.done .wg-name { color: var(--secondary); }
+.wg-meta { font-size: 12px; font-weight: 650; color: var(--secondary); }
+.wg-empty { padding: 4px 4px 2px; font-size: 13px; color: var(--secondary); }
+
 /* ---------- Mac menu bar panel ---------- */
 html.tray-mode, html.tray-mode body { background: transparent; }
 .tray { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
@@ -898,7 +924,7 @@ html.tray-mode, html.tray-mode body { background: transparent; }
 /* Rows rise in one after another when a screen opens. */
 .habit-list.stagger .habit-row { animation: row-in 0.5s var(--ease) backwards; animation-delay: calc(var(--i) * 45ms + 60ms); }
 @keyframes row-in { from { opacity: 0; transform: translateY(14px) scale(0.98); } }
-.momentum, .score-bar { animation: fade-up 0.5s var(--ease) backwards; }
+.momentum { animation: fade-up 0.5s var(--ease) backwards; }
 .momentum { animation-delay: 0.08s; }
 @keyframes fade-up { from { opacity: 0; transform: translateY(8px); } }
 
