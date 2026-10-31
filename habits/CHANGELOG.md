@@ -3,6 +3,12 @@
 Har update ke saath version badhta hai (`npm run bump`) aur yahan ek line judti hai.
 Version ka matlab: **1.2.3** → 1 = bada badlav, 2 = naya feature ya design, 3 = chhota sudhaar.
 
+## 1.6.0
+- Mac widget naya design: desktop pe (jahan macOS rang hata deta hai) ab safed ki halki-gehri parton se saaf dikhta hai, aur ring macOS ke accent rang mein
+- Kam habits hon to bade card, naam ke neeche "1 of 13 glasses" aur progress bar. Zyada hon to do line wali rows, aur bahut zyada hon to patli list. Ab faltu khaali jagah nahi rehti
+- Ring ke beech ka % ab ring ke bharav jaisa hai: 13 mein se 1 glass pe 0% nahi, 8%. Sab ho jaye to ✓. App, Android widget aur Mac widget, teeno mein ek jaisa
+- Gola thoda bada, click karna aasaan
+
 ## 1.5.0
 - **Asli Mac widget** (macOS 14 Sonoma se): baaki apps ki tarah desktop pe right-click → Edit Widgets → Roj Habit. Small, Medium, Large. Gole pe click karke wahin habit tick, aur widget pe click karne se app khulta hai
 - Widget Apple ke WidgetKit (Swift) se bana hai aur macOS ke sandbox mein chalta hai. App har badlav pe widget ko naya data deta hai

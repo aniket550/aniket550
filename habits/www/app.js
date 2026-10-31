@@ -98,6 +98,8 @@
   const fmt = (key, opts) => C.parseKey(key).toLocaleDateString("en-GB", opts);
   const plural = (n, one, many) => n + " " + (n === 1 ? one : (many || one + "s"));
   const pct = (done, total) => (total ? Math.round((done / total) * 100) : 0);
+  // How full the day's ring is: count habits add their share, so 1 of 13 glasses already shows.
+  const ringFill = (st) => (st.total ? Math.round((st.items.reduce((a, it) => a + it.frac, 0) / st.total) * 100) : 0);
   const habitById = (id) => data.habits.find((h) => h.id === id);
   const colorOf = (h) => (COLORS.find((c) => c.id === h.color) || COLORS[0]).hex;
   const uid = () => "h" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -386,7 +388,7 @@
     return '<section class="momentum' + (perfect ? " perfect" : "") + '"><div class="m-text"><p class="kicker">' + (isToday ? "Today's progress" : "That day") + "</p>" +
       '<p class="m-big num">' + st.done + "<span> of " + st.total + "</span></p>" +
       '<p class="m-sub">' + (best ? '<span class="flame">' + ICON.flame(13) + "</span>" + esc(best.h.name) + " · " + plural(best.s.current, best.s.unit) : "Small steps add up.") + "</p></div>" +
-      '<div class="m-ring">' + segRing(st.items, 104, 9) + '<span class="m-pct num"><span data-count="' + pct(st.done, st.total) + '" data-from="' + prev("mpct:" + ui.day, pct(st.done, st.total)) + '">' + pct(st.done, st.total) + "</span><small>%</small></span></div></section>";
+      '<div class="m-ring">' + segRing(st.items, 104, 9) + '<span class="m-pct num"><span data-count="' + ringFill(st) + '" data-from="' + prev("mpct:" + ui.day, ringFill(st)) + '">' + ringFill(st) + "</span><small>%</small></span></div></section>";
   }
   function viewToggle(size) {
     return '<button class="icon-btn bare" data-action="view" aria-label="' + (ui.view === "list" ? "Show week grid" : "Show list") + '">' + (ui.view === "list" ? ICON.grid(size) : ICON.list(size)) + "</button>";
@@ -1049,7 +1051,7 @@
     const items = widgetItems(st);
     const title = !st.total ? "Nothing today" : st.done === st.total ? "All done" : '<b class="num">' + st.done + "</b> of " + st.total + " done";
     const ring = (size, stroke) => '<div class="m-ring wg-ring" style="width:' + size + "px;height:" + size + 'px">' + segRing(st.items, size, stroke) +
-      '<span class="m-pct num">' + pct(st.done, st.total) + "<small>%</small></span></div>";
+      '<span class="m-pct num">' + ringFill(st) + "<small>%</small></span></div>";
     const row = (it) => {
       const h = it.habit, counter = h.target > 1 && !it.done;
       return '<div class="wg-row' + (it.satisfied ? " done" : "") + '" style="--c:' + colorOf(h) + '">' +
@@ -1099,8 +1101,13 @@
         short: fmt(today, { weekday: "short", day: "numeric" }).toUpperCase(),
         items: widgetItems(st).map((it) => {
           const h = it.habit;
+          const streak = C.streak(data, h, today);
+          const time = (TIMES.find((t) => t.id === h.time) || TIMES[3]).label;
           return { id: h.id, name: h.name, color: colorOf(h), done: it.satisfied, weekMet: it.satisfied && !it.done, count: it.count, target: h.target, frac: it.frac,
-            meta: h.target > 1 ? it.count + "/" + h.target : h.schedule.type === "weekly" ? Math.min(it.weekDone, h.schedule.times) + "/" + h.schedule.times + " wk" : null };
+            meta: h.target > 1 ? it.count + "/" + h.target : h.schedule.type === "weekly" ? Math.min(it.weekDone, h.schedule.times) + "/" + h.schedule.times + " wk" : null,
+            // the line under the name when a row has room for it
+            sub: h.target > 1 ? it.count + " of " + h.target + " " + (h.unit || "times") : h.schedule.type === "weekly" ? Math.min(it.weekDone, h.schedule.times) + " of " + h.schedule.times + " this week" : time,
+            unit: h.unit || "", streak: streak.unit === "day" ? streak.current : 0 };
         }),
         week: weekStates().map((d) => ({ l: d.l, s: d.s, now: d.now }))
       });

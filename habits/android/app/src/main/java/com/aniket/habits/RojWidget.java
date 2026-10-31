@@ -412,7 +412,10 @@ public class RojWidget extends AppWidgetProvider {
         t.setTextSize(15f * d * sizeDp / 60f);
         t.setTypeface(Typeface.create("sans-serif", Typeface.BOLD));
         t.setTextAlign(Paint.Align.CENTER);
-        String label = items.isEmpty() ? "–" : Math.round(100f * done / items.size()) + "%";
+        // how full the ring is: count habits add their share
+        float sum = 0;
+        for (Item it : items) sum += it.frac;
+        String label = items.isEmpty() ? "–" : Math.round(100f * sum / items.size()) + "%";
         cv.drawText(label, px / 2f, px / 2f - (t.descent() + t.ascent()) / 2f, t);
         return bmp;
     }

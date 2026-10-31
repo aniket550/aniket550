@@ -23,6 +23,8 @@ struct Snapshot: Codable {
         var target: Int
         var frac: Double
         var meta: String?
+        var sub: String? // "1 of 13 glasses", "2 of 3 this week", "Morning"
+        var streak: Int?
     }
 
     struct Day: Codable {
@@ -38,7 +40,6 @@ struct Snapshot: Codable {
     var week: [Day]
 
     var done: Int { items.filter(\.done).count }
-    var pct: Int { items.isEmpty ? 0 : Int((Double(done) / Double(items.count) * 100).rounded()) }
 
     static let sample = Snapshot(
         day: Files.todayKey(), date: "SATURDAY 31 OCT", short: "SAT 31",
@@ -139,6 +140,11 @@ struct Provider: TimelineProvider {
 }
 
 // MARK: - Look
+//
+// On the desktop macOS draws widgets "vibrant": it takes the colour out and shows them in white
+// on the wallpaper's glass. Colour can't carry meaning there, so every colour comes from Look,
+// which in that mode switches to shades of the primary colour, and the parts that matter most
+// (the ring, ticked circles, the done count) are marked accentable so macOS can tint them.
 
 enum Palette {
     static func dynamic(_ light: NSColor, _ dark: NSColor) -> Color {
@@ -146,10 +152,24 @@ enum Palette {
     }
     static let paper = dynamic(NSColor(red: 0.988, green: 0.980, blue: 0.965, alpha: 1), NSColor(red: 0.102, green: 0.106, blue: 0.125, alpha: 1))
     static let ink = dynamic(NSColor(red: 0.090, green: 0.094, blue: 0.106, alpha: 1), NSColor(red: 0.949, green: 0.945, blue: 0.933, alpha: 1))
-    static let secondary = dynamic(NSColor(red: 0.467, green: 0.451, blue: 0.420, alpha: 1), NSColor(red: 0.565, green: 0.553, blue: 0.529, alpha: 1))
+    static let secondary = dynamic(NSColor(red: 0.467, green: 0.451, blue: 0.420, alpha: 1), NSColor(red: 0.600, green: 0.588, blue: 0.565, alpha: 1))
     static let accent = dynamic(NSColor(red: 0.910, green: 0.588, blue: 0.180, alpha: 1), NSColor(red: 0.949, green: 0.651, blue: 0.271, alpha: 1))
     static let accentText = dynamic(NSColor(red: 0.659, green: 0.357, blue: 0.047, alpha: 1), NSColor(red: 0.961, green: 0.710, blue: 0.396, alpha: 1))
-    static let line = dynamic(NSColor(white: 0, alpha: 0.08), NSColor(white: 1, alpha: 0.10))
+}
+
+struct Look {
+    let full: Bool
+
+    init(_ mode: WidgetRenderingMode) { full = mode == .fullColor }
+
+    var ink: Color { full ? Palette.ink : .primary }
+    var secondary: Color { full ? Palette.secondary : Color.primary.opacity(0.62) }
+    var accent: Color { full ? Palette.accent : .primary }
+    var accentText: Color { full ? Palette.accentText : .primary }
+    var track: Color { full ? Palette.accent.opacity(0.2) : Color.primary.opacity(0.2) }
+    var card: Color { full ? Palette.ink.opacity(0.045) : Color.primary.opacity(0.1) }
+    var line: Color { full ? Palette.ink.opacity(0.08) : Color.primary.opacity(0.18) }
+    func habit(_ hex: String) -> Color { full ? Color(hex: hex) : .primary }
 }
 
 extension Color {
@@ -159,10 +179,16 @@ extension Color {
     }
 }
 
-// One piece of ring per habit, filling in marigold as it gets done, like the app's Today.
+extension Snapshot {
+    // How full the ring is: count habits add their share, so 1 of 13 glasses already shows.
+    var fill: Int { items.isEmpty ? 0 : Int((items.map(\.frac).reduce(0, +) / Double(items.count) * 100).rounded()) }
+}
+
+// One piece of ring per habit, filling in as it gets done, like the app's Today.
 struct SegRing: View {
     let fracs: [Double]
     let width: CGFloat
+    let look: Look
 
     var body: some View {
         let n = max(fracs.count, 1)
@@ -172,10 +198,11 @@ struct SegRing: View {
             ForEach(0..<n, id: \.self) { i in
                 let start = Double(i) / Double(n) + gap / 2
                 Circle().trim(from: start, to: start + seg)
-                    .stroke(Palette.accent.opacity(0.22), style: StrokeStyle(lineWidth: width, lineCap: .round))
+                    .stroke(look.track, style: StrokeStyle(lineWidth: width, lineCap: .round))
                 if i < fracs.count, fracs[i] > 0 {
                     Circle().trim(from: start, to: start + seg * fracs[i])
-                        .stroke(Palette.accent, style: StrokeStyle(lineWidth: width, lineCap: .round))
+                        .stroke(look.accent, style: StrokeStyle(lineWidth: width, lineCap: .round))
+                        .widgetAccentable()
                 }
             }
         }
@@ -187,63 +214,144 @@ struct SegRing: View {
 struct Ring: View {
     let snap: Snapshot
     let size: CGFloat
+    let look: Look
 
     var body: some View {
         ZStack {
-            SegRing(fracs: snap.items.map(\.frac), width: size * 0.11)
-            HStack(alignment: .firstTextBaseline, spacing: 0) {
-                Text("\(snap.pct)").font(.system(size: size * 0.27, weight: .bold, design: .rounded))
-                Text("%").font(.system(size: size * 0.15, weight: .semibold, design: .rounded)).foregroundStyle(Palette.secondary)
+            SegRing(fracs: snap.items.map(\.frac), width: size * 0.105, look: look)
+            if !snap.items.isEmpty && snap.done == snap.items.count {
+                Image(systemName: "checkmark").font(.system(size: size * 0.3, weight: .bold)).foregroundStyle(look.accent).widgetAccentable()
+            } else {
+                HStack(alignment: .firstTextBaseline, spacing: 0) {
+                    Text("\(snap.fill)").font(.system(size: size * 0.28, weight: .bold, design: .rounded))
+                    Text("%").font(.system(size: size * 0.15, weight: .semibold, design: .rounded)).foregroundStyle(look.secondary)
+                }
+                .foregroundStyle(look.ink)
+                .monospacedDigit()
             }
-            .foregroundStyle(Palette.ink)
-            .monospacedDigit()
         }
         .frame(width: size, height: size)
     }
 }
 
-// The check circle: an outline in the habit's colour, a partly drawn ring for counts, filled with a tick when done.
+// The check circle: an outline in the habit's colour, a partly drawn ring with the count for
+// count habits, filled with a tick when done.
 struct Bubble: View {
     let item: Snapshot.Item
+    let size: CGFloat
+    let look: Look
 
     var body: some View {
-        let c = Color(hex: item.color)
+        let c = look.habit(item.color)
+        let w = max(1.6, size * 0.09)
         ZStack {
             if item.done {
-                Circle().fill(c)
-                Image(systemName: "checkmark").font(.system(size: 8.5, weight: .heavy)).foregroundStyle(.white)
+                Circle().fill(c).widgetAccentable()
+                Image(systemName: "checkmark").font(.system(size: size * 0.46, weight: .heavy))
+                    .foregroundStyle(look.full ? Color.white : Color.black.opacity(0.85))
             } else if item.frac > 0 {
-                Circle().stroke(c.opacity(0.25), lineWidth: 1.8)
-                Circle().trim(from: 0, to: item.frac).stroke(c, style: StrokeStyle(lineWidth: 1.8, lineCap: .round)).rotationEffect(.degrees(-90))
-                Text("\(item.count)").font(.system(size: 8.5, weight: .bold, design: .rounded)).foregroundStyle(Palette.ink)
+                Circle().stroke(c.opacity(0.25), lineWidth: w)
+                Circle().trim(from: 0, to: item.frac).stroke(c, style: StrokeStyle(lineWidth: w, lineCap: .round))
+                    .rotationEffect(.degrees(-90)).widgetAccentable()
+                Text("\(item.count)").font(.system(size: size * 0.42, weight: .bold, design: .rounded)).foregroundStyle(look.ink)
             } else {
-                Circle().stroke(c.opacity(0.75), lineWidth: 1.8)
+                Circle().stroke(c.opacity(look.full ? 0.8 : 0.55), lineWidth: w)
             }
         }
-        .frame(width: 18, height: 18)
+        .frame(width: size, height: size)
     }
 }
 
+// The line under a habit's name: its count, its week, its streak, or its part of the day.
+struct Sub: View {
+    let item: Snapshot.Item
+    let look: Look
+
+    var body: some View {
+        HStack(spacing: 3) {
+            if let streak = item.streak, streak >= 2, item.target == 1, item.meta == nil {
+                Image(systemName: "flame.fill").font(.system(size: 9.5)).foregroundStyle(look.full ? Palette.accent : look.secondary)
+                Text("\(streak) days")
+            } else {
+                Text(item.sub ?? item.meta ?? "")
+            }
+        }
+        .font(.system(size: 11.5, weight: .medium))
+        .foregroundStyle(look.secondary)
+        .lineLimit(1)
+    }
+}
+
+// Three densities, picked by the height each habit gets: a card with a progress bar when there
+// is plenty, two lines when there is some, one line when the list is long.
+enum Density { case card, twoLine, line }
+
 struct Row: View {
     let item: Snapshot.Item
+    let density: Density
+    let look: Look
 
     var body: some View {
         Button(intent: ToggleHabit(id: item.id)) {
+            content.contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    @ViewBuilder var content: some View {
+        switch density {
+        case .card:
+            HStack(spacing: 12) {
+                Bubble(item: item, size: 26, look: look)
+                VStack(alignment: .leading, spacing: 4) {
+                    name(14)
+                    Sub(item: item, look: look)
+                    if item.target > 1 && !item.done {
+                        bar.frame(height: 4)
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 12)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+            .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(look.card))
+        case .twoLine:
+            HStack(spacing: 11) {
+                Bubble(item: item, size: 22, look: look)
+                VStack(alignment: .leading, spacing: 2) {
+                    name(13.5)
+                    Sub(item: item, look: look)
+                }
+                Spacer(minLength: 0)
+            }
+            .frame(maxHeight: .infinity)
+        case .line:
             HStack(spacing: 10) {
-                Bubble(item: item)
-                Text(item.name)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(item.done ? Palette.secondary : Palette.ink)
-                    .lineLimit(1)
+                Bubble(item: item, size: 18, look: look)
+                name(13)
                 Spacer(minLength: 4)
                 if let meta = item.meta {
-                    Text(meta).font(.system(size: 11, weight: .semibold)).foregroundStyle(Palette.secondary).monospacedDigit()
+                    Text(meta).font(.system(size: 11, weight: .semibold)).foregroundStyle(look.secondary).monospacedDigit()
                 }
             }
             .frame(maxHeight: .infinity)
-            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+    }
+
+    func name(_ size: CGFloat) -> some View {
+        Text(item.name)
+            .font(.system(size: size, weight: .semibold))
+            .foregroundStyle(item.done ? look.secondary : look.ink)
+            .lineLimit(1)
+    }
+
+    var bar: some View {
+        GeometryReader { g in
+            ZStack(alignment: .leading) {
+                Capsule().fill(look.habit(item.color).opacity(0.18))
+                Capsule().fill(look.habit(item.color)).frame(width: max(4, g.size.width * item.frac)).widgetAccentable()
+            }
+        }
     }
 }
 
@@ -251,6 +359,7 @@ struct Row: View {
 struct Title: View {
     let snap: Snapshot
     let size: CGFloat
+    let look: Look
 
     var body: some View {
         Group {
@@ -259,63 +368,77 @@ struct Title: View {
             } else if snap.done == snap.items.count {
                 Text("All done")
             } else {
-                Text("\(snap.done)").foregroundColor(Palette.accentText) + Text(" of \(snap.items.count) done")
+                Text("\(snap.done)").foregroundColor(look.accentText) + Text(" of \(snap.items.count) done")
             }
         }
         .font(.system(size: size, weight: .bold))
-        .foregroundStyle(Palette.ink)
+        .foregroundStyle(look.ink)
         .lineLimit(1)
-        .minimumScaleFactor(0.8)
+        .minimumScaleFactor(0.75)
     }
 }
 
-// Open habits first; rows share the height. With more habits than fit, the last row says how many more.
+// The habits in the height it is given, open ones first. Each gets an even share; with more than
+// fit, the last place says how many more.
 struct Checklist: View {
     let snap: Snapshot
-    let slots: Int
+    let height: CGFloat
+    let maxRows: Int
+    let look: Look
 
     var body: some View {
-        let more = snap.items.count > slots
+        let n = snap.items.count
+        let lineSlots = max(1, min(maxRows, Int(height / 30)))
+        let per = height / CGFloat(max(n, 1))
+        let density: Density = per >= 58 && n <= 3 ? .card : per >= 40 ? .twoLine : .line
+        let slots = density == .line ? lineSlots : n
+        let more = n > slots
         let shown = Array(snap.items.prefix(more ? slots - 1 : slots))
-        VStack(alignment: .leading, spacing: 0) {
-            ForEach(shown) { Row(item: $0) }
+        VStack(alignment: .leading, spacing: density == .card ? 8 : 0) {
+            ForEach(shown) { Row(item: $0, density: density, look: look) }
             if more {
-                Text("+\(snap.items.count - shown.count) more")
+                Text("+\(n - shown.count) more")
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(Palette.secondary)
+                    .foregroundStyle(look.secondary)
                     .padding(.leading, 28)
                     .frame(maxHeight: .infinity)
+            } else if density == .card {
+                // cards stay a sensible size instead of stretching tall
+                Spacer(minLength: 0).frame(height: max(0, height - CGFloat(n) * 64 - CGFloat(n - 1) * 8))
+            } else if density == .line && shown.count < slots {
+                Spacer(minLength: 0)
             }
-            if !more && shown.count < slots && shown.count <= slots / 2 { Spacer(minLength: 0) }
         }
+        .frame(height: height, alignment: .top)
     }
 }
 
 struct WeekStrip: View {
     let days: [Snapshot.Day]
+    let look: Look
 
     var body: some View {
         HStack(spacing: 0) {
             ForEach(Array(days.enumerated()), id: \.offset) { _, d in
                 VStack(spacing: 5) {
-                    Text(d.l).font(.system(size: 10, weight: d.now ? .bold : .semibold))
-                        .foregroundStyle(d.now ? Palette.accentText : Palette.secondary)
+                    Text(d.l).font(.system(size: 10, weight: d.now ? .heavy : .semibold))
+                        .foregroundStyle(d.now ? look.accentText : look.secondary)
                     dot(d.s).frame(width: 8, height: 8)
                 }
                 .frame(maxWidth: .infinity)
             }
         }
-        .padding(.top, 8)
-        .overlay(alignment: .top) { Rectangle().fill(Palette.line).frame(height: 1) }
+        .padding(.top, 9)
+        .overlay(alignment: .top) { Rectangle().fill(look.line).frame(height: 1) }
     }
 
     @ViewBuilder func dot(_ s: String) -> some View {
         switch s {
-        case "full": Circle().fill(Palette.accent)
-        case "some": Circle().strokeBorder(Palette.accent, lineWidth: 1.5)
-        case "none": Circle().strokeBorder(Palette.secondary.opacity(0.6), lineWidth: 1.5)
-        case "rest": Circle().fill(Palette.secondary.opacity(0.35)).scaleEffect(0.45)
-        default: Circle().fill(Palette.line).scaleEffect(0.6)
+        case "full": Circle().fill(look.accent).widgetAccentable()
+        case "some": Circle().strokeBorder(look.accent, lineWidth: 1.5).widgetAccentable()
+        case "none": Circle().strokeBorder(look.secondary, lineWidth: 1.5)
+        case "rest": Circle().fill(look.secondary).scaleEffect(0.4)
+        default: Circle().fill(look.line).scaleEffect(0.6)
         }
     }
 }
@@ -323,13 +446,14 @@ struct WeekStrip: View {
 // Shown when there is nothing to draw yet, or the data is from yesterday.
 struct OpenApp: View {
     let line: String
+    let look: Look
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Image(systemName: "circle.dashed").font(.system(size: 26, weight: .semibold)).foregroundStyle(Palette.accent)
+            Image(systemName: "circle.dashed").font(.system(size: 26, weight: .semibold)).foregroundStyle(look.accent).widgetAccentable()
             Spacer(minLength: 0)
-            Text("Roj Habit").font(.system(size: 15, weight: .bold)).foregroundStyle(Palette.ink)
-            Text(line).font(.system(size: 12)).foregroundStyle(Palette.secondary).lineLimit(3)
+            Text("Roj Habit").font(.system(size: 15, weight: .bold)).foregroundStyle(look.ink)
+            Text(line).font(.system(size: 12)).foregroundStyle(look.secondary).lineLimit(3)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
@@ -337,75 +461,91 @@ struct OpenApp: View {
 
 struct TodayView: View {
     @Environment(\.widgetFamily) var family
+    @Environment(\.widgetRenderingMode) var mode
     let entry: Entry
 
     var body: some View {
+        let look = Look(mode)
         Group {
             if let snap = entry.snap, !entry.stale {
                 switch family {
-                case .systemSmall: small(snap)
-                case .systemLarge, .systemExtraLarge: large(snap)
-                default: medium(snap)
+                case .systemSmall: small(snap, look)
+                case .systemLarge, .systemExtraLarge: large(snap, look)
+                default: medium(snap, look)
                 }
             } else {
-                OpenApp(line: entry.snap == nil ? "Open Roj Habit once to show your habits here." : "A new day. Open Roj Habit to load it.")
+                OpenApp(line: entry.snap == nil ? "Open Roj Habit once to show your habits here." : "A new day. Open Roj Habit to load it.", look: look)
             }
         }
         .widgetURL(URL(string: "rojhabit://open"))
     }
 
-    func small(_ snap: Snapshot) -> some View {
+    func date(_ text: String, _ look: Look) -> some View {
+        Text(text).font(.system(size: 10, weight: .semibold)).kerning(1).foregroundStyle(look.secondary)
+    }
+
+    func nothing(_ look: Look) -> some View {
+        Text("Nothing planned today.\nRest counts too.").font(.system(size: 12.5)).foregroundStyle(look.secondary)
+            .multilineTextAlignment(.center).frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    // Small: one glance and one tap. The ring, the count, and the next habit to do.
+    func small(_ snap: Snapshot, _ look: Look) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .top) {
-                Ring(snap: snap, size: 50)
+                Ring(snap: snap, size: 56, look: look)
                 Spacer()
-                Text(snap.short).font(.system(size: 10, weight: .semibold)).kerning(1).foregroundStyle(Palette.secondary)
+                date(snap.short, look)
             }
             Spacer(minLength: 6)
-            Title(snap: snap, size: 16)
+            Title(snap: snap, size: 16, look: look)
             if let next = snap.items.first(where: { !$0.done }) {
-                Row(item: next).frame(height: 26)
+                Row(item: next, density: .line, look: look).frame(height: 28)
             } else {
                 Text(snap.items.isEmpty ? "Rest counts too" : "Every habit checked")
-                    .font(.system(size: 12)).foregroundStyle(Palette.secondary).frame(height: 26)
+                    .font(.system(size: 12)).foregroundStyle(look.secondary).frame(height: 28)
             }
         }
     }
 
-    func medium(_ snap: Snapshot) -> some View {
-        HStack(spacing: 16) {
-            VStack(spacing: 4) {
-                Ring(snap: snap, size: 70)
-                Title(snap: snap, size: 13).padding(.top, 4)
-                Text(snap.short).font(.system(size: 9.5, weight: .semibold)).kerning(1).foregroundStyle(Palette.secondary)
-            }
-            .frame(width: 96)
-            if snap.items.isEmpty {
-                Text("Nothing planned today. Rest counts too.").font(.system(size: 12)).foregroundStyle(Palette.secondary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                Checklist(snap: snap, slots: 4)
+    // Medium: the ring and count on the left, the habits on the right.
+    func medium(_ snap: Snapshot, _ look: Look) -> some View {
+        GeometryReader { g in
+            HStack(spacing: 14) {
+                VStack(spacing: 6) {
+                    Ring(snap: snap, size: 74, look: look)
+                    Title(snap: snap, size: 13.5, look: look)
+                    date(snap.short, look)
+                }
+                .frame(width: 100)
+                if snap.items.isEmpty {
+                    nothing(look)
+                } else {
+                    Checklist(snap: snap, height: g.size.height, maxRows: 4, look: look)
+                }
             }
         }
     }
 
-    func large(_ snap: Snapshot) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+    // Large: date and count on top with the ring, the habits, and this week at the bottom.
+    func large(_ snap: Snapshot, _ look: Look) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .center) {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(snap.date).font(.system(size: 10.5, weight: .semibold)).kerning(1).foregroundStyle(Palette.secondary)
-                    Title(snap: snap, size: 21)
+                    date(snap.date, look)
+                    Title(snap: snap, size: 22, look: look)
                 }
                 Spacer()
-                Ring(snap: snap, size: 50)
+                Ring(snap: snap, size: 54, look: look)
             }
-            if snap.items.isEmpty {
-                Text("Nothing planned today. Rest counts too.").font(.system(size: 13)).foregroundStyle(Palette.secondary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                Checklist(snap: snap, slots: 7)
+            GeometryReader { g in
+                if snap.items.isEmpty {
+                    nothing(look)
+                } else {
+                    Checklist(snap: snap, height: g.size.height, maxRows: 8, look: look)
+                }
             }
-            WeekStrip(days: snap.week)
+            WeekStrip(days: snap.week, look: look)
         }
     }
 }
