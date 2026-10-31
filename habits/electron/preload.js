@@ -10,7 +10,10 @@ contextBridge.exposeInMainWorld("rozDesktop", {
   onCommand: (cb) => ipcRenderer.on("command", (ev, cmd) => cb(cmd)),
   widgetState: () => ipcRenderer.invoke("widget-state"),
   toggleWidget: () => ipcRenderer.invoke("widget-toggle"),
-  widgetMenu: () => ipcRenderer.send("widget-menu")
+  widgetMenu: () => ipcRenderer.send("widget-menu"),
+  syncInfo: () => ipcRenderer.invoke("sync-info"),
+  setSync: (on) => ipcRenderer.invoke("sync-set", on),
+  newSyncCode: () => ipcRenderer.invoke("sync-newcode")
 });
 
 if (process.platform === "darwin") {

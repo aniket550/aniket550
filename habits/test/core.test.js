@@ -82,10 +82,65 @@ test("dayItems lists only habits due that day", () => {
   assert.deepEqual(C.dayItems(s, "2026-10-27").map((i) => i.habit.id), ["d"]);
 });
 
-test("removeHabit clears its log entries", () => {
+test("removeHabit clears its log entries and leaves a deletion note", () => {
   const s = state([daily], [["2026-10-26", "d"]]);
-  C.removeHabit(s, "d");
-  assert.deepEqual(s, C.emptyState());
+  C.removeHabit(s, "d", 5);
+  assert.deepEqual(s, Object.assign(C.emptyState(), { deleted: { d: 5 } }));
+});
+
+// ---------- sync ----------
+const copy = (x) => JSON.parse(JSON.stringify(x));
+const walk = { id: "w", name: "Walk", target: 1, created: "2026-10-01", schedule: { type: "daily" } };
+
+test("merge: the later change to a day wins, either way round", () => {
+  const phone = state([daily]);
+  const mac = copy(phone);
+  C.setCount(phone, "d", "2026-10-26", 1, 100); // checked on the phone
+  C.setCount(mac, "d", "2026-10-26", 0, 200); // then unchecked on the Mac
+  C.setCount(mac, "d", "2026-10-27", 1, 150);
+  for (const out of [C.merge(phone, mac), C.merge(mac, phone)]) {
+    assert.equal(C.countOn(out, "d", "2026-10-26"), 0);
+    assert.equal(C.countOn(out, "d", "2026-10-27"), 1);
+    assert.equal(out.stamps["2026-10-26|d"], 200);
+  }
+});
+
+test("merge: habits from both sides, the later edit wins, local order first", () => {
+  const phone = state([Object.assign({}, daily, { updated: 10 })]);
+  const mac = state([Object.assign({}, daily, { name: "Read 10 pages", updated: 20 }), walk]);
+  const out = C.merge(phone, mac);
+  assert.deepEqual(out.habits.map((h) => h.id), ["d", "w"]);
+  assert.equal(out.habits[0].name, "Read 10 pages");
+  assert.equal(C.merge(mac, phone).habits[0].name, "Read 10 pages");
+});
+
+test("merge: a deleted habit stays deleted, unless it was edited after", () => {
+  const phone = state([daily, walk], [["2026-10-26", "w"]]);
+  const mac = copy(phone);
+  C.removeHabit(phone, "w", 50);
+  let out = C.merge(mac, phone);
+  assert.deepEqual(out.habits.map((h) => h.id), ["d"]);
+  assert.equal(C.countOn(out, "w", "2026-10-26"), 0);
+  assert.equal(out.deleted.w, 50);
+  mac.habits[1].updated = 60; // brought back (or edited) later on the Mac
+  out = C.merge(phone, mac);
+  assert.deepEqual(out.habits.map((h) => h.id), ["d", "w"]);
+  assert.equal(out.deleted.w, undefined);
+});
+
+test("merge: old data without stamps keeps every check-in from both sides", () => {
+  const a = { habits: [daily], log: { "2026-10-26": { d: 1 } }, settings: { theme: "dark" } };
+  const b = { habits: [daily], log: { "2026-10-27": { d: 1 } }, settings: { theme: "light" } };
+  const out = C.merge(C.validate(a), C.validate(b));
+  assert.equal(C.countOn(out, "d", "2026-10-26"), 1);
+  assert.equal(C.countOn(out, "d", "2026-10-27"), 1);
+  assert.equal(out.settings.theme, "dark"); // settings stay with this device
+});
+
+test("validate keeps sync stamps and deletion notes, and drops bad ones", () => {
+  const out = C.validate({ habits: [], log: {}, stamps: { "2026-10-26|d": 5, junk: 3, "2026-10-27|d": "x" }, deleted: { w: 9, v: -1 } });
+  assert.deepEqual(out.stamps, { "2026-10-26|d": 5 });
+  assert.deepEqual(out.deleted, { w: 9 });
 });
 
 test("validate rejects junk and keeps good parts of a backup", () => {

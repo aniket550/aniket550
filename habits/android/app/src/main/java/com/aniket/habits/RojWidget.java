@@ -207,6 +207,13 @@ public class RojWidget extends AppWidgetProvider {
             else day.remove(id);
             if (day.length() > 0) log.put(today, day);
             else log.remove(today);
+            // stamp the change like core.js setCount does, so sync with the Mac keeps the newest
+            JSONObject stamps = state.optJSONObject("stamps");
+            if (stamps == null) {
+                stamps = new JSONObject();
+                state.put("stamps", stamps);
+            }
+            stamps.put(today + "|" + id, System.currentTimeMillis());
             SharedPreferences.Editor ed = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit();
             ed.putString(KEY, state.toString()).apply();
         } catch (Exception e) {

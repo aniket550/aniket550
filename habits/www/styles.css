@@ -865,6 +865,24 @@ html.wide .pane.main.desk { padding-left: max(40px, calc((100% - 1040px) / 2)); 
 .switch.on { background: var(--good); }
 .switch.on i { transform: translateX(18px); }
 
+/* ---------- Sync settings ---------- */
+.pair-card { display: flex; align-items: center; gap: 20px; padding: 18px; }
+.pair-card.phone { flex-direction: column; align-items: stretch; gap: 10px; }
+.pair-qr { width: 156px; height: 156px; flex-shrink: 0; padding: 8px; border-radius: 16px; background: #FFFFFF; box-shadow: inset 0 0 0 1px var(--line); }
+.pair-qr svg { display: block; width: 100%; height: 100%; }
+.pair-steps { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.pair-title { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+.pair-steps ol { margin: 0; padding-left: 18px; font-size: 14px; color: var(--label-2); display: flex; flex-direction: column; gap: 4px; }
+.pair-manual { font-size: 13px; color: var(--secondary); line-height: 1.5; }
+.pair-manual b { color: var(--label); font-weight: 650; }
+.pair-last { font-size: 12.5px; color: var(--secondary); }
+.pair-inputs { display: flex; flex-direction: column; gap: 8px; }
+.pair-card .btn { align-self: flex-start; }
+.link-btn { font-size: inherit; font-weight: 600; color: var(--tab-blue-ink); }
+.link-btn:hover { text-decoration: underline; }
+.welcome-sync { display: inline-flex; align-items: center; gap: 6px; margin-top: 18px; font-size: 14px; }
+.list-row .text-btn { flex-shrink: 0; }
+
 /* ---------- Mac desktop widget ----------
    Apple's widget sizes (small 170 x 170, medium 364 x 170, large 364 x 382), 16px margins,
    22px corners. The window is clear; the card is drawn here so its corners can be round. */

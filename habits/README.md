@@ -25,6 +25,26 @@ Roz ki habits tick karo. Home page pe aaj ka ring batata hai ki din kahan khada 
 
 Mac ke asli Notification Center widgets (WidgetKit) ke liye app pe Apple ka paid developer signature chahiye, isliye abhi Roj Habit apna khud ka desktop widget deta hai.
 
+## Sync: Mac ↔ Android (same Wi‑Fi)
+
+Mac aur phone jab **ek hi Wi‑Fi** pe hon, to habits apne aap ek jaisi ho jaati hain. Koi account nahi, koi cloud nahi: data sirf aapke dono devices pe rehta hai.
+
+1. **Mac:** Roj Habit → **Settings → Sync with your phone** ON karo. Ek QR code dikhega.
+2. **Phone:** camera kholo, QR pe point karo, jo link aaye us pe tap karo. Roj Habit khulega aur jud jayega.
+   Camera link na khole to phone pe **Settings → Sync** mein Mac pe likha **Address** aur **Code** type karke **Pair** dabao.
+3. Bas. Phone pe app khulte hi aur har badlav ke 1–2 second baad sync hota hai. Settings mein **Sync now** bhi hai.
+
+```
+ Phone (Roj Habit)  ── Wi‑Fi ──►  Mac (Roj Habit, port 47613)
+   apna data bhejta hai            dono ko milata hai (core.js merge)
+   ◄── mila hua data wapas ──────  aur save karta hai
+```
+
+- Ek hi din aur habit pe dono jagah badlav ho to **baad wala** jeet-ta hai. Delete ki hui habit sync se wapas nahi aati.
+- Mac pe Roj Habit chalu hona chahiye (window band ho to bhi menu bar mein chalta rehta hai).
+- Mac ka firewall ON ho to pehli baar macOS poochega "accept incoming connections?" → **Allow** dabao.
+- Galat code wale phone ko Mac jawab nahi deta. **New code** dabane se purane jude phones alag ho jaate hain.
+
 ## Download aur install
 
 Har push ke baad GitHub apne aap naye apps banata hai aur unhe ek release page pe daal deta hai:
@@ -69,7 +89,7 @@ npm run bump -- minor   # 1.1.1 -> 1.2.0  naya feature / design
 
 ## Data kahan rehta hai
 
-Data **sirf aapke device pe** rehta hai (Android pe app storage, Mac pe `~/Library/Application Support/Roj Habit`). Phone aur Mac abhi sync nahi hote. Data ek device se doosre pe le jaana ho to:
+Data **sirf aapke devices pe** rehta hai (Android pe app storage, Mac pe `~/Library/Application Support/Roj Habit`). Phone aur Mac same Wi‑Fi pe sync ho sakte hain (upar dekho). Bina sync ke data ek device se doosre pe le jaana ho to:
 **Settings → Export backup** karo, phir doosre device pe **Settings → Import backup**.
 
 ## Code kaise bana hai

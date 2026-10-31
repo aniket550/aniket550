@@ -76,6 +76,7 @@
     sparkle: (s) => svg('<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.7 1.8 1.8.7-1.8.7L19 21l-.7-1.8-1.8-.7 1.8-.7z"/>', s),
     clock: (s) => svg('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>', s),
     target: (s) => svg('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/>', s),
+    sync: (s) => svg('<path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4"/>', s),
     widget: (s) => svg('<rect x="3.5" y="3.5" width="17" height="10" rx="3"/><rect x="3.5" y="16" width="7.5" height="4.5" rx="2"/><rect x="13" y="16" width="7.5" height="4.5" rx="2"/>', s),
     open: (s) => svg('<path d="M14 4h6v6M20 4l-8.5 8.5M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/>', s)
   };
@@ -143,8 +144,10 @@
         return raw ? JSON.parse(raw) : null;
       } catch (e) { return null; }
     },
-    save(state) {
+    // quiet: a save that came from syncing, which should not start another sync
+    save(state, quiet) {
       const raw = JSON.stringify(state);
+      if (!quiet) queueSync();
       if (native) capacitorPreferences.Preferences.set({ key: STORE_KEY, value: raw }).then(() => homeWidget && homeWidget.refresh()).catch(() => {});
       else try { localStorage.setItem(STORE_KEY, raw); } catch (e) { /* private mode: keep going in memory */ }
     }
@@ -689,14 +692,14 @@
     const where = desktop ? "this Mac" : native ? "this phone" : "this browser";
     return '<header class="screen-head"><div><h1 class="large-title">Settings</h1></div></header>' +
       '<section class="settings-group"><p class="caption">Appearance</p><div class="segmented" role="group" aria-label="Theme">' + seg("system", "System") + seg("light", "Light") + seg("dark", "Dark") + "</div></section>" +
-      widgetSettings() +
+      widgetSettings() + syncSettings() +
       '<section class="settings-group"><p class="caption">Your data</p><div class="list card">' +
       '<button class="list-row" data-action="export"><span class="tile" style="--c:#3F82CC">' + ICON.upload(18) + '</span><span class="lr-text"><span class="lr-title">Export backup</span><span class="lr-sub">Save all habits and history as a file</span></span></button>' +
       '<button class="list-row" data-action="import"><span class="tile" style="--c:#4F8C63">' + ICON.download(18) + '</span><span class="lr-text"><span class="lr-title">Import backup</span><span class="lr-sub">Replace everything with a backup file</span></span></button>' +
       '<button class="list-row" data-action="tips-again"><span class="tile" style="--c:#BC8A35">' + ICON.right(18) + '</span><span class="lr-text"><span class="lr-title">Show gesture tips</span><span class="lr-sub">How swiping and holding a habit works</span></span></button>' +
       '<button class="list-row" data-action="sample"><span class="tile" style="--c:#7766C6">' + ICON.sparkle(18) + '</span><span class="lr-text"><span class="lr-title">Load example habits</span><span class="lr-sub">Replace everything with sample data</span></span></button>' +
       '<button class="list-row danger" data-action="reset"><span class="tile" style="--c:#C2413B">' + ICON.trash(18) + '</span><span class="lr-text"><span class="lr-title">Erase everything</span><span class="lr-sub">Delete all habits and history</span></span></button>' +
-      '</div><p class="footnote">Your habits are stored only on ' + where + ". Export a backup to move them to another device.</p></section>" +
+      '</div><p class="footnote">Your habits are stored only on ' + where + (pair || (ui.syncInfo && ui.syncInfo.on) ? " and the devices it syncs with." : ". Export a backup to move them to another device.") + "</p></section>" +
       '<section class="about">' + brandMark(40) + "<p><b>" + APP_NAME + '</b> · version ' + esc(window.ROJ_VERSION || "") + '</p><p class="muted small">Small habits, every single day.</p></section>';
   }
 
@@ -706,6 +709,107 @@
     if (homeWidget) row = '<button class="list-row" data-action="pin-widget"><span class="tile" style="--c:#3F8F8C">' + ICON.widget(18) + '</span><span class="lr-text"><span class="lr-title">Add widget to home screen</span><span class="lr-sub">See today\'s habits and check them off without opening the app</span></span></button>';
     else if (desktop && desktop.toggleWidget) row = '<button class="list-row" data-action="desk-widget" role="switch" aria-checked="' + !!ui.deskWidget + '"><span class="tile" style="--c:#3F8F8C">' + ICON.widget(18) + '</span><span class="lr-text"><span class="lr-title">Desktop widget</span><span class="lr-sub">Today\'s habits in a small card on your desktop</span></span><span class="switch' + (ui.deskWidget ? " on" : "") + '"><i></i></span></button>';
     return row ? '<section class="settings-group"><p class="caption">Widgets</p><div class="list card">' + row + "</div></section>" : "";
+  }
+
+  // Sync. Mac: a switch, then the QR code the phone scans. Phone: who it syncs with, or how to pair.
+  function syncSettings() {
+    const ago = (t) => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? "just now" : m < 60 ? m + " min ago" : m < 1440 ? Math.round(m / 60) + " h ago" : fmt(C.dateKey(new Date(t)), { day: "numeric", month: "short" }); };
+    const tile = '<span class="tile" style="--c:#4C84BC">' + ICON.sync(18) + "</span>";
+    let body = "";
+    if (desktop && desktop.syncInfo) {
+      const s = ui.syncInfo || {};
+      body = '<div class="list card"><button class="list-row" data-action="sync-switch" role="switch" aria-checked="' + !!s.on + '">' + tile +
+        '<span class="lr-text"><span class="lr-title">Sync with your phone</span><span class="lr-sub">Over your Wi-Fi. No account, nothing in the cloud.</span></span><span class="switch' + (s.on ? " on" : "") + '"><i></i></span></button></div>';
+      if (s.on) {
+        body += '<div class="card pair-card">' + (s.hosts && s.hosts.length ?
+          '<div class="pair-qr">' + s.qr + '</div><div class="pair-steps"><p class="pair-title">Pair your phone</p>' +
+          "<ol><li>Open the <b>camera</b> on your Android phone and point it at this code.</li><li>Tap the link that appears. " + APP_NAME + " opens and pairs.</li></ol>" +
+          '<p class="pair-manual">Or in the phone app: Settings → Sync, type<br>Address <b class="num">' + esc(s.hosts[0] + (s.port !== 47613 ? ":" + s.port : "")) + '</b> · Code <b class="num">' + esc(s.code) + "</b></p>" +
+          '<p class="pair-last">' + (s.last ? "Last synced with " + esc(s.last.device) + " " + ago(s.last.time) : "Not synced yet. Both need the same Wi-Fi.") + ' · <button class="link-btn" data-action="sync-newcode">New code</button></p></div>' :
+          '<p class="pair-manual">Connect this Mac to Wi-Fi to pair a phone.</p>') + "</div>";
+      }
+    } else if (native) {
+      if (pair) {
+        const sub = ui.syncError === "offline" ? "Can't reach the Mac right now. Same Wi-Fi?" : ui.syncError === "refused" ? "The Mac changed its code. Pair again." : pair.time ? "Last sync " + ago(pair.time) : "Not synced yet";
+        body = '<div class="list card"><div class="list-row">' + tile + '<span class="lr-text"><span class="lr-title">Synced with ' + esc(pair.name) + '</span><span class="lr-sub">' + sub + "</span></span>" +
+          '<button class="text-btn" data-action="sync-now">Sync now</button></div>' +
+          '<button class="list-row danger" data-action="unpair"><span class="tile" style="--c:#8A8780">' + ICON.minus(18) + '</span><span class="lr-text"><span class="lr-title">Stop syncing</span><span class="lr-sub">Your habits stay on this phone</span></span></button></div>';
+      } else {
+        body = '<div class="card pair-card phone">' + '<p class="pair-title">Sync with your Mac</p>' +
+          '<p class="pair-manual">On the Mac open ' + APP_NAME + " → Settings → <b>Sync with your phone</b>, then scan the code with this phone's camera. Or type what the Mac shows:</p>" +
+          '<div class="pair-inputs"><input id="pair-host" class="unit-input" type="text" inputmode="decimal" autocomplete="off" placeholder="Address, like 192.168.1.5">' +
+          '<input id="pair-code" class="unit-input" type="text" autocapitalize="characters" autocomplete="off" placeholder="Code, like K7QM-3XPD"></div>' +
+          '<button class="btn" data-action="pair-manual">' + ICON.sync(18) + "Pair</button></div>";
+      }
+    }
+    return body ? '<section class="settings-group"><p class="caption">Sync</p>' + body + "</section>" : "";
+  }
+
+  // ---------- sync (same Wi-Fi) ----------
+  // The Mac app listens on the home network (electron/main.js). The phone pairs once, from the
+  // QR code (rojhabit://pair?h=hosts&p=port&c=code&n=name) or by typing the address and code.
+  // Then, when it opens and after each change, it sends its data and keeps the joined data the
+  // Mac sends back (C.merge, the same on both sides).
+  const PAIR_KEY = "rojhabit.pair.v1";
+  const httpPlugin = native ? capCore.CapacitorHttp : null;
+  let pair = null, syncBusy = false, syncAgain = false, syncTimer = null;
+  const cleanCode = (c) => String(c || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+  async function loadPair() {
+    if (!native) return;
+    try { const v = (await capacitorPreferences.Preferences.get({ key: PAIR_KEY })).value; pair = v ? JSON.parse(v) : null; } catch (e) { pair = null; }
+  }
+  function savePair() {
+    const p = capacitorPreferences.Preferences;
+    (pair ? p.set({ key: PAIR_KEY, value: JSON.stringify(pair) }) : p.remove({ key: PAIR_KEY })).catch(() => {});
+  }
+  function pairFromUrl(url) {
+    let u;
+    try { u = new URL(url); } catch (e) { return; }
+    if (u.protocol !== "rojhabit:" || u.host !== "pair") return;
+    const hosts = (u.searchParams.get("h") || "").split(",").filter((h) => /^[0-9a-z.:-]+$/i.test(h));
+    const code = cleanCode(u.searchParams.get("c"));
+    if (!hosts.length || !code) return;
+    pair = { hosts: hosts, port: +u.searchParams.get("p") || 47613, code: code, name: (u.searchParams.get("n") || "Mac").slice(0, 40), last: null, time: 0 };
+    savePair();
+    ui.tab = "settings"; ui.sheet = null; ui.detail = null; ui.syncError = null;
+    render();
+    syncNow(true);
+  }
+  function queueSync() {
+    if (!pair) return;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => syncNow(false), 1500);
+  }
+  async function syncNow(manual) {
+    if (!pair || !httpPlugin) return;
+    if (syncBusy) { syncAgain = true; return; }
+    syncBusy = true;
+    const hosts = [pair.last].concat(pair.hosts).filter((h, i, a) => h && a.indexOf(h) === i);
+    let result = "offline";
+    for (const host of hosts) {
+      try {
+        const r = await httpPlugin.request({
+          url: "http://" + host + ":" + pair.port + "/roj/sync", method: "POST", headers: { "Content-Type": "application/json" },
+          data: { code: pair.code, device: "Android phone", state: data }, connectTimeout: 2500, readTimeout: 10000
+        });
+        if (r.status === 401) { result = "refused"; break; }
+        const body = typeof r.data === "string" ? JSON.parse(r.data) : r.data;
+        const v = r.status === 200 && body && body.state && C.validate(body.state);
+        if (!v) continue;
+        data = normalize(C.merge(data, v));
+        Store.save(data, true);
+        Object.assign(pair, { last: host, time: Date.now(), name: String(body.name || pair.name).slice(0, 40) });
+        savePair();
+        result = "ok";
+        break;
+      } catch (e) { /* try the next address */ }
+    }
+    syncBusy = false;
+    ui.syncError = result === "ok" ? null : result;
+    if (!ui.sheet && !ui.menu && !gesture) render();
+    if (manual) toast(result === "ok" ? ICON.check(16) + " Synced with " + esc(pair.name) : result === "refused" ? "The Mac did not accept the code. Pair again." : "Can't reach " + esc(pair.name) + ". Same Wi-Fi, and " + APP_NAME + " open on the Mac?", 3600);
+    if (syncAgain) { syncAgain = false; syncNow(false); }
   }
 
   // ---------- detail ----------
@@ -979,7 +1083,8 @@
   function welcome() {
     return '<div class="welcome"><div class="welcome-art">' + brandMark(132) + "</div>" +
       '<p class="eyebrow">Welcome to</p><h1>' + APP_NAME + '</h1><p class="welcome-sub">Small habits, every single day.<br>Watch your day fill up, from sunrise to night.</p>' +
-      '<div class="welcome-btns"><button class="btn" data-action="start-sample">' + ICON.sparkle(18) + 'Start with examples</button><button class="btn secondary" data-action="start-empty">Start empty</button></div></div>';
+      '<div class="welcome-btns"><button class="btn" data-action="start-sample">' + ICON.sparkle(18) + 'Start with examples</button><button class="btn secondary" data-action="start-empty">Start empty</button></div>' +
+      (native ? '<button class="link-btn welcome-sync" data-action="start-sync">' + ICON.sync(15) + " Already using " + APP_NAME + " on your Mac? Sync it</button>" : "") + "</div>";
   }
 
 
@@ -1156,7 +1261,7 @@
     const schedule = d.schedule.type === "days" ? { type: "days", days: d.schedule.days.slice().sort() } :
       d.schedule.type === "weekly" ? { type: "weekly", times: d.schedule.times } : { type: "daily" };
     if (schedule.type === "days" && !schedule.days.length) { toast("Pick at least one day"); return; }
-    const fields = { name: name, icon: d.icon, color: d.color, time: d.time, schedule: schedule, target: d.target, unit: d.target > 1 ? d.unit.trim() : "" };
+    const fields = { name: name, icon: d.icon, color: d.color, time: d.time, schedule: schedule, target: d.target, unit: d.target > 1 ? d.unit.trim() : "", updated: Date.now() };
     const isNew = !d.id;
     if (d.id) Object.assign(habitById(d.id), fields);
     else {
@@ -1189,6 +1294,8 @@
   function undoDelete() {
     const u = ui.undo;
     if (!u) return;
+    u.habit.updated = Date.now(); // newer than its deletion, so sync keeps it
+    if (data.deleted) delete data.deleted[u.habit.id];
     data.habits.splice(Math.min(u.index, data.habits.length), 0, u.habit);
     Object.keys(u.log).forEach((k) => C.setCount(data, u.habit.id, k, u.log[k]));
     ui.undo = null;
@@ -1198,6 +1305,17 @@
   }
 
   function askConfirm(cf) { ui.confirm = cf; render(); }
+
+  // Replace everything (import, examples, erase) so that sync carries it to the other devices:
+  // habits that go away get deletion notes, and the new ones count as just edited.
+  function replaceAll(next) {
+    const now = Date.now(), keep = {};
+    next.habits.forEach((h) => { h.updated = now; keep[h.id] = true; });
+    next.deleted = Object.assign({}, data.deleted, next.deleted);
+    data.habits.forEach((h) => { if (!keep[h.id]) next.deleted[h.id] = now; });
+    next.habits.forEach((h) => { delete next.deleted[h.id]; });
+    data = normalize(next);
+  }
 
   async function exportBackup() {
     const text = JSON.stringify(data, null, 2);
@@ -1245,7 +1363,7 @@
     askConfirm({
       title: "Replace your habits?", yes: "Replace", danger: true,
       text: "This replaces your " + plural(data.habits.length, "habit") + " with " + plural(parsed.habits.length, "habit") + " from the backup.",
-      run: () => { data = normalize(parsed); ui.detail = null; commit(); toast("Backup imported"); }
+      run: () => { replaceAll(parsed); ui.detail = null; commit(); toast("Backup imported"); }
     });
   }
 
@@ -1330,15 +1448,31 @@
       case "import": importBackup(); break;
       case "sample":
         askConfirm({ title: "Load example habits?", text: "This replaces everything you have now with sample habits and history.", yes: "Load examples", danger: data.habits.length > 0,
-          run: () => { data = sampleData(data.settings.theme); ui.detail = null; commit(); } });
+          run: () => { replaceAll(sampleData(data.settings.theme)); ui.detail = null; commit(); } });
         break;
       case "reset":
-        askConfirm({ title: "Erase everything?", text: "All habits and their history will be deleted from this device.", yes: "Erase", danger: true,
-          run: () => { const t = data.settings.theme; data = C.emptyState(); data.settings.theme = t; ui.detail = null; commit(); } });
+        askConfirm({ title: "Erase everything?", text: "All habits and their history will be deleted from this device" + (pair || (ui.syncInfo && ui.syncInfo.on) ? " and from the devices it syncs with." : "."), yes: "Erase", danger: true,
+          run: () => { const next = C.emptyState(); next.settings.theme = data.settings.theme; replaceAll(next); ui.detail = null; commit(); } });
         break;
       case "start-sample": data = sampleData("system"); ui.enter = true; commit(); break;
       case "start-empty": delete data.welcome; ui.enter = true; commit(); break;
+      case "start-sync": delete data.welcome; ui.tab = "settings"; ui.enter = true; commit(); break;
       case "open-main": if (desktop) desktop.openMain(); break;
+      case "sync-switch": desktop.setSync(!(ui.syncInfo && ui.syncInfo.on)).then((info) => { ui.syncInfo = info; render(); }); break;
+      case "sync-newcode":
+        askConfirm({ title: "Make a new code?", text: "Phones paired with the old code stop syncing until you pair them again.", yes: "New code",
+          run: () => desktop.newSyncCode().then((info) => { ui.syncInfo = info; render(); }) });
+        break;
+      case "sync-now": syncNow(true); break;
+      case "unpair": pair = null; savePair(); ui.syncError = null; render(); toast("Sync stopped"); break;
+      case "pair-manual": {
+        const host = (document.getElementById("pair-host").value || "").trim().replace(/^https?:\/\//, "");
+        const code = cleanCode(document.getElementById("pair-code").value);
+        const m = host.match(/^([0-9a-z.-]+)(?::(\d+))?$/i);
+        if (!m || code.length < 6) { toast("Type the address and code your Mac shows"); break; }
+        pairFromUrl("rojhabit://pair?h=" + encodeURIComponent(m[1]) + "&p=" + (m[2] || 47613) + "&c=" + code + "&n=Mac");
+        break;
+      }
       case "desk-widget": desktop.toggleWidget().then((on) => { ui.deskWidget = on; render(); }); break;
       case "pin-widget":
         homeWidget.pin().then((r) => { if (!r || !r.asked) toast("Long-press your home screen, tap Widgets, then pick " + APP_NAME, 3600); })
@@ -1473,9 +1607,33 @@
     if (document.hidden) return;
     checkDay();
     render();
-    // Habits may have been checked off on the home screen widget while the app was away.
-    if (homeWidget && !ui.sheet) Store.load().then((saved) => { const v = saved && C.validate(saved); if (v && !ui.sheet) { data = normalize(v); render(); } });
+    // Habits may have been checked off on the home screen widget while the app was away;
+    // then the Mac gets a turn to sync.
+    if (homeWidget && !ui.sheet) {
+      Store.load().then((saved) => { const v = saved && C.validate(saved); if (v && !ui.sheet) { data = normalize(v); render(); } }).then(() => syncNow(false));
+    }
   });
+
+  // Phone: opening the pairing link from the Mac's QR code (camera app or browser).
+  if (native) {
+    capacitorApp.App.addListener("appUrlOpen", (ev) => pairFromUrl(ev.url));
+  }
+  // Mac: the sync server hands the phone's data to a window, which joins it with its own,
+  // saves, and returns the result for the phone (see electron/main.js).
+  let markReady;
+  const ready = new Promise((resolve) => { markReady = resolve; });
+  if (desktop) {
+    window.rojMerge = async (json) => {
+      await ready;
+      const v = C.validate(JSON.parse(json));
+      if (!v) throw new Error("not Roj Habit data");
+      data = normalize(C.merge(data, v));
+      delete data.welcome;
+      Store.save(data, true);
+      if (!ui.sheet && !ui.menu) render();
+      return JSON.parse(JSON.stringify(data));
+    };
+  }
 
   // The desktop widget changes size by changing its address.
   if (widgetMode) window.addEventListener("hashchange", () => location.reload());
@@ -1509,6 +1667,7 @@
       else if (cmd === "export") exportBackup();
       else if (cmd === "import") importBackup();
       else if (cmd === "widget-on" || cmd === "widget-off") { ui.deskWidget = cmd === "widget-on"; render(); }
+      else if (cmd === "sync-changed" && desktop.syncInfo) desktop.syncInfo().then((info) => { ui.syncInfo = info; if (ui.tab === "settings") render(); });
     });
   }
 
@@ -1557,8 +1716,16 @@
     if (data.habits.length) delete data.welcome;
     loaded = true;
     if (desktop && desktop.widgetState) ui.deskWidget = await desktop.widgetState();
+    if (desktop && desktop.syncInfo) ui.syncInfo = await desktop.syncInfo();
+    await loadPair();
     checkDay();
     render();
     document.documentElement.classList.add("ready");
+    markReady();
+    if (native) {
+      const launch = await capacitorApp.App.getLaunchUrl().catch(() => null);
+      if (launch && launch.url) pairFromUrl(launch.url);
+      else syncNow(false);
+    }
   })();
 })();

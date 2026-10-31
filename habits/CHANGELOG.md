@@ -3,6 +3,12 @@
 Har update ke saath version badhta hai (`npm run bump`) aur yahan ek line judti hai.
 Version ka matlab: **1.2.3** → 1 = bada badlav, 2 = naya feature ya design, 3 = chhota sudhaar.
 
+## 1.4.0
+- **Sync aa gaya: Mac ↔ Android, same Wi‑Fi pe.** Mac pe Settings → Sync with your phone ON karo, phone ke camera se QR scan karo, bas. Koi account nahi, koi cloud nahi
+- Phone pe app khulte hi aur har badlav ke thodi der baad sync hota hai. Settings mein "Sync now" aur "Stop syncing"
+- Ek hi cheez dono jagah badli ho to baad wala badlav jeet-ta hai. Delete ki hui habit sync se wapas nahi aati. Android widget se kiya tick bhi sync hota hai
+- Naye phone pe welcome screen se seedha "Sync it" kar sakte ho
+
 ## 1.3.1
 - Android: "App not installed… conflicts" theek kiya. Har build nayi key se sign ho raha tha, isliye naya APK purane ke upar install nahi hota tha. Ab ek hi key rehti hai. Is version pe aane ke liye ek baar purana app hatana padega (pehle backup export kar lo), uske baad updates seedhe install honge
 

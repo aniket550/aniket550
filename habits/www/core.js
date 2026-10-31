@@ -136,19 +136,75 @@
   }
 
   // ---------- changes ----------
-  function setCount(state, habitId, key, count) {
+  // Every change to a day's count is stamped with when it happened ("2026-10-31|h1": ms), so two
+  // devices can sync: for each day and habit the later change wins. at = time, for tests.
+  function setCount(state, habitId, key, count, at) {
     const day = state.log[key] || (state.log[key] = {});
     if (count > 0) day[habitId] = count;
     else delete day[habitId];
     if (!Object.keys(day).length) delete state.log[key];
+    (state.stamps || (state.stamps = {}))[key + "|" + habitId] = at || Date.now();
   }
 
-  function removeHabit(state, habitId) {
+  // A deleted habit leaves a dated note behind, so syncing does not bring it back.
+  function removeHabit(state, habitId, at) {
     state.habits = state.habits.filter(function (h) { return h.id !== habitId; });
-    Object.keys(state.log).forEach(function (k) { setCount(state, habitId, k, 0); });
+    Object.keys(state.log).forEach(function (k) {
+      const day = state.log[k];
+      delete day[habitId];
+      if (!Object.keys(day).length) delete state.log[k];
+    });
+    const stamps = state.stamps || {};
+    Object.keys(stamps).forEach(function (k) { if (k.slice(11) === habitId) delete stamps[k]; });
+    (state.deleted || (state.deleted = {}))[habitId] = at || Date.now();
   }
 
-  function emptyState() { return { version: 1, habits: [], log: {}, settings: { theme: "system" } }; }
+  function emptyState() { return { version: 1, habits: [], log: {}, stamps: {}, deleted: {}, settings: { theme: "system" } }; }
+
+  // ---------- sync ----------
+  // Joins two copies of the data (this device's and another's) into one, the same whichever side
+  // runs it. Habits: the later edit wins (h.updated), unless deleted after that edit. Day counts:
+  // the later stamp wins; counts from before stamps existed are joined by taking the larger.
+  // Settings stay as they are on this device.
+  function merge(local, remote) {
+    const out = emptyState();
+    out.settings = local.settings;
+    const deleted = Object.assign({}, local.deleted || {});
+    Object.keys(remote.deleted || {}).forEach(function (id) { deleted[id] = Math.max(deleted[id] || 0, remote.deleted[id]); });
+    const remoteById = {};
+    remote.habits.forEach(function (h) { remoteById[h.id] = h; });
+    const seen = {};
+    local.habits.concat(remote.habits).forEach(function (h) {
+      if (seen[h.id]) return;
+      seen[h.id] = true;
+      const mine = local.habits.find(function (x) { return x.id === h.id; });
+      const theirs = remoteById[h.id];
+      const pick = !mine ? theirs : !theirs ? mine : (theirs.updated || 0) > (mine.updated || 0) ? theirs : mine;
+      if ((deleted[h.id] || 0) >= (pick.updated || 0) && deleted[h.id]) return;
+      out.habits.push(pick);
+    });
+    // a habit that is kept clears its old deletion note
+    out.habits.forEach(function (h) { if (deleted[h.id] && deleted[h.id] < (h.updated || 0)) delete deleted[h.id]; });
+    out.deleted = deleted;
+    const keep = {};
+    out.habits.forEach(function (h) { keep[h.id] = true; });
+    const ls = local.stamps || {}, rs = remote.stamps || {};
+    const count = (st, k, id) => (st.log[k] && st.log[k][id]) || 0;
+    const pairs = {};
+    [local, remote].forEach(function (st) {
+      Object.keys(st.log).forEach(function (k) { Object.keys(st.log[k]).forEach(function (id) { pairs[k + "|" + id] = true; }); });
+    });
+    Object.keys(ls).concat(Object.keys(rs)).forEach(function (p) { pairs[p] = true; });
+    Object.keys(pairs).forEach(function (p) {
+      const k = p.slice(0, 10), id = p.slice(11);
+      if (!keep[id]) return;
+      const a = ls[p] || 0, b = rs[p] || 0;
+      const n = a || b ? (b > a ? count(remote, k, id) : count(local, k, id)) : Math.max(count(local, k, id), count(remote, k, id));
+      if (n > 0) (out.log[k] || (out.log[k] = {}))[id] = n;
+      if (a || b) out.stamps[p] = Math.max(a, b);
+    });
+    return out;
+  }
 
   // Backup files come from outside the app, so check the shape before trusting one.
   function validate(data) {
@@ -172,6 +228,13 @@
     const out = emptyState();
     out.habits = habits;
     out.log = log;
+    const stampRe = /^\d{4}-\d{2}-\d{2}\|.+$/;
+    if (data.stamps && typeof data.stamps === "object") {
+      Object.keys(data.stamps).forEach(function (k) { const t = Number(data.stamps[k]); if (stampRe.test(k) && t > 0) out.stamps[k] = t; });
+    }
+    if (data.deleted && typeof data.deleted === "object") {
+      Object.keys(data.deleted).forEach(function (id) { const t = Number(data.deleted[id]); if (t > 0) out.deleted[id] = t; });
+    }
     if (data.settings && ["system", "light", "dark"].indexOf(data.settings.theme) !== -1) out.settings.theme = data.settings.theme;
     if (data.settings && data.settings.swipeTip === true) out.settings.swipeTip = true;
     return out;
@@ -181,6 +244,6 @@
     dateKey, parseKey, addDays, dayOfWeek, weekStart,
     isScheduled, countOn, isDone, weekDoneDays,
     streak, rate, weeklyOverall, dayItems, heatLevel,
-    setCount, removeHabit, emptyState, validate
+    setCount, removeHabit, emptyState, validate, merge
   };
 });

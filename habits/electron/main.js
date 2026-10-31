@@ -1,7 +1,12 @@
-// Roj Habit for Mac: the main window, the menu bar panel, the desktop widget and the app menu.
+// Roj Habit for Mac: the main window, the menu bar panel, the desktop widget, sync with the
+// phone and the app menu.
 const { app, BrowserWindow, Menu, Tray, ipcMain, dialog, nativeImage, nativeTheme, protocol, net, screen, shell } = require("electron");
 const path = require("path");
 const fs = require("fs");
+const http = require("http");
+const os = require("os");
+const crypto = require("crypto");
+const qrcode = require("qrcode-generator");
 const { pathToFileURL } = require("url");
 
 const WWW = path.join(__dirname, "..", "www");
@@ -149,6 +154,116 @@ function setWidget(on) {
   return on;
 }
 
+// ---------- sync with the phone, over the home Wi-Fi ----------
+// While sync is on, a small server listens on the local network. A phone that knows the code
+// (from the QR code, see syncInfo) posts its data to /roj/sync; a window joins it with ours
+// (window.rojMerge in www/app.js, HabitCore.merge) and the joined data goes back to the phone.
+const SYNC_PORT = 47613;
+const syncFile = () => path.join(app.getPath("userData"), "sync.json");
+function syncPrefs() {
+  try { return JSON.parse(fs.readFileSync(syncFile(), "utf8")) || {}; } catch (e) { return {}; }
+}
+function saveSyncPrefs(change) {
+  try { fs.writeFileSync(syncFile(), JSON.stringify(Object.assign(syncPrefs(), change))); } catch (e) { /* not worth stopping for */ }
+}
+let syncServer = null;
+let syncPort = 0;
+const syncFailures = [];
+
+// Eight letters and digits that cannot be misread (no 0/O, 1/I).
+function newSyncCode() {
+  const abc = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  return Array.from(crypto.randomBytes(8), (b) => abc[b % abc.length]).join("");
+}
+function macName() {
+  return os.hostname().replace(/\.local$/, "").replace(/[-_]+/g, " ").trim().slice(0, 40) || "Mac";
+}
+function lanAddresses() {
+  return Object.values(os.networkInterfaces()).flat()
+    .filter((a) => a && a.family === "IPv4" && !a.internal && !a.address.startsWith("169.254."))
+    .map((a) => a.address);
+}
+
+function syncInfo() {
+  const p = syncPrefs();
+  const hosts = lanAddresses();
+  const info = { on: !!syncServer && !!syncPort, port: syncPort || SYNC_PORT, hosts: hosts, name: macName(), last: p.last || null,
+    code: p.code ? p.code.slice(0, 4) + "-" + p.code.slice(4) : "" };
+  if (info.on && hosts.length) {
+    const qr = qrcode(0, "M");
+    qr.addData("rojhabit://pair?h=" + hosts.join(",") + "&p=" + info.port + "&c=" + p.code + "&n=" + encodeURIComponent(info.name));
+    qr.make();
+    info.qr = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+  }
+  return info;
+}
+
+function startSync() {
+  if (syncServer) return Promise.resolve();
+  if (!syncPrefs().code) saveSyncPrefs({ code: newSyncCode() });
+  return new Promise((resolve) => {
+    let port = SYNC_PORT;
+    syncServer = http.createServer(handleSync);
+    syncServer.on("error", (e) => {
+      // another program has the port: try the next few
+      if (e.code === "EADDRINUSE" && port < SYNC_PORT + 6) syncServer.listen(++port, "0.0.0.0");
+      else { syncServer = null; resolve(); }
+    });
+    syncServer.on("listening", () => { syncPort = port; resolve(); });
+    syncServer.listen(port, "0.0.0.0");
+  });
+}
+function stopSync() {
+  if (syncServer) syncServer.close();
+  syncServer = null;
+  syncPort = 0;
+}
+
+// A window that has the app loaded joins the data. On the Mac the menu bar panel always exists.
+function mergeInApp(state) {
+  const win = [mainWin, trayWin, widgetWin].find((w) => w && !w.isDestroyed());
+  if (!win) return Promise.reject(new Error("no window"));
+  return win.webContents.executeJavaScript("window.rojMerge(" + JSON.stringify(JSON.stringify(state)) + ")");
+}
+
+function handleSync(req, res) {
+  const reply = (status, body) => {
+    res.writeHead(status, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(body));
+  };
+  if (req.method === "GET" && req.url === "/roj/ping") return reply(200, { app: "Roj Habit", name: macName() });
+  if (req.method !== "POST" || req.url !== "/roj/sync") return reply(404, {});
+  // Ten wrong codes within a minute and the server stops listening to anyone for that minute.
+  const now = Date.now();
+  while (syncFailures.length && now - syncFailures[0] > 60000) syncFailures.shift();
+  if (syncFailures.length >= 10) return reply(429, {});
+  const chunks = [];
+  let size = 0;
+  req.on("data", (chunk) => {
+    size += chunk.length;
+    if (size > 5e6) req.destroy();
+    else chunks.push(chunk);
+  });
+  req.on("end", async () => {
+    let msg;
+    try { msg = JSON.parse(Buffer.concat(chunks).toString("utf8")); } catch (e) { return reply(400, {}); }
+    const given = Buffer.from(String((msg && msg.code) || "").toUpperCase().replace(/[^A-Z0-9]/g, ""));
+    const code = Buffer.from(syncPrefs().code || "");
+    if (!code.length || given.length !== code.length || !crypto.timingSafeEqual(given, code)) {
+      syncFailures.push(now);
+      return reply(401, {});
+    }
+    try {
+      const merged = await mergeInApp(msg.state);
+      saveSyncPrefs({ last: { device: String(msg.device || "Phone").slice(0, 40), time: Date.now() } });
+      if (mainWin) mainWin.webContents.send("command", "sync-changed");
+      reply(200, { name: macName(), state: merged });
+    } catch (e) {
+      reply(500, {});
+    }
+  });
+}
+
 function send(cmd) {
   showMain();
   mainWin.webContents.send("command", cmd);
@@ -226,6 +341,18 @@ ipcMain.on("open-main", () => {
   showMain();
 });
 
+ipcMain.handle("sync-info", () => syncInfo());
+ipcMain.handle("sync-set", async (ev, on) => {
+  saveSyncPrefs({ on: !!on });
+  if (on) await startSync();
+  else stopSync();
+  return syncInfo();
+});
+ipcMain.handle("sync-newcode", () => {
+  saveSyncPrefs({ code: newSyncCode(), last: null });
+  return syncInfo();
+});
+
 ipcMain.handle("widget-state", () => !!widgetWin);
 ipcMain.handle("widget-toggle", () => setWidget(!widgetWin));
 
@@ -254,6 +381,7 @@ app.whenReady().then(() => {
   createMain();
   if (isMac) createTray();
   if (widgetPrefs().show) createWidget();
+  if (syncPrefs().on) startSync().then(() => mainWin && mainWin.webContents.send("command", "sync-changed"));
   app.on("activate", showMain);
 });
 

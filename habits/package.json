@@ -1,7 +1,7 @@
 {
   "name": "habits",
   "productName": "Roj Habit",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "private": true,
   "description": "Roj Habit: a habit tracker for Android and Mac (iOS later)",
   "author": "Aniket",
@@ -23,7 +23,8 @@
     "@capacitor/filesystem": "8.1.4",
     "@capacitor/haptics": "8.0.2",
     "@capacitor/preferences": "8.0.1",
-    "@capacitor/share": "8.0.3"
+    "@capacitor/share": "8.0.3",
+    "qrcode-generator": "1.4.4"
   },
   "devDependencies": {
     "@capacitor/cli": "8.5.3",
