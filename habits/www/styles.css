@@ -41,6 +41,12 @@
   --scrim: rgba(23, 20, 15, 0.30);
   --shadow: 0 1px 2px rgba(48, 36, 12, 0.04), 0 6px 20px rgba(48, 36, 12, 0.05);
   --shadow-lift: 0 2px 6px rgba(48, 36, 12, 0.06), 0 18px 48px rgba(48, 36, 12, 0.16);
+  /* a few parts look different in the dark rather than just darker */
+  --momentum-bg: color-mix(in srgb, var(--marigold) 11%, var(--card));
+  --momentum-line: color-mix(in srgb, var(--marigold) 18%, transparent);
+  --sel-bg: var(--ink);
+  --sel-fg: var(--on-ink);
+  --bar: var(--ink);
 
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, system-ui, sans-serif;
   --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, sans-serif;
@@ -61,70 +67,84 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0D0E11;
-    --bg-2: #141519;
-    --card: #1A1B20;
-    --card-2: #222329;
-    --label: #F2F1EE;
-    --label-2: #D3D1CC;
-    --secondary: #908D87;
-    --tertiary: #5F5D59;
-    --line: rgba(255, 255, 255, 0.08);
-    --track: rgba(255, 255, 255, 0.09);
-    --ink: #F2F1EE;
-    --on-ink: #111215;
-    --marigold: #F2A645;
-    --marigold-text: #F5B565;
-    --tab-blue: #5E9BE0;
-    --tab-blue-ink: #7DB1EC;
-    --danger: #EF6A63;
+    /* Dark: near black with cards lifted in steps (like iOS grouped lists), a lit hairline on
+       each card instead of a shadow, brighter grey text, and marigold as light, not as a tint. */
+    --bg: #08080A;
+    --bg-2: #111114;
+    --card: #17171B;
+    --card-2: #222227;
+    --label: #F4F3F0;
+    --label-2: #DAD8D3;
+    --secondary: #A3A09A;
+    --tertiary: #6B6863;
+    --line: rgba(255, 255, 255, 0.075);
+    --track: rgba(255, 255, 255, 0.1);
+    --ink: #F4F3F0;
+    --on-ink: #0B0B0D;
+    --marigold: #FFAD47;
+    --marigold-text: #FFBE6B;
+    --tab-blue: #64A2E8;
+    --tab-blue-ink: #86B8F0;
+    --danger: #FF6B63;
     --good: #5FD08A;
-    --glass: rgba(36, 37, 43, 0.68);
+    --glass: rgba(30, 30, 35, 0.7);
     --glass-line: rgba(255, 255, 255, 0.10);
-    --glass-shade: rgba(0, 0, 0, 0.35);
-    --lg-fill: rgba(44, 45, 52, 0.48);
+    --glass-shade: rgba(0, 0, 0, 0.4);
+    --lg-fill: rgba(40, 40, 46, 0.5);
     --lg-fill-strong: rgba(255, 255, 255, 0.13);
-    --lg-rim: rgba(255, 255, 255, 0.30);
-    --lg-rim-soft: rgba(255, 255, 255, 0.07);
+    --lg-rim: rgba(255, 255, 255, 0.28);
+    --lg-rim-soft: rgba(255, 255, 255, 0.06);
     --lg-spec: 0.45;
-    --lg-shadow: 0 12px 36px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.3);
-    --scrim: rgba(0, 0, 0, 0.55);
-    --shadow: 0 0 0 1px rgba(255, 255, 255, 0.045);
-    --shadow-lift: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 24px 60px rgba(0, 0, 0, 0.6);
+    --lg-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.35);
+    --scrim: rgba(0, 0, 0, 0.6);
+    --shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 0 0 1px rgba(255, 255, 255, 0.055);
+    --shadow-lift: 0 0 0 1px rgba(255, 255, 255, 0.07), 0 24px 60px rgba(0, 0, 0, 0.65);
+    --momentum-bg: radial-gradient(120% 140% at 100% 0%, rgba(255, 173, 71, 0.16) 0%, rgba(255, 173, 71, 0.04) 45%, transparent 70%), var(--card);
+    --momentum-line: rgba(255, 173, 71, 0.16);
+    --sel-bg: rgba(255, 173, 71, 0.16);
+    --sel-fg: #FFD6A0;
+    --bar: rgba(255, 255, 255, 0.32);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0D0E11;
-  --bg-2: #141519;
-  --card: #1A1B20;
-  --card-2: #222329;
-  --label: #F2F1EE;
-  --label-2: #D3D1CC;
-  --secondary: #908D87;
-  --tertiary: #5F5D59;
-  --line: rgba(255, 255, 255, 0.08);
-  --track: rgba(255, 255, 255, 0.09);
-  --ink: #F2F1EE;
-  --on-ink: #111215;
-  --marigold: #F2A645;
-  --marigold-text: #F5B565;
-  --tab-blue: #5E9BE0;
-  --tab-blue-ink: #7DB1EC;
-  --danger: #EF6A63;
+  /* Dark: near black with cards lifted in steps (like iOS grouped lists), a lit hairline on
+     each card instead of a shadow, brighter grey text, and marigold as light, not as a tint. */
+  --bg: #08080A;
+  --bg-2: #111114;
+  --card: #17171B;
+  --card-2: #222227;
+  --label: #F4F3F0;
+  --label-2: #DAD8D3;
+  --secondary: #A3A09A;
+  --tertiary: #6B6863;
+  --line: rgba(255, 255, 255, 0.075);
+  --track: rgba(255, 255, 255, 0.1);
+  --ink: #F4F3F0;
+  --on-ink: #0B0B0D;
+  --marigold: #FFAD47;
+  --marigold-text: #FFBE6B;
+  --tab-blue: #64A2E8;
+  --tab-blue-ink: #86B8F0;
+  --danger: #FF6B63;
   --good: #5FD08A;
-  --glass: rgba(36, 37, 43, 0.68);
+  --glass: rgba(30, 30, 35, 0.7);
   --glass-line: rgba(255, 255, 255, 0.10);
-  --glass-shade: rgba(0, 0, 0, 0.35);
-  --lg-fill: rgba(44, 45, 52, 0.48);
+  --glass-shade: rgba(0, 0, 0, 0.4);
+  --lg-fill: rgba(40, 40, 46, 0.5);
   --lg-fill-strong: rgba(255, 255, 255, 0.13);
-  --lg-rim: rgba(255, 255, 255, 0.30);
-  --lg-rim-soft: rgba(255, 255, 255, 0.07);
+  --lg-rim: rgba(255, 255, 255, 0.28);
+  --lg-rim-soft: rgba(255, 255, 255, 0.06);
   --lg-spec: 0.45;
-  --lg-shadow: 0 12px 36px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.3);
-  --scrim: rgba(0, 0, 0, 0.55);
-  --shadow: 0 0 0 1px rgba(255, 255, 255, 0.045);
-  --shadow-lift: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 24px 60px rgba(0, 0, 0, 0.6);
+  --lg-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.35);
+  --scrim: rgba(0, 0, 0, 0.6);
+  --shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 0 0 1px rgba(255, 255, 255, 0.055);
+  --shadow-lift: 0 0 0 1px rgba(255, 255, 255, 0.07), 0 24px 60px rgba(0, 0, 0, 0.65);
+  --momentum-bg: radial-gradient(120% 140% at 100% 0%, rgba(255, 173, 71, 0.16) 0%, rgba(255, 173, 71, 0.04) 45%, transparent 70%), var(--card);
+  --momentum-line: rgba(255, 173, 71, 0.16);
+  --sel-bg: rgba(255, 173, 71, 0.16);
+  --sel-fg: #FFD6A0;
+  --bar: rgba(255, 255, 255, 0.32);
   color-scheme: dark;
 }
 
@@ -145,6 +165,9 @@ body {
 svg { flex-shrink: 0; }
 button, input { font: inherit; color: inherit; }
 button { cursor: pointer; border: 0; background: none; padding: 0; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+/* An app, not a page: pressing and holding never selects text or opens the copy menu. Typing still can. */
+body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+input, textarea { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
 button:disabled { cursor: default; }
 :focus-visible { outline: 2.5px solid var(--marigold); outline-offset: 2px; }
 h1, h2, p { margin: 0; }
@@ -207,10 +230,10 @@ h1, h2, p { margin: 0; }
 .wk-dot.some { box-shadow: inset 0 0 0 1.5px var(--secondary); }
 .wk-dot.none { box-shadow: inset 0 0 0 1.5px var(--tertiary); opacity: 0.6; }
 .wk-day.is-today .wk-num { color: var(--marigold-text); }
-.wk-day.sel { background: var(--ink); }
-.wk-day.sel .wk-dow, .wk-day.sel .wk-num { color: var(--on-ink); }
-.wk-day.sel .wk-dow { opacity: 0.6; }
-.wk-day.sel .wk-dot.some, .wk-day.sel .wk-dot.none { box-shadow: inset 0 0 0 1.5px var(--on-ink); }
+.wk-day.sel { background: var(--sel-bg); }
+.wk-day.sel .wk-dow, .wk-day.sel .wk-num { color: var(--sel-fg); }
+.wk-day.sel .wk-dow { opacity: 0.7; }
+.wk-day.sel .wk-dot.some, .wk-day.sel .wk-dot.none { box-shadow: inset 0 0 0 1.5px var(--sel-fg); }
 .wk-day.future { opacity: 0.32; }
 
 /* ---------- phone Today ---------- */
@@ -260,7 +283,7 @@ html.scrolled .brand-row {
 .hero .pill-btn { margin-top: 4px; }
 .momentum {
   display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 22px 22px 22px 24px; border-radius: 28px;
-  background: color-mix(in srgb, var(--marigold) 11%, var(--card)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--marigold) 18%, transparent);
+  background: var(--momentum-bg); box-shadow: inset 0 0 0 1px var(--momentum-line);
 }
 .m-text { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .m-big { font-size: 44px; font-weight: 700; letter-spacing: -0.045em; line-height: 1; }
@@ -275,8 +298,6 @@ html.scrolled .brand-row {
 .m-pct { position: relative; font-size: 24px; font-weight: 700; letter-spacing: -0.03em; }
 .m-pct small { font-size: 13px; color: var(--secondary); margin-left: 1px; }
 .momentum.perfect .m-big { color: var(--marigold-text); }
-:root[data-theme="dark"] .momentum { background: color-mix(in srgb, var(--marigold) 7%, var(--card)); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .momentum { background: color-mix(in srgb, var(--marigold) 7%, var(--card)); } }
 .sec-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px 2px -6px; }
 .sec-meta { font-size: 14px; font-weight: 550; color: var(--secondary); }
 .sec-title { font-family: var(--font-display); font-size: 22px; font-weight: 740; letter-spacing: -0.03em; }
@@ -443,7 +464,7 @@ html.scrolled .brand-row {
 .week-bars { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
 .wb { display: flex; flex-direction: column; align-items: center; gap: 7px; }
 .wb-track { position: relative; width: 100%; height: 110px; display: flex; align-items: flex-end; border-radius: 12px; background: var(--track); overflow: hidden; }
-.wb-track i { display: block; width: 100%; border-radius: 12px; background: var(--ink); opacity: 0.85; transition: height 0.6s var(--ease); }
+.wb-track i { display: block; width: 100%; border-radius: 12px; background: var(--bar); opacity: 0.85; transition: height 0.6s var(--ease); }
 .wb.hi .wb-track i { background: var(--marigold); opacity: 1; }
 .wb.future .wb-track { background: none; box-shadow: inset 0 0 0 1.5px var(--track); }
 .wb span { font-size: 11px; font-weight: 650; color: var(--tertiary); }
@@ -634,8 +655,8 @@ html.scrolled .brand-row {
   position: fixed; z-index: 20; bottom: calc(var(--sab) + 10px); left: calc(50% - var(--bar-w) / 2);
   width: var(--bar-w); height: 62px; padding: 5px; border-radius: 31px; display: flex;
 }
-:root[data-theme="dark"] .tabbar { --cut: #1A1B20; --lg-fill: rgba(44, 45, 52, 0.36); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tabbar { --cut: #1A1B20; --lg-fill: rgba(44, 45, 52, 0.36); } }
+:root[data-theme="dark"] .tabbar { --cut: #17171B; --lg-fill: rgba(40, 40, 46, 0.38); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tabbar { --cut: #17171B; --lg-fill: rgba(40, 40, 46, 0.38); } }
 /* The lens slides with a little overshoot and stretches while it travels, then settles. */
 .tab-glow {
   position: absolute; top: 5px; left: 5px; width: calc((100% - 10px) / 4); height: 52px;

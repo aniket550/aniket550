@@ -150,7 +150,7 @@ enum Palette {
     static func dynamic(_ light: NSColor, _ dark: NSColor) -> Color {
         Color(nsColor: NSColor(name: nil) { $0.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua ? dark : light })
     }
-    static let paper = dynamic(NSColor(red: 0.988, green: 0.980, blue: 0.965, alpha: 1), NSColor(red: 0.102, green: 0.106, blue: 0.125, alpha: 1))
+    static let paper = dynamic(NSColor(red: 0.988, green: 0.980, blue: 0.965, alpha: 1), NSColor(red: 0.090, green: 0.090, blue: 0.106, alpha: 1))
     static let ink = dynamic(NSColor(red: 0.090, green: 0.094, blue: 0.106, alpha: 1), NSColor(red: 0.949, green: 0.945, blue: 0.933, alpha: 1))
     static let secondary = dynamic(NSColor(red: 0.467, green: 0.451, blue: 0.420, alpha: 1), NSColor(red: 0.600, green: 0.588, blue: 0.565, alpha: 1))
     static let accent = dynamic(NSColor(red: 0.910, green: 0.588, blue: 0.180, alpha: 1), NSColor(red: 0.949, green: 0.651, blue: 0.271, alpha: 1))

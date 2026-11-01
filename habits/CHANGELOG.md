@@ -3,6 +3,13 @@
 Har update ke saath version badhta hai (`npm run bump`) aur yahan ek line judti hai.
 Version ka matlab: **1.2.3** → 1 = bada badlav, 2 = naya feature ya design, 3 = chhota sudhaar.
 
+## 1.8.0
+- Habit ko dabaa ke rakhne pe ab uska text select nahi hota (Copy / Select all wala menu band). Likhne wale box mein text pehle jaisa select hota hai
+- Dark mode naya: background aur gehra kaala, cards thode upar uthe hue aur kinaron pe halki roshni ki line, grey text zyada saaf
+- Dark mein "Today's progress" card ab bhoora nahi, kone se naarangi roshni aati hai
+- Dark mein chuna hua din aur Progress ke bars ab chamakte safed dabbe nahi, narm rang mein
+- Android ka status bar aur widget, aur Mac widget bhi naye dark rang mein
+
 ## 1.7.0
 - Repeat naya: **Every day · Today · Tomorrow**. "Some days" aur "Weekly" hata diye
 - **Today / Tomorrow** = ek baar ka kaam. Sirf usi din list mein aata hai, dobara nahi. Neeche saaf likha aata hai "Just once, on Monday 2 November"
