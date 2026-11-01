@@ -1,0 +1,11 @@
+{
+  "appId": "com.aniket.habits",
+  "appName": "Roj Habit",
+  "webDir": "www",
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "disable",
+      "initialViewportFitValueHint": "cover"
+    }
+  }
+}

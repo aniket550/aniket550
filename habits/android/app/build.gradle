@@ -1,0 +1,83 @@
+apply plugin: 'com.android.application'
+
+android {
+    namespace = "com.aniket.habits"
+    compileSdk = rootProject.ext.compileSdkVersion
+    defaultConfig {
+        applicationId "com.aniket.habits"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        // CI passes its run number, so every new APK installs as an update over the old one.
+        versionCode((System.getenv("ROZ_VERSION_CODE") ?: "1").toInteger())
+        // The version people see comes from package.json (npm run bump).
+        versionName new groovy.json.JsonSlurper().parse(file("../../package.json")).version
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    // Release builds are signed with your own key, passed in by CI from GitHub secrets.
+    // The same key must sign every build, or the APK will not install as an update.
+    def keystore = System.getenv("ROZ_KEYSTORE")
+    // Without that key CI builds a debug APK, signed with a debug key it keeps in its cache
+    // (ROZ_DEBUG_KEYSTORE), so those builds also install over each other.
+    def debugKeystore = System.getenv("ROZ_DEBUG_KEYSTORE")
+    signingConfigs {
+        if (debugKeystore) {
+            debug {
+                storeFile file(debugKeystore)
+                storePassword "android"
+                keyAlias "androiddebugkey"
+                keyPassword "android"
+            }
+        }
+        if (keystore) {
+            roz {
+                storeFile file(keystore)
+                storePassword System.getenv("ROZ_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("ROZ_KEY_ALIAS")
+                keyPassword System.getenv("ROZ_KEY_PASSWORD")
+            }
+        }
+    }
+    buildTypes {
+        release {
+            if (keystore) signingConfig signingConfigs.roz
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.activity:activity:$androidxActivityVersion"
+    implementation "androidx.core:core:$androidxCoreVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}

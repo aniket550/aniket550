@@ -1,0 +1,37 @@
+# The Mac widget (WidgetKit), built on CI with XcodeGen + xcodebuild and put inside the
+# Electron app by scripts/mac-widget.js. Electron cannot make widgets itself.
+name: RojWidget
+options:
+  deploymentTarget:
+    macOS: "14.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    CODE_SIGN_IDENTITY: "-"
+    CODE_SIGN_STYLE: Manual
+    DEVELOPMENT_TEAM: ""
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  RojWidget:
+    type: app-extension
+    platform: macOS
+    sources: [Widget]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.aniket.habits.widget
+        PRODUCT_NAME: RojWidget
+        INFOPLIST_FILE: Widget/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_ENTITLEMENTS: Widget/RojWidget.entitlements
+        APPLICATION_EXTENSION_API_ONLY: YES
+        LD_RUNPATH_SEARCH_PATHS: "@executable_path/../Frameworks @executable_path/../../../../Frameworks"
+  # Asks WidgetKit to redraw the widget after the app writes new data. It sits in the app's
+  # Contents/MacOS, so it speaks for the app.
+  RojWidgetReload:
+    type: tool
+    platform: macOS
+    sources: [Reload]
+    settings:
+      base:
+        PRODUCT_NAME: RojWidgetReload
