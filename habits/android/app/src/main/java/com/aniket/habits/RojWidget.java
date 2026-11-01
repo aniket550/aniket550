@@ -33,7 +33,8 @@ import org.json.JSONObject;
 // Home screen widget: today's ring, the headline and the habits, each checked off with a tap.
 // It reads and writes the app's saved state (Capacitor Preferences keeps it in the
 // "CapacitorStorage" shared preferences) and follows the same rules as www/core.js:
-// local date keys, weeks from Monday, "some days" habits only on their days, and weekly
+// local date keys, weeks from Monday, "some days" habits only on their days, one-offs only on
+// their date, and weekly
 // habits counted as met once the week's goal is reached.
 public class RojWidget extends AppWidgetProvider {
 
@@ -152,6 +153,7 @@ public class RojWidget extends AppWidgetProvider {
             if (today.compareTo(created) < 0) continue;
             JSONObject s = h.optJSONObject("schedule");
             String type = s == null ? "daily" : s.optString("type", "daily");
+            if ("once".equals(type) && !today.equals(s.optString("date"))) continue; // a one-off, due on its day only
             if ("days".equals(type)) {
                 JSONArray days = s.optJSONArray("days");
                 boolean due = false;

@@ -117,6 +117,10 @@
   function scheduleText(h) {
     const s = h.schedule;
     if (s.type === "weekly") return s.times + "× a week";
+    if (s.type === "once") {
+      const t = todayKey();
+      return s.date === t ? "Today" : s.date === C.addDays(t, 1) ? "Tomorrow" : "Once · " + fmt(s.date, { weekday: "short", day: "numeric", month: "short" });
+    }
     if (s.type === "days") {
       const d = s.days.slice().sort().join();
       if (d === "1,2,3,4,5") return "Weekdays";
@@ -907,11 +911,28 @@
   function newDraft() {
     const used = data.habits.map((h) => h.color);
     const color = (COLORS.find((c) => used.indexOf(c.id) === -1) || COLORS[data.habits.length % COLORS.length]).id;
-    return { name: "", icon: "sprout", color: color, time: "anytime", schedule: { type: "daily", days: [1, 2, 3, 4, 5], times: 3 }, target: 1, unit: "" };
+    return { name: "", icon: "sprout", color: color, time: "anytime", schedule: { type: "daily", days: [1, 2, 3, 4, 5], times: 3, date: todayKey() }, target: 1, unit: "" };
   }
   function draftFrom(h) {
+    const s = h.schedule;
     return { id: h.id, name: h.name, icon: h.icon, emoji: h.emoji, color: h.color, time: h.time, unit: h.unit, target: h.target,
-      schedule: { type: h.schedule.type === "days" && h.schedule.days.length === 7 ? "daily" : h.schedule.type, days: (h.schedule.days || [1, 2, 3, 4, 5]).slice(), times: h.schedule.times || 3 } };
+      // a schedule the editor no longer offers (a weekly goal, a one-off on another day) keeps a button of its own
+      kept: s.type === "weekly" || (s.type === "once" && s.date !== todayKey() && s.date !== C.addDays(todayKey(), 1)) ? JSON.parse(JSON.stringify(s)) : null,
+      schedule: { type: s.type === "days" && s.days.length === 7 ? "daily" : s.type, days: (s.days || [1, 2, 3, 4, 5]).slice(), times: s.times || 3, date: s.date || todayKey() } };
+  }
+  // Repeat, in the editor: one row of choices. The first repeats on the days lit below it (its
+  // name says which: Every day, Weekdays, Mon, Thu…); Today and Tomorrow are one-offs.
+  function repeatChoice(s) {
+    const t = todayKey();
+    if (s.type === "daily" || s.type === "days") return "repeat";
+    if (s.type === "once" && s.date === t) return "today";
+    if (s.type === "once" && s.date === C.addDays(t, 1)) return "tomorrow";
+    return "kept";
+  }
+  function repeatLabel(s) {
+    if (s.type !== "days" || s.days.length === 7) return "Every day";
+    const named = scheduleText({ schedule: s });
+    return s.days.length <= 2 || named === "Weekdays" || named === "Weekends" ? named : s.days.length + " days a week";
   }
 
   function editorSheet(d) {
@@ -928,14 +949,21 @@
     html += '<p class="caption">Icon</p><div class="icon-grid">' + ICONS.map((n) => '<button class="icon-pick' + (n === d.icon ? " on" : "") + '" data-action="icon" data-v="' + n + '" aria-label="Icon ' + n.replace(/-/g, " ") + '">' + iconSvg(n, 22) + "</button>").join("") + "</div>";
     html += '<p class="caption">Colour</p><div class="color-row">' + COLORS.map((x) => '<button class="swatch' + (x.id === d.color ? " on" : "") + '" style="--s:' + x.hex + '" data-action="color" data-v="' + x.id + '" aria-label="Colour ' + x.id + '"></button>').join("") + "</div>";
     html += '<p class="caption">Time of day</p><div class="segmented four">' + TIMES.map((t) => '<button class="seg-btn' + (d.time === t.id ? " on" : "") + '" data-action="time" data-v="' + t.id + '">' + ICON[t.icon](16) + "<span>" + t.label + "</span></button>").join("") + "</div>";
-    html += '<p class="caption">Repeat</p><div class="segmented">' +
-      [["daily", "Every day"], ["days", "Some days"], ["weekly", "Weekly"]].map((x) => '<button class="seg-btn' + (s.type === x[0] ? " on" : "") + '" data-action="rtype" data-v="' + x[0] + '">' + x[1] + "</button>").join("") + "</div>";
-    if (s.type !== "weekly") {
+    const choice = repeatChoice(s);
+    const choices = [["repeat", repeatLabel(s.type === "daily" || s.type === "days" ? s : { type: "daily" })], ["today", "Today"], ["tomorrow", "Tomorrow"]];
+    if (d.kept) choices.push(["kept", d.kept.type === "weekly" ? d.kept.times + "× a week" : fmt(d.kept.date, { day: "numeric", month: "short" })]);
+    html += '<p class="caption">Repeat</p><div class="segmented repeat">' + choices.map((x) => '<button class="seg-btn' + (choice === x[0] ? " on" : "") + '" data-action="rtype" data-v="' + x[0] + '" aria-pressed="' + (choice === x[0]) + '">' +
+      (x[0] === "repeat" ? ICON.sync(14) : x[0] === "kept" ? "" : ICON[x[0] === "today" ? "sun" : "sunrise"](14)) + "<span>" + esc(x[1]) + "</span></button>").join("") + "</div>";
+    if (choice === "repeat") {
       const on = (x) => s.type === "daily" || s.days.indexOf(x) !== -1;
-      html += '<div class="day-chips">' + WEEK_ORDER.map((x) => '<button class="day-chip' + (on(x) ? " on" : "") + '" data-action="rday" data-v="' + x + '" aria-pressed="' + on(x) + '">' + DOW_SHORT[x].slice(0, 2) + "</button>").join("") + "</div>";
+      html += '<div class="day-chips">' + WEEK_ORDER.map((x) => '<button class="day-chip' + (on(x) ? " on" : "") + '" data-action="rday" data-v="' + x + '" aria-pressed="' + on(x) + '">' + DOW_SHORT[x].slice(0, 2) + "</button>").join("") + "</div>" +
+        '<p class="repeat-note">' + (s.type === "daily" ? "Every day of the week. Tap a day to skip it." : "Only on the lit days. Light all seven for every day.") + "</p>";
+    } else if (s.type === "once") {
+      html += '<div class="once-note">' + ICON.today(18) + "<p><b>Just once</b>, on " + fmt(s.date, { weekday: "long", day: "numeric", month: "long" }) + ". It won't repeat.</p></div>";
+    } else if (s.type === "weekly") {
+      html += '<div class="stepper-row card"><span>Times per week</span>' + stepper("times", s.times) + "</div>";
     }
-    if (s.type === "weekly") html += '<div class="stepper-row card"><span>Times per week</span>' + stepper("times", s.times) + "</div>";
-    html += '<p class="caption">Daily goal</p><div class="stepper-row card"><span>' + (d.target > 1 ? "Count up to" : "Once a day") + "</span>" + stepper("target", d.target) + "</div>";
+    html += '<p class="caption">' + (s.type === "once" ? "Goal" : "Daily goal") + '</p><div class="stepper-row card"><span>' + (d.target > 1 ? "Count up to" : s.type === "once" ? "Do it once" : "Once a day") + "</span>" + stepper("target", d.target) + "</div>";
     if (d.target > 1) html += '<input id="habit-unit" class="unit-input" type="text" maxlength="16" placeholder="Unit, like glasses or pages" value="' + esc(d.unit) + '" aria-label="Unit">';
     if (d.id) html += '<button class="btn ghost-danger" data-action="delete" data-id="' + d.id + '">' + ICON.trash(18) + "Delete habit</button>";
     html += "</div>";
@@ -1302,7 +1330,8 @@
     const name = d.name.trim();
     if (!name) return;
     const schedule = d.schedule.type === "days" ? { type: "days", days: d.schedule.days.slice().sort() } :
-      d.schedule.type === "weekly" ? { type: "weekly", times: d.schedule.times } : { type: "daily" };
+      d.schedule.type === "weekly" ? { type: "weekly", times: d.schedule.times } :
+      d.schedule.type === "once" ? { type: "once", date: d.schedule.date } : { type: "daily" };
     if (schedule.type === "days" && !schedule.days.length) { toast("Pick at least one day"); return; }
     const fields = { name: name, icon: d.icon, color: d.color, time: d.time, schedule: schedule, target: d.target, unit: d.target > 1 ? d.unit.trim() : "", updated: Date.now() };
     const isNew = !d.id;
@@ -1455,10 +1484,11 @@
       case "color": ui.sheet.draft.color = el.dataset.v; render(); break;
       case "time": ui.sheet.draft.time = el.dataset.v; render(); break;
       case "rtype": {
-        const sc = ui.sheet.draft.schedule;
-        sc.type = el.dataset.v;
-        if (sc.type === "days" && sc.days.length === 7) sc.days = [1, 2, 3, 4, 5];
-        render(); break;
+        const d = ui.sheet.draft, sc = d.schedule, v = el.dataset.v;
+        if (v === "repeat") { if (sc.type !== "days") sc.type = "daily"; }
+        else if (v === "today" || v === "tomorrow") { sc.type = "once"; sc.date = v === "today" ? todayKey() : C.addDays(todayKey(), 1); }
+        else if (v === "kept" && d.kept) Object.assign(sc, JSON.parse(JSON.stringify(d.kept)));
+        haptic("light"); render(); break;
       }
       case "rday": {
         // All seven days on is Every day; turning one off makes it Some days.

@@ -27,9 +27,11 @@
 
   // ---------- schedule ----------
   // schedule.type: "daily" | "days" (days: [0..6], 0 = Sunday) | "weekly" (times: N per week)
+  //   | "once" (date: "2026-11-02", a one-off for that day only)
   function isScheduled(habit, key) {
     if (key < habit.created) return false;
     const s = habit.schedule;
+    if (s.type === "once") return key === s.date;
     if (s.type === "days") return s.days.indexOf(dayOfWeek(key)) !== -1;
     return true; // daily, and weekly habits can be done on any day
   }
@@ -212,7 +214,8 @@
     const keyRe = /^\d{4}-\d{2}-\d{2}$/;
     const habits = data.habits.filter(function (h) {
       return h && typeof h.id === "string" && typeof h.name === "string" && keyRe.test(h.created) &&
-        h.target >= 1 && h.schedule && ["daily", "days", "weekly"].indexOf(h.schedule.type) !== -1 &&
+        h.target >= 1 && h.schedule && ["daily", "days", "weekly", "once"].indexOf(h.schedule.type) !== -1 &&
+        (h.schedule.type !== "once" || keyRe.test(h.schedule.date)) &&
         (h.schedule.type !== "days" || (Array.isArray(h.schedule.days) && h.schedule.days.length > 0)) &&
         (h.schedule.type !== "weekly" || h.schedule.times >= 1);
     });

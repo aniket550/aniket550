@@ -14,6 +14,8 @@ Roz ki habits tick karo. Home page pe aaj ka ring batata hai ki din kahan khada 
 | Ginti wali habit (jaise 8 glass paani) | Right wala gola dabane par +1 hota hai, aur moti (●●●○○) bharte jaate hain |
 | Edit / Delete | Habit ko **dabaa ke rakho** (Mac: right-click). Ya **Habits** tab → **Edit** → lal ⊖ dabao |
 | Galti se delete ho gaya | Neeche aane wale **Undo** button ko dabao (5 second tak rehta hai) |
+| Sirf aaj ya kal ka kaam | Nayi habit → **Repeat** mein **Today** ya **Tomorrow**. Ye ek hi din dikhta hai, dobara nahi aata |
+| Kuch hi din (jaise Weekdays) | **Repeat → Every day**, phir neeche jo din nahi chahiye un pe tap karke band karo |
 | Pichhla din theek karna | Upar hafte ki strip se din chuno, ya habit ke calendar mein us din pe tap karo |
 
 ## Widgets
@@ -134,6 +136,7 @@ npm run android:sync  # phir Android Studio mein android/ kholo
 
 - Tareekh **local time** mein banti hai (`toISOString()` UTC deta hai, jisse India mein subah 5:30 se pehle kal ki date aa jaati hai).
 - Hafta **Somvar** se shuru hota hai.
+- Schedule ke 4 tarah: roz (`daily`), kuch din (`days`), hafte mein X baar (`weekly`, ab sirf purani habits mein), aur ek din ka kaam (`once`, Today/Tomorrow).
 - Streak mein **schedule se bahar ke din skip** hote hain. Som/Budh/Shukra wali habit Mangalwar ko nahi tootti.
 - **Adhoora aaj streak nahi todta**, kyunki din abhi khatam nahi hua.
 - "Hafte mein X baar" wali habit ki streak **hafton** mein ginti hai.

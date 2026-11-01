@@ -88,6 +88,17 @@ test("removeHabit clears its log entries and leaves a deletion note", () => {
   assert.deepEqual(s, Object.assign(C.emptyState(), { deleted: { d: 5 } }));
 });
 
+test("once: due on its one day only, and kept by validate", () => {
+  const once = { id: "o", name: "Call the bank", target: 1, created: "2026-10-26", schedule: { type: "once", date: "2026-10-27" } };
+  assert.equal(C.isScheduled(once, "2026-10-26"), false);
+  assert.equal(C.isScheduled(once, "2026-10-27"), true);
+  assert.equal(C.isScheduled(once, "2026-10-28"), false);
+  const s = state([once]);
+  assert.deepEqual(C.dayItems(s, "2026-10-27").map((i) => i.habit.id), ["o"]);
+  assert.equal(C.validate({ habits: [once], log: {} }).habits.length, 1);
+  assert.equal(C.validate({ habits: [Object.assign({}, once, { schedule: { type: "once" } })], log: {} }).habits.length, 0);
+});
+
 // ---------- sync ----------
 const copy = (x) => JSON.parse(JSON.stringify(x));
 const walk = { id: "w", name: "Walk", target: 1, created: "2026-10-01", schedule: { type: "daily" } };

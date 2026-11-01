@@ -3,6 +3,13 @@
 Har update ke saath version badhta hai (`npm run bump`) aur yahan ek line judti hai.
 Version ka matlab: **1.2.3** → 1 = bada badlav, 2 = naya feature ya design, 3 = chhota sudhaar.
 
+## 1.7.0
+- Repeat naya: **Every day · Today · Tomorrow**. "Some days" aur "Weekly" hata diye
+- **Today / Tomorrow** = ek baar ka kaam. Sirf usi din list mein aata hai, dobara nahi. Neeche saaf likha aata hai "Just once, on Monday 2 November"
+- Kuch hi din chahiye? Every day chuno aur jo din nahi chahiye un pe tap karo. Upar ka naam apne aap "Weekdays", "Mon, Thu" ya "5 days a week" ho jaata hai
+- Purani "hafte mein 3 baar" wali habits waise hi chalti rahengi, edit karne pe unka button alag dikhta hai
+- Android widget bhi ek baar wale kaam samajhta hai
+
 ## 1.6.0
 - Mac widget naya design: desktop pe (jahan macOS rang hata deta hai) ab safed ki halki-gehri parton se saaf dikhta hai, aur ring macOS ke accent rang mein
 - Kam habits hon to bade card, naam ke neeche "1 of 13 glasses" aur progress bar. Zyada hon to do line wali rows, aur bahut zyada hon to patli list. Ab faltu khaali jagah nahi rehti
