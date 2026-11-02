@@ -115,11 +115,12 @@
   };
   let leads = store.get("lf_leads", {});
   let settings = Object.assign(
-    { name: "", phone: "", link: "", key: "", limit: 30, lang: "en", followDays: 3, tpl: {} },
+    { name: "", phone: "", link: "", key: "", limit: 30, followDays: 3, tpl: {} },
     store.get("lf_settings", {})
   );
   if (!settings.tpl || typeof settings.tpl !== "object") settings.tpl = {};
   delete settings.msg; // the old single Hinglish template; each business type now has its own
+  delete settings.lang; // messages are always in English now
   let shown = PAGE;
   const saveLeads = () => { if (!store.set("lf_leads", leads)) toast("Storage is full. Export a CSV and delete old leads.", "alert", "var(--red)"); };
   const saveSettings = () => store.set("lf_settings", settings);
@@ -437,14 +438,14 @@
 
   // ---------- messages ----------
   const TPL_KEYS = [["restaurant", "Restaurants"], ["gym", "Gyms"], ["other", "Other businesses"], ["followUp", "Follow-up"]];
-  function defaultTpl(key, lang) {
-    const M = window.MESSAGES[lang || settings.lang] || window.MESSAGES.en;
+  function defaultTpl(key) {
+    const M = window.MESSAGES;
     return (key === "followUp" ? M.followUp : M.first[key] || M.first.other).join("\n");
   }
   const tplFor = (key) => settings.tpl[key] || defaultTpl(key);
   function fill(tpl, l, s) {
     s = s || settings;
-    const M = window.MESSAGES[s.lang] || window.MESSAGES.en;
+    const M = window.MESSAGES;
     if (!s.link) tpl = tpl.split("\n").filter((line) => !line.includes("{link}")).join("\n");
     const reason = l.siteType === "social" ? M.reasonSocial.replace("{social}", socialName(l.siteHost)) : M.reasonNone;
     const vars = {
@@ -601,7 +602,7 @@
   }
 
   // ---------- LEADS ----------
-  let typeSeg, srcSeg, langSeg;
+  let typeSeg, srcSeg;
   function filtered() {
     const type = typeSeg.get(), st = $("fStatus").value, ph = $("fPhone").value, ni = $("fNiche").value, txt = $("fText").value.trim().toLowerCase();
     const arr = Object.values(leads).filter((l) => {
@@ -902,7 +903,7 @@
       ["Address", l.address || [l.city, l.state].filter(Boolean).join(", ")],
       ["Type", nicheOne(l) + (l.cat && l.cat !== NICHE[l.niche]?.one ? ` · ${l.cat}` : "")],
       ["Google rating", l.reviews ? `★ ${l.rating} from ${l.reviews} reviews` : "No reviews listed"],
-      ["Online", l.siteType === "none" ? "No website" : l.siteType === "social" ? `Only a ${socialName(l.siteHost)} page` : l.siteHost],
+      ["Online", l.siteType === "none" ? "No website" : l.siteType === "social" ? `Only on ${socialName(l.siteHost)}` : l.siteHost],
       ["Lead score", `${l.score} / 100`],
     ];
     const log = (l.log || []).slice().reverse().map((x) => {
@@ -1130,10 +1131,6 @@
 
     // Settings
     ["sName", "sPhone", "sLink", "sKey"].forEach((id) => $(id).addEventListener("input", onSettingsInput));
-    langSeg = segmented($("langSeg"), [["en", "English"], ["hi", "Hinglish"]], settings.lang, (v) => {
-      settings.lang = v; saveSettings(); renderTplRows(); refreshAll();
-      toast(v === "en" ? "Messages in English" : "Messages in Hinglish", "chat", "var(--blue)");
-    });
     $("tplRows").addEventListener("click", (e) => { const b = e.target.closest("[data-tpl]"); if (b) tplSheet(b.dataset.tpl); });
     $("limitDown").addEventListener("click", () => step("limit", -1, 1, 200, "limitVal", String));
     $("limitUp").addEventListener("click", () => step("limit", 1, 1, 200, "limitVal", String));

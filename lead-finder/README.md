@@ -21,7 +21,7 @@ Find local businesses that don't have a website, message them on WhatsApp in one
 | **Today** | Messages sent today against your daily limit, money earned, reply rate, follow-ups due, the 5 best leads to message next, and your pipeline (found → messaged → replied → interested → won). |
 | **Find** | Pick a business type (Restaurants, Gyms, or your own words like "salon"), the kinds to include, a state and cities, then search Google Maps or OpenStreetMap. |
 | **Leads** | Every business found, best first. Filter by website, business type, status or phone. Tap a card for details, status, notes, deal amount and history. |
-| **Settings** | Your name, number and portfolio link; message language (English or Hinglish); the pitch for each business type; follow-up timing; daily limit; Google API key; CSV export. |
+| **Settings** | Your name, number and portfolio link; the pitch for each business type; follow-up timing; daily limit; Google API key; CSV export. |
 
 ### Business types and their pitch
 
@@ -31,7 +31,7 @@ Each type has its own message, because owners care about different things:
 - **Gyms:** showing up for "gym near me", membership plans, trainers, transformation photos and free-trial bookings.
 - **Other:** found on Google, services, prices and contact on WhatsApp.
 
-Messages come in English or Hinglish and can be edited in Settings, with a WhatsApp-style preview.
+Messages are always sent in English and can be edited in Settings, with a WhatsApp-style preview.
 
 ### Lead score (0–100)
 
