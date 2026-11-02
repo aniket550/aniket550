@@ -1,7 +1,7 @@
 {
   "name": "lead-finder",
   "productName": "Lead Finder",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "private": true,
   "description": "Find local businesses without a website and message them on WhatsApp.",
   "author": "Aniket",

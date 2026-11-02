@@ -361,11 +361,6 @@
   }
 
   async function searchGoogle(stateName, cities, jobsIn, progress) {
-    if (!settings.key) {
-      showView("settings");
-      setTimeout(() => $("sKey").focus(), 400);
-      throw new Error("Add your Google API key first, or switch to OpenStreetMap.");
-    }
     if (!cities.length) throw new Error("Type at least one city for Google Maps.");
     let added = 0, total = 0, done = 0;
     const jobs = [];
@@ -767,6 +762,14 @@
     status.classList.remove("err");
     $("searchLabel").innerHTML = `<span class="spinner"></span>Searching…`;
     const progress = (f, text) => { btn.style.setProperty("--p", Math.max(0.04, f).toFixed(3)); status.textContent = text; };
+    if (srcSeg.get() === "google" && !settings.key) {
+      searching = false;
+      btn.disabled = false; btn.classList.remove("busy");
+      $("searchLabel").textContent = "Find " + NICHE[niche].label.toLowerCase();
+      status.textContent = "";
+      noKeySheet();
+      return;
+    }
     try {
       let r;
       if (srcSeg.get() === "google") {
@@ -801,6 +804,27 @@
       setTimeout(() => btn.style.setProperty("--p", 0), 900);
       refreshAll();
     }
+  }
+
+  // Searching Google Maps without a key: explain the choice instead of failing.
+  function noKeySheet() {
+    const osmOk = niche !== "other" && selectedTypes().some((t) => t.osm.length);
+    sheet("Google Maps needs a key", `<p class="sheet-text">Google Maps finds the most businesses and phone numbers, but it needs your own <b>Maps</b> API key. Your Gemini key from AI Studio won't work here.</p>
+      <div class="group">
+        <button class="row row-btn tint" type="button" id="nkAdd"><span data-icon="pencil"></span>I have a key, add it</button>
+        <button class="row row-btn tint" type="button" id="nkHelp"><span data-icon="alert"></span>How to get a Maps key</button>
+      </div>
+      ${osmOk ? `<button class="btn-primary" type="button" id="nkOsm">Search free with OpenStreetMap</button>
+      <p class="group-foot">OpenStreetMap needs no key. It finds fewer places and fewer phone numbers.</p>` : ""}`, (s, close) => {
+      paintIcons(s);
+      s.querySelector("#nkAdd").addEventListener("click", () => {
+        close(); showView("settings");
+        setTimeout(() => { const k = $("sKey"); k.scrollIntoView({ block: "center" }); k.focus(); }, 450);
+      });
+      s.querySelector("#nkHelp").addEventListener("click", () => { close(); setTimeout(keyHelp, 300); });
+      const o = s.querySelector("#nkOsm");
+      if (o) o.addEventListener("click", () => { close(); srcSeg.set("osm", true); setTimeout(runSearch, 350); });
+    });
   }
 
   function previewNotice() {
@@ -1165,6 +1189,18 @@
       const onScheme = () => { applyTheme(); setTimeout(applyTheme, 300); }; // after Android resets the bars itself
       darkQuery.addEventListener ? darkQuery.addEventListener("change", onScheme) : darkQuery.addListener(onScheme);
     }
+
+    // While typing, the keyboard takes the bottom of the screen: hide the tab bar so it
+    // doesn't sit on top of the field, and bring the field to the middle of the screen.
+    const typing = (el) => el && (el.tagName === "TEXTAREA" || (el.tagName === "INPUT" && !/^(checkbox|radio|button)$/.test(el.type)));
+    document.addEventListener("focusin", (e) => {
+      if (!typing(e.target)) return;
+      document.documentElement.classList.add("typing");
+      setTimeout(() => { if (document.activeElement === e.target && !e.target.closest(".sheet")) e.target.scrollIntoView({ block: "center", behavior: reduceMotion ? "auto" : "smooth" }); }, 350);
+    });
+    document.addEventListener("focusout", () => setTimeout(() => {
+      if (!typing(document.activeElement)) document.documentElement.classList.remove("typing");
+    }, 50));
 
     // Tabs, scrolling, links
     document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => { haptic(); showView(t.dataset.view); }));
