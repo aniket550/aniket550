@@ -95,6 +95,9 @@ svg.i { width: 1em; height: 1em; display: block; flex: none; }
 .mt8 { margin-top: 8px; }
 .num { font-variant-numeric: tabular-nums; }
 
+/* A solid strip behind the phone's status bar, so text never scrolls under the time and battery */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: var(--safe-t); background: var(--bg); z-index: 39; }
+
 /* ---------- nav bar (large title collapses into it) ---------- */
 .nav {
   position: fixed; inset: 0 0 auto 0; z-index: 40;
