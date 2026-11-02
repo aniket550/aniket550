@@ -559,7 +559,7 @@
 
     const miniRow = (l, a, sub) => `<div class="mini" data-id="${esc(l.id)}">
         <div class="avatar" style="--h:${hue(l.name)}" aria-hidden="true">${esc(initials(l.name))}</div>
-        <div class="mini-main" data-act="open"><b>${esc(l.name)}${l.demo ? ` <span class="tag tag-demo">Demo</span>` : ""}</b><span>${esc(sub)}</span></div>
+        <div class="mini-main" data-act="open"><b>${esc(l.name)}</b><span>${l.demo ? "Demo · " : ""}${esc(sub)}</span></div>
         <a class="act act-main ${a.cls}" data-act="wa" data-kind="${a.kind}" href="${waHref(a)}" target="_blank" rel="noopener">${esc(a.label)}</a></div>`;
 
     $("todayBody").innerHTML = `<div class="today-grid">
