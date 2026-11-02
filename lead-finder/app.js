@@ -115,7 +115,7 @@
   };
   let leads = store.get("lf_leads", {});
   let settings = Object.assign(
-    { name: "", phone: "", link: "", key: "", limit: 30, followDays: 3, tpl: {} },
+    { name: "", phone: "", link: "", key: "", limit: 30, followDays: 3, theme: "auto", tpl: {} },
     store.get("lf_settings", {})
   );
   if (!settings.tpl || typeof settings.tpl !== "object") settings.tpl = {};
@@ -466,6 +466,23 @@
     return { kind: "chat", label: "Open chat", cls: "soft", text: "", to };
   }
   const waHref = (a) => (a && a.to ? `https://wa.me/${a.to}${a.text ? "?text=" + encodeURIComponent(a.text) : ""}` : "#");
+
+  // ---------- appearance ----------
+  // Light or dark page, and status bar icons that contrast with it: dark icons (time, battery,
+  // notifications) on the light page, white icons on the dark page. Android can't tell which the
+  // page shows, so the page tells it.
+  const darkQuery = window.matchMedia ? matchMedia("(prefers-color-scheme: dark)") : null;
+  function applyTheme() {
+    const t = settings.theme || "auto";
+    if (t === "auto") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", t);
+    const dark = t === "dark" || (t === "auto" && !!(darkQuery && darkQuery.matches));
+    document.querySelectorAll('meta[name="theme-color"]').forEach((m) => { m.content = dark ? "#000000" : "#f2f2f7"; });
+    if (NATIVE && cap.SystemBars) {
+      // "DARK" means light icons for a dark page; "LIGHT" means dark icons for a light page
+      cap.SystemBars.setStyle({ style: dark ? "DARK" : "LIGHT" }).catch(() => {});
+    }
+  }
 
   // ---------- views + nav ----------
   const VIEWS = ["today", "find", "leads", "settings"];
@@ -1141,6 +1158,14 @@
     $("demoToggle").addEventListener("click", () => (demoCount() ? removeDemo() : startDemo()));
     $("clearAll").addEventListener("click", clearAll);
 
+    segmented($("themeSeg"), [["auto", "Automatic"], ["light", "Light"], ["dark", "Dark"]], settings.theme || "auto", (v) => {
+      settings.theme = v; saveSettings(); applyTheme();
+    });
+    if (darkQuery) {
+      const onScheme = () => { applyTheme(); setTimeout(applyTheme, 300); }; // after Android resets the bars itself
+      darkQuery.addEventListener ? darkQuery.addEventListener("change", onScheme) : darkQuery.addListener(onScheme);
+    }
+
     // Tabs, scrolling, links
     document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => { haptic(); showView(t.dataset.view); }));
     let ticking = false;
@@ -1162,10 +1187,12 @@
         else capacitorApp.App.minimizeApp();
       });
       // Coming back from WhatsApp: refresh so "Messages today" and follow-ups are current
-      capacitorApp.App.addListener("resume", () => refreshAll());
+      capacitorApp.App.addListener("resume", () => { applyTheme(); refreshAll(); });
     }
     document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshAll(); });
 
+    applyTheme();
+    setTimeout(applyTheme, 600); // again once the app has finished starting
     fillSettings();
     updateEstimate();
     if (PREVIEW && !Object.keys(leads).length) loadDemo();

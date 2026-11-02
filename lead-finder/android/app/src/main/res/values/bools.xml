@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tells the WebView whether the app is in light or dark mode, so the page's
+         prefers-color-scheme follows the phone (values-night sets false). -->
+    <bool name="lf_is_light">true</bool>
+</resources>

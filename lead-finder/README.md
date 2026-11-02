@@ -21,7 +21,7 @@ Find local businesses that don't have a website, message them on WhatsApp in one
 | **Today** | Messages sent today against your daily limit, money earned, reply rate, follow-ups due, the 5 best leads to message next, and your pipeline (found → messaged → replied → interested → won). |
 | **Find** | Pick a business type (Restaurants, Gyms, or your own words like "salon"), the kinds to include, a state and cities, then search Google Maps or OpenStreetMap. |
 | **Leads** | Every business found, best first. Filter by website, business type, status or phone. Tap a card for details, status, notes, deal amount and history. |
-| **Settings** | Your name, number and portfolio link; the pitch for each business type; follow-up timing; daily limit; Google API key; CSV export. |
+| **Settings** | Your name, number and portfolio link; Appearance (Automatic, Light or Dark); the pitch for each business type; follow-up timing; daily limit; Google API key; CSV export. |
 
 ### Business types and their pitch
 
@@ -78,5 +78,7 @@ lead-finder/
 ```
 
 **Android build:** GitHub Actions (`.github/workflows/lead-finder.yml`) runs on every push that changes `lead-finder/`. It builds the APK, publishes it on the `leadfinder-latest` release, and copies the web version to the `gh-pages` branch. To change the version, edit it in both `package.json` and `version.js`.
+
+**Status bar:** the page tells Android which icon colour to use (dark icons on the light page, white on the dark one) through Capacitor's SystemBars, and the theme's `android:isLightTheme` makes the page follow the phone's dark mode.
 
 **Signing:** without secrets, CI builds a debug APK signed with a key it keeps in its cache, so new builds install as updates while the cache lives (7 days unused). For a permanent key, add four repository secrets: `LF_KEYSTORE_B64` (the keystore, base64), `LF_KEYSTORE_PASSWORD`, `LF_KEY_ALIAS`, `LF_KEY_PASSWORD`. Never commit a keystore.
