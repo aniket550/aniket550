@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Lead Finder</title>
+  <meta name="description" content="State choose karo, bina website wale restaurants dhoondho, aur ek tap mein WhatsApp pe apna offer bhejo.">
+  <meta name="theme-color" content="#0a7d4f">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <div>
+      <h1>Lead Finder</h1>
+      <p class="sub">Bina website wale restaurants → aapke clients</p>
+    </div>
+    <button class="ghost" id="openSettings" type="button">⚙️ Settings</button>
+  </header>
+
+  <main>
+    <!-- 1. SEARCH -->
+    <section class="card" id="searchCard">
+      <h2><span class="step">1</span> Kahan dhoondhna hai?</h2>
+
+      <label>State
+        <select id="state"></select>
+      </label>
+
+      <label>Shehar <small>(comma se alag; khaali chhodo = poora state, sirf OpenStreetMap mein)</small>
+        <input id="cities" type="text" placeholder="Patna, Gaya">
+      </label>
+
+      <fieldset>
+        <legend>Kya dhoondhna hai</legend>
+        <div class="chips" id="cats"></div>
+        <label class="inline">Aur kuch? <small>(sirf Google, jaise "salon, gym, clinic")</small>
+          <input id="customKw" type="text" placeholder="optional">
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Data kahan se</legend>
+        <label class="radio"><input type="radio" name="src" value="google" checked>
+          <span><b>Google Maps</b> — sabse zyada restaurants + phone number. API key chahiye (Settings).</span></label>
+        <label class="radio"><input type="radio" name="src" value="osm">
+          <span><b>OpenStreetMap</b> — free, koi key nahi. Par India mein kam data, phone kam milte hain.</span></label>
+      </fieldset>
+
+      <p class="hint" id="estimate"></p>
+      <button class="primary" id="searchBtn" type="button">🔍 Restaurants dhoondho</button>
+      <div class="progress" id="progress" hidden>
+        <div class="bar"><div id="progressBar"></div></div>
+        <p id="progressText"></p>
+      </div>
+    </section>
+
+    <!-- 2. LEADS -->
+    <section class="card" id="leadsCard">
+      <h2><span class="step">2</span> Aapke leads</h2>
+      <div class="stats" id="stats"></div>
+
+      <div class="filters">
+        <select id="fType" aria-label="Website filter">
+          <option value="lead">Sirf leads (website nahi / sirf social)</option>
+          <option value="none">Website bilkul nahi</option>
+          <option value="social">Sirf Zomato/Instagram/FB</option>
+          <option value="all">Sab dikhao</option>
+        </select>
+        <select id="fStatus" aria-label="Status filter">
+          <option value="">Har status</option>
+        </select>
+        <select id="fPhone" aria-label="Phone filter">
+          <option value="wa">WhatsApp wala number</option>
+          <option value="any">Koi bhi number</option>
+          <option value="">Number ho ya na ho</option>
+        </select>
+        <select id="fSort" aria-label="Sort">
+          <option value="score">Best lead pehle</option>
+          <option value="reviews">Zyada reviews pehle</option>
+          <option value="name">Naam A-Z</option>
+        </select>
+        <input id="fText" type="search" placeholder="Naam / area / shehar se dhoondho">
+      </div>
+
+      <div class="toolbar">
+        <span id="count"></span>
+        <span class="grow"></span>
+        <button class="ghost" id="exportCsv" type="button">⬇️ CSV</button>
+        <button class="ghost danger" id="clearAll" type="button">🗑️ Sab mitao</button>
+      </div>
+
+      <div id="list" class="list"></div>
+      <button class="ghost wide" id="more" type="button" hidden>Aur dikhao</button>
+      <p class="empty" id="empty">Abhi koi lead nahi. Upar state choose karke dhoondho.</p>
+    </section>
+  </main>
+
+  <!-- SETTINGS -->
+  <dialog id="settings">
+    <form method="dialog" class="settings">
+      <h2>Settings</h2>
+      <label>Aapka naam <input id="sName" type="text" placeholder="Aniket"></label>
+      <label>Aapka contact number <input id="sPhone" type="tel" placeholder="98XXXXXXXX"></label>
+      <label>Portfolio / demo link <small>(optional)</small> <input id="sLink" type="url" placeholder="https://..."></label>
+      <label>Google Maps API key <small>(Places API (New) on hona chahiye)</small>
+        <input id="sKey" type="password" autocomplete="off" placeholder="AIza...">
+      </label>
+      <details>
+        <summary>API key kaise milegi?</summary>
+        <ol>
+          <li><a href="https://console.cloud.google.com/" target="_blank" rel="noopener">console.cloud.google.com</a> kholo, naya project banao.</li>
+          <li>Billing account jodo (card lagta hai; har mahine kuch free quota milta hai).</li>
+          <li>"APIs &amp; Services → Library" mein <b>Places API (New)</b> enable karo.</li>
+          <li>"Credentials → Create credentials → API key". Key ko sirf Places API (New) tak restrict karo.</li>
+          <li>Billing → Budgets mein ₹500 ka budget alert lagao, taaki galti se kharcha na ho.</li>
+        </ol>
+      </details>
+      <label>Ek din mein kitne message <small>(WhatsApp ban se bachne ke liye)</small>
+        <input id="sLimit" type="number" min="1" max="200" value="30">
+      </label>
+      <label>Message <small>{name} {city} {reason} {myName} {myPhone} {link}</small>
+        <textarea id="sMsg" rows="11"></textarea>
+      </label>
+      <div class="row">
+        <button class="ghost" id="resetMsg" type="button">Default message</button>
+        <span class="grow"></span>
+        <button class="primary" value="save">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

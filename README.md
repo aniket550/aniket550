@@ -47,3 +47,9 @@ app/
 Har word, rule, model aur quiz sawaal mein `why` zaroor bharo, kyunki app ka asli fark yahi reason hai. Shabd ko `**bold**` likhne se woh app mein mota dikhta hai. "Likho" ke har item mein `pattern` (regex) hota hai jo user ke sentence ko check karta hai; uska `placeholder` wala example us pattern se pass hona chahiye.
 
 App apne aap pehla adhoora din "aaj ka task" banata hai. Ek din poora hote hi agla din khul jaata hai, aur poore hue din Safar screen se dobara khul sakte hain.
+
+---
+
+## Lead Finder (alag tool)
+
+Web development ke clients dhoondhne ke liye: state choose karo, bina website wale restaurants milte hain, aur ek tap mein WhatsApp pe offer bhejo. Dekho [`lead-finder/README.md`](lead-finder/README.md).
