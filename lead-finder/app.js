@@ -220,6 +220,47 @@
     return l;
   }
 
+  // ---------- Demo data: bina API key ke app try karne ke liye ----------
+  // Naam kaalpanik hain. Demo lead ka WhatsApp button AAPKE APNE number pe message kholta hai,
+  // taaki aap dekh sako restaurant ko kya jaayega, bina kisi anjaan ko message bheje.
+  const DEMO = [
+    ["Maa Tara Bhojnalaya", "Kankarbagh Main Rd, Patna", "", 4.4, 1260],
+    ["Patna Litti Junction", "Boring Road, Patna", "https://instagram.com/pattnalittijunction", 4.2, 640],
+    ["Raju Family Dhaba", "NH 30, Bakhtiyarpur, Patna", "", 4.1, 2130],
+    ["Shree Krishna Sweets", "Ashok Rajpath, Patna", "https://www.zomato.com/patna/shree-krishna-sweets", 4.5, 890],
+    ["Cafe Gulmohar", "Fraser Road, Patna", "", 4.3, 310],
+    ["Biryani Darbar", "Raja Bazar, Patna", "", 3.9, 450],
+    ["Bihari Rasoi", "Station Road, Gaya", "https://facebook.com/bihari.rasoi.gaya", 4.0, 205],
+    ["Momo Point", "Exhibition Road, Patna", "", 4.1, 95],
+    ["Annapurna Family Restaurant", "Bodh Gaya Road, Gaya", "", 3.8, 72],
+    ["Hotel Green Leaf", "Gandhi Maidan, Patna", "https://greenleafpatna.in", 4.6, 3400],
+  ];
+  function loadDemo() {
+    let added = 0;
+    DEMO.forEach(([name, address, site, rating, reviews], i) => {
+      const lead = makeLead({
+        id: "demo:" + i, src: "demo", demo: true, cat: "restaurants", name, address,
+        city: address.includes("Gaya") ? "Gaya" : "Patna", state: "Bihar", rating, reviews,
+        maps: "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(name + " " + address),
+      }, i === 5 ? "0612 222 3333" : "98765 4321" + i, site);
+      if (upsert(lead)) added++;
+    });
+    saveLeads();
+    return added;
+  }
+  const demoCount = () => Object.values(leads).filter((l) => l.demo).length;
+  function removeDemo() {
+    Object.keys(leads).forEach((k) => { if (leads[k].demo) delete leads[k]; });
+    saveLeads(); rerender(); toast("Demo leads hata diye", "trash", "var(--blue)");
+  }
+  function startDemo() {
+    const n = loadDemo();
+    typeSeg.set("lead");
+    $("fPhone").value = "wa";
+    shown = PAGE; showView("leads"); render(true);
+    toast(n ? `${n} demo leads aaye` : "Demo leads pehle se hain", "star", "var(--indigo)");
+  }
+
   // ---------- Google Places (New) Text Search ----------
   async function googleQuery(textQuery, key) {
     let pageToken = "";
@@ -439,14 +480,15 @@
       : l.siteType === "social" ? `<span class="tag tag-social">Sirf ${esc(socialName(l.siteHost))}</span>`
       : `<span class="tag tag-site">Website hai</span>`;
     const meta = [
-      `<span>${esc(l.phone || "Number nahi mila")}</span>`,
+      `<span>${l.demo ? "Demo number" : esc(l.phone || "Number nahi mila")}</span>`,
       l.reviews ? `<span>★ ${esc(l.rating)} · ${esc(l.reviews)} reviews</span>` : "",
       `<span class="score">Score ${l.score}</span>`,
     ].join("");
+    const waTo = l.demo ? parsePhones(settings.phone).wa : l.wa;
     const main = l.wa
-      ? `<a class="act act-main" data-act="wa" href="https://wa.me/${l.wa}?text=${encodeURIComponent(buildMessage(l))}" target="_blank" rel="noopener">${icon("chat")}WhatsApp</a>`
-      : l.tel ? `<a class="act act-main call" href="tel:${esc(l.tel)}">${icon("phone")}Call</a>` : "";
-    const call = l.wa && l.tel ? `<a class="act act-icon" href="tel:${esc(l.tel)}" aria-label="Call karo">${icon("phone")}</a>` : "";
+      ? `<a class="act act-main" data-act="wa" href="${waTo ? `https://wa.me/${waTo}?text=` : "#"}${waTo ? encodeURIComponent(buildMessage(l)) : ""}" target="_blank" rel="noopener">${icon("chat")}${l.demo ? "Khud ko bhejo" : "WhatsApp"}</a>`
+      : l.tel && !l.demo ? `<a class="act act-main call" href="tel:${esc(l.tel)}">${icon("phone")}Call</a>` : "";
+    const call = !l.demo && l.wa && l.tel ? `<a class="act act-icon" href="tel:${esc(l.tel)}" aria-label="Call karo">${icon("phone")}</a>` : "";
     const maps = l.maps ? `<a class="act act-icon" href="${esc(l.maps)}" target="_blank" rel="noopener" aria-label="Map pe dekho">${icon("pin")}</a>` : "";
     const site = l.website ? `<a class="act act-icon" href="${esc(/^https?:/i.test(l.website) ? l.website : "http://" + l.website)}" target="_blank" rel="noopener nofollow" aria-label="Unka page kholo">${icon("link")}</a>` : "";
     const opts = STATUSES.map(([v, t]) => `<option value="${v}"${v === l.status ? " selected" : ""}>${t}</option>`).join("");
@@ -454,7 +496,7 @@
     return `<article class="lead${animate && i < 12 ? " enter" : ""}" style="--i:${i}" data-id="${esc(l.id)}">
       <div class="lead-top">
         <div class="avatar" style="--h:${hue(l.name)}" aria-hidden="true">${esc(initials(l.name))}</div>
-        <div><h3>${esc(l.name)}</h3><p class="sub">${esc(l.address || l.city || l.state)}</p></div>
+        <div><h3>${esc(l.name)}${l.demo ? ` <span class="tag tag-demo">Demo</span>` : ""}</h3><p class="sub">${esc(l.address || l.city || l.state)}</p></div>
         ${tag}
       </div>
       <div class="lead-meta">${meta}</div>
@@ -485,7 +527,7 @@
     if (!arr.length) {
       empty.innerHTML = total
         ? `<div class="empty-ic">${icon("search")}</div><h3>Is filter mein kuch nahi</h3><p>Upar filter badal ke dekho, ya "Sab" chuno.</p>`
-        : `<div class="empty-ic">${icon("search")}</div><h3>Abhi koi lead nahi</h3><p>State chuno aur dhoondho. Bina website wale restaurants yahan aa jayenge.</p><button class="btn-tinted" type="button" data-go="search">Dhoondhna shuru karo</button>`;
+        : `<div class="empty-ic">${icon("search")}</div><h3>Abhi koi lead nahi</h3><p>State chuno aur dhoondho. Bina website wale restaurants yahan aa jayenge.</p><div class="empty-btns"><button class="btn-tinted" type="button" data-go="search">Dhoondhna shuru karo</button><button class="btn-plain" type="button" data-demo>Demo data se try karo</button></div>`;
     }
     ["fStatus", "fPhone", "fSort"].forEach((id) => {
       const s = $(id);
@@ -519,6 +561,7 @@
   let searching = false;
   async function runSearch() {
     if (searching) return;
+    if (window.LF_PREVIEW) { previewNotice(); return; }
     const state = window.STATES[+$("state").value];
     const btn = $("searchBtn");
     const status = $("progressText");
@@ -559,6 +602,14 @@
     }
   }
 
+  function previewNotice() {
+    sheet("Yeh preview link hai", `<p class="sheet-text">Is link pe Google Maps se asli search nahi ho sakti, kyunki yahan bahar ke servers ko call karna band hai. Baaki poori app (leads, WhatsApp message, status, notes) demo data se chala ke dekh sakte ho.</p>
+      <p class="sheet-text">Asli restaurants ke liye app ko apne GitHub Pages link pe kholo (README mein tareeka hai).</p>
+      <button class="btn-primary" type="button" id="pvDemo">Demo leads dekho</button>`, (s, close) => {
+      s.querySelector("#pvDemo").addEventListener("click", () => { close(); startDemo(); });
+    });
+  }
+
   // ---------- lead actions ----------
   function markSent(l) {
     store.set("lf_sent_" + today(), sentToday() + 1);
@@ -570,6 +621,7 @@
   }
 
   function onListClick(e) {
+    if (e.target.closest("[data-demo]")) { startDemo(); return; }
     const go = e.target.closest("[data-go]");
     if (go) { showView(go.dataset.go); return; }
     const el = e.target.closest("[data-act]");
@@ -578,7 +630,10 @@
     if (!l) return;
     const act = el.dataset.act;
     if (act === "wa") {
-      if (!settings.name || !settings.phone) { e.preventDefault(); welcome(); return; }
+      if (!settings.name || !settings.phone || (l.demo && !parsePhones(settings.phone).wa)) {
+        e.preventDefault(); welcome(); if (settings.phone) toast("Demo ke liye apna 10 digit mobile number daalo", "alert", "var(--orange)"); return;
+      }
+      if (l.demo) { toast("Yeh message aapke apne number pe khulega", "chat", "var(--wa)"); if (l.status === "new") l.status = "sent"; l.sentAt = new Date().toISOString(); popId = l.id; saveLeads(); setTimeout(() => render(false), 350); return; }
       if (sentToday() >= settings.limit) {
         e.preventDefault();
         ask({ title: "Aaj ki limit poori", message: `Aaj ${sentToday()} message ja chuke. Zyada bhejoge to WhatsApp aapka number ban kar sakta hai.`, ok: "Phir bhi bhejo", cancel: "Ruk jao", destructive: true })
@@ -618,6 +673,7 @@
   }
 
   function exportCsv() {
+    if (window.LF_PREVIEW) { toast("Preview link mein CSV download band hai", "alert", "var(--orange)"); return; }
     const arr = current === "leads" ? filtered() : Object.values(leads);
     if (!arr.length) { toast("Export karne ko kuch nahi", "alert", "var(--orange)"); return; }
     const cols = ["name", "phone", "wa", "address", "city", "state", "siteType", "website", "rating", "reviews", "score", "status", "note", "sentAt", "maps", "src"];
@@ -656,7 +712,8 @@
         <label class="row"><span class="row-label">Naam</span><input id="wName" type="text" placeholder="Aniket" autocomplete="name" value="${esc(settings.name)}"></label>
         <label class="row"><span class="row-label">Number</span><input id="wPhone" type="tel" placeholder="98XXXXXXXX" autocomplete="tel" value="${esc(settings.phone)}"></label>
       </div>
-      <button class="btn-primary" type="button" id="wGo">Shuru karo</button>`, (s, close) => {
+      <button class="btn-primary" type="button" id="wGo">Shuru karo</button>
+      <button class="btn-plain wide" type="button" id="wDemo">Pehle demo data se try karo</button>`, (s, close) => {
       const n = s.querySelector("#wName"), p = s.querySelector("#wPhone"), go = s.querySelector("#wGo");
       const check = () => { go.disabled = !(n.value.trim() && p.value.trim()); };
       n.addEventListener("input", check); p.addEventListener("input", check); check();
@@ -664,6 +721,11 @@
         settings.name = n.value.trim(); settings.phone = p.value.trim(); saveSettings(); fillSettings(); close();
         render(false);
         toast(`Namaste ${settings.name}!`, "check");
+      });
+      s.querySelector("#wDemo").addEventListener("click", () => {
+        if (n.value.trim()) settings.name = n.value.trim();
+        if (p.value.trim()) settings.phone = p.value.trim();
+        saveSettings(); fillSettings(); close(); startDemo();
       });
     });
   }
@@ -743,8 +805,10 @@
     $("clearAll").addEventListener("click", clearAll);
     $("navAction").addEventListener("click", () => actionSheet("Leads", [
       { label: "CSV export karo", icon: "download", run: exportCsv },
+      demoCount() ? { label: `Demo leads hatao (${demoCount()})`, icon: "x", run: removeDemo } : { label: "Demo data se try karo", icon: "star", run: startDemo },
       { label: "Saare leads mitao", icon: "trash", destructive: true, run: clearAll },
     ]));
+    $("demoBtn").addEventListener("click", startDemo);
 
     document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => showView(t.dataset.view)));
     let ticking = false;
@@ -752,6 +816,7 @@
 
     fillSettings();
     updateEstimate();
+    if (window.LF_PREVIEW && !Object.keys(leads).length) loadDemo();
     render(false);
     const startTab = store.get("lf_tab", "search");
     if (VIEWS.includes(startTab) && startTab !== "search") showView(startTab);
@@ -759,6 +824,6 @@
   }
 
   // test ke liye kuch functions bahar
-  window.LeadFinder = { parsePhones, classifySite, buildMessage: (l) => buildMessage(l), showView };
+  window.LeadFinder = { parsePhones, classifySite, buildMessage: (l) => buildMessage(l), showView, startDemo };
   init();
 })();

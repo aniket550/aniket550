@@ -19,6 +19,11 @@ Web developer ke liye client dhoondhne ka tool. Koi install nahi, koi server nah
           "Send" dabate ho        Status: Naya → Message gaya → Reply → Interested → Deal pakki
 ```
 
+## Test kaise karein
+
+1. **Bina API key (demo):** app kholo → "Pehle demo data se try karo". 10 sample restaurants aate hain. Demo lead ka WhatsApp button **aapke apne number** pe message kholta hai, taaki aap dekh sako restaurant ko kya jaayega.
+2. **Asli data:** Settings mein Google API key daalo → 1 shehar, sirf "Restaurant" → dhoondho (max 3 Google request). Pehla asli message apne kisi dost ke restaurant ya apne number pe bhej ke dekho.
+
 ## Chalao
 
 1. `lead-finder/index.html` ko Chrome mein kholo. (Phone pe chahiye to GitHub Pages on karo: repo **Settings → Pages → Branch** choose karo, phir `.../lead-finder/` kholo.)
