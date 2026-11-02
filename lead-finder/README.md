@@ -56,12 +56,24 @@ Tool jaan-boojh kar **auto-send nahi** karta. Har message aap khud Send dabate h
 - Message mein restaurant ka naam aata hai (copy-paste spam nahi lagta) aur "interest na ho to bata dijiye, dobara message nahi karunga" likha hai. Jo mana kare use **🚫 Mana kiya** mark karo aur dobara mat bhejo.
 - SMS se bulk promotion ke liye TRAI ke DLT rules lagte hain; WhatsApp/call ek-ek karke karna sabse safe hai.
 
+## Design (iOS jaisa)
+
+- **3 tab, floating glass tab bar** (Dhoondho · Leads · Settings). Chuna hua tab ek sliding pill se dikhta hai, jo halka sa uchhal ke (spring) chalta hai.
+- **Large title**: scroll karne pe bada title chhota ho jaata hai aur upar blur wali bar aa jaati hai.
+- **Grouped list**: form iOS Settings jaisa dikhta hai, aur Settings apne-aap save hoti hai (Save button nahi).
+- **Segmented control**: Google/OpenStreetMap aur Leads filter ka thumb slide hota hai.
+- **Search button** ke andar hi progress bharti hai, chamak (shimmer) ke saath.
+- **Leads**: Apple Fitness jaisa ring "aaj ke message / limit" dikhata hai. Numbers gin-te hue badhte hain. Har card par naam ke initials wala rangeen avatar hota hai, aur cards ek-ek karke upar aate hain.
+- **Dynamic Island jaisa toast**, **bottom sheet** (note, API key help, welcome), **iOS alert** aur **action sheet** (⋯ menu).
+- Light aur dark mode dono hain. Agar phone mein "Reduce motion" on hai to saari animation band ho jaati hai.
+
 ## Files
 
 ```
 lead-finder/
   index.html   page
-  styles.css   design (light + dark)
+  styles.css   iOS design tokens, light + dark, animations
   data.js      states, shehar, categories, social domains ki list
-  app.js       search (Google / OpenStreetMap), lead score, WhatsApp message, status, CSV export
+  app.js       search (Google / OpenStreetMap), lead score, WhatsApp message, status, CSV export,
+               tabs, sheets, alerts, toast, count-up animations
 ```

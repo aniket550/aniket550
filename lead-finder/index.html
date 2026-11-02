@@ -5,131 +5,177 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Lead Finder</title>
   <meta name="description" content="State choose karo, bina website wale restaurants dhoondho, aur ek tap mein WhatsApp pe apna offer bhejo.">
-  <meta name="theme-color" content="#0a7d4f">
+  <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="top">
-    <div>
-      <h1>Lead Finder</h1>
-      <p class="sub">Bina website wale restaurants → aapke clients</p>
-    </div>
-    <button class="ghost" id="openSettings" type="button">⚙️ Settings</button>
+  <!-- Upar wali bar: scroll karne pe chhota title aur blur dikhta hai (iOS jaisa) -->
+  <header class="nav" id="nav">
+    <span class="nav-title" id="navTitle">Dhoondho</span>
+    <button class="nav-btn" id="navAction" type="button" aria-label="Aur options" hidden></button>
   </header>
 
   <main>
-    <!-- 1. SEARCH -->
-    <section class="card" id="searchCard">
-      <h2><span class="step">1</span> Kahan dhoondhna hai?</h2>
+    <!-- ================= DHOONDHO ================= -->
+    <section class="view" id="view-search" data-title="Dhoondho">
+      <h1 class="large-title">Dhoondho</h1>
+      <p class="lede">Bina website wale restaurants, aapke agle clients.</p>
 
-      <label>State
-        <select id="state"></select>
-      </label>
-
-      <label>Shehar <small>(comma se alag; khaali chhodo = poora state, sirf OpenStreetMap mein)</small>
-        <input id="cities" type="text" placeholder="Patna, Gaya">
-      </label>
-
-      <fieldset>
-        <legend>Kya dhoondhna hai</legend>
-        <div class="chips" id="cats"></div>
-        <label class="inline">Aur kuch? <small>(sirf Google, jaise "salon, gym, clinic")</small>
-          <input id="customKw" type="text" placeholder="optional">
+      <div class="group-label">Jagah</div>
+      <div class="group">
+        <label class="row">
+          <span class="row-label">State</span>
+          <select id="state" class="row-select"></select>
+          <span class="chev" data-icon="chevron"></span>
         </label>
-      </fieldset>
-
-      <fieldset>
-        <legend>Data kahan se</legend>
-        <label class="radio"><input type="radio" name="src" value="google" checked>
-          <span><b>Google Maps</b> — sabse zyada restaurants + phone number. API key chahiye (Settings).</span></label>
-        <label class="radio"><input type="radio" name="src" value="osm">
-          <span><b>OpenStreetMap</b> — free, koi key nahi. Par India mein kam data, phone kam milte hain.</span></label>
-      </fieldset>
-
-      <p class="hint" id="estimate"></p>
-      <button class="primary" id="searchBtn" type="button">🔍 Restaurants dhoondho</button>
-      <div class="progress" id="progress" hidden>
-        <div class="bar"><div id="progressBar"></div></div>
-        <p id="progressText"></p>
+        <label class="row col">
+          <span class="row-cap">Shehar</span>
+          <input id="cities" type="text" placeholder="Patna, Gaya" autocomplete="off">
+        </label>
       </div>
+      <p class="group-foot">Comma se alag likho. Khaali chhodo to poora state (sirf OpenStreetMap mein).</p>
+
+      <div class="group-label">Kya dhoondhna hai</div>
+      <div class="group"><div class="chips" id="cats"></div></div>
+      <div class="group mt8">
+        <label class="row">
+          <span class="row-label">Aur kuch</span>
+          <input id="customKw" type="text" placeholder="salon, gym…" autocomplete="off">
+        </label>
+      </div>
+      <p class="group-foot">"Aur kuch" sirf Google Maps mein chalta hai. Restaurant ke alawa bhi clients mil sakte hain.</p>
+
+      <div class="group-label">Data kahan se</div>
+      <div class="segmented" id="srcSeg" role="radiogroup" aria-label="Data source"></div>
+      <p class="group-foot" id="srcFoot"></p>
+
+      <p class="estimate" id="estimate"></p>
+      <button class="btn-primary big" id="searchBtn" type="button">
+        <span class="btn-fill" id="progressBar"></span>
+        <span class="btn-label" id="searchLabel">Restaurants dhoondho</span>
+      </button>
+      <p class="search-status" id="progressText" aria-live="polite"></p>
     </section>
 
-    <!-- 2. LEADS -->
-    <section class="card" id="leadsCard">
-      <h2><span class="step">2</span> Aapke leads</h2>
-      <div class="stats" id="stats"></div>
+    <!-- ================= LEADS ================= -->
+    <section class="view" id="view-leads" data-title="Leads" hidden>
+      <h1 class="large-title">Leads</h1>
 
-      <div class="filters">
-        <select id="fType" aria-label="Website filter">
-          <option value="lead">Sirf leads (website nahi / sirf social)</option>
-          <option value="none">Website bilkul nahi</option>
-          <option value="social">Sirf Zomato/Instagram/FB</option>
-          <option value="all">Sab dikhao</option>
-        </select>
-        <select id="fStatus" aria-label="Status filter">
-          <option value="">Har status</option>
-        </select>
-        <select id="fPhone" aria-label="Phone filter">
-          <option value="wa">WhatsApp wala number</option>
-          <option value="any">Koi bhi number</option>
-          <option value="">Number ho ya na ho</option>
-        </select>
-        <select id="fSort" aria-label="Sort">
-          <option value="score">Best lead pehle</option>
-          <option value="reviews">Zyada reviews pehle</option>
-          <option value="name">Naam A-Z</option>
-        </select>
-        <input id="fText" type="search" placeholder="Naam / area / shehar se dhoondho">
+      <div class="today">
+        <svg class="ring" viewBox="0 0 72 72" aria-hidden="true">
+          <circle class="ring-track" cx="36" cy="36" r="30"/>
+          <circle class="ring-fill" id="ringFill" cx="36" cy="36" r="30"/>
+        </svg>
+        <div class="today-text">
+          <div class="today-cap">Aaj ke message</div>
+          <div class="today-num"><b id="todayNum" data-v="0">0</b><span id="todayLimit">/30</span></div>
+          <div class="today-sub" id="todaySub"></div>
+        </div>
       </div>
 
-      <div class="toolbar">
-        <span id="count"></span>
-        <span class="grow"></span>
-        <button class="ghost" id="exportCsv" type="button">⬇️ CSV</button>
-        <button class="ghost danger" id="clearAll" type="button">🗑️ Sab mitao</button>
+      <div class="tiles">
+        <div class="tile"><span class="tile-ic t-orange" data-icon="bolt"></span><b data-stat="hot">0</b><span>Bina website</span></div>
+        <div class="tile"><span class="tile-ic t-green" data-icon="chat"></span><b data-stat="wa">0</b><span>WhatsApp leads</span></div>
+        <div class="tile"><span class="tile-ic t-indigo" data-icon="reply"></span><b data-stat="replied">0</b><span>Reply / Interested</span></div>
+        <div class="tile"><span class="tile-ic t-blue" data-icon="star"></span><b data-stat="won">0</b><span>Deal pakki</span></div>
       </div>
 
+      <div class="searchfield">
+        <span data-icon="search"></span>
+        <input id="fText" type="search" placeholder="Naam, area ya shehar" autocomplete="off">
+      </div>
+      <div class="segmented small" id="typeSeg" role="radiogroup" aria-label="Website filter"></div>
+      <div class="pills">
+        <label class="pill"><span class="pill-text" id="fStatusText">Har status</span><span data-icon="down"></span>
+          <select id="fStatus" aria-label="Status filter"></select></label>
+        <label class="pill"><span class="pill-text" id="fPhoneText"></span><span data-icon="down"></span>
+          <select id="fPhone" aria-label="Phone filter">
+            <option value="wa">WhatsApp number</option>
+            <option value="any">Koi bhi number</option>
+            <option value="">Number ho ya na ho</option>
+          </select></label>
+        <label class="pill"><span class="pill-text" id="fSortText"></span><span data-icon="down"></span>
+          <select id="fSort" aria-label="Sort">
+            <option value="score">Best lead pehle</option>
+            <option value="reviews">Zyada reviews pehle</option>
+            <option value="name">Naam A–Z</option>
+          </select></label>
+      </div>
+
+      <div class="group-label" id="count"></div>
       <div id="list" class="list"></div>
-      <button class="ghost wide" id="more" type="button" hidden>Aur dikhao</button>
-      <p class="empty" id="empty">Abhi koi lead nahi. Upar state choose karke dhoondho.</p>
+      <button class="btn-tinted wide" id="more" type="button" hidden>Aur dikhao</button>
+      <div class="empty" id="empty" hidden></div>
+    </section>
+
+    <!-- ================= SETTINGS ================= -->
+    <section class="view" id="view-settings" data-title="Settings" hidden>
+      <h1 class="large-title">Settings</h1>
+
+      <div class="group-label">Aapki jankari</div>
+      <div class="group">
+        <label class="row"><span class="row-label">Naam</span><input id="sName" type="text" placeholder="Aniket" autocomplete="name"></label>
+        <label class="row"><span class="row-label">Number</span><input id="sPhone" type="tel" placeholder="98XXXXXXXX" autocomplete="tel"></label>
+        <label class="row"><span class="row-label">Portfolio</span><input id="sLink" type="url" placeholder="https://… (optional)"></label>
+      </div>
+      <p class="group-foot">Yeh har message mein jaata hai. Apne-aap save hota hai.</p>
+
+      <div class="group-label">Google Maps</div>
+      <div class="group">
+        <label class="row"><span class="row-label">API key</span><input id="sKey" type="password" placeholder="AIza…" autocomplete="off"></label>
+        <button class="row row-btn" id="keyHelp" type="button"><span class="row-label">API key kaise banayein</span><span class="chev" data-icon="chevron"></span></button>
+      </div>
+
+      <div class="group-label">Number ki suraksha</div>
+      <div class="group">
+        <div class="row">
+          <span class="row-label">Roz ki limit</span>
+          <span class="row-value" id="limitVal">30</span>
+          <span class="stepper">
+            <button type="button" id="limitDown" aria-label="Kam karo">−</button>
+            <button type="button" id="limitUp" aria-label="Badhao">+</button>
+          </span>
+        </div>
+      </div>
+      <p class="group-foot">WhatsApp ban se bachne ke liye. Naya number ho to 10–15 se shuru karo.</p>
+
+      <div class="group-label">Message</div>
+      <div class="group">
+        <textarea id="sMsg" rows="10" aria-label="Message template"></textarea>
+      </div>
+      <p class="group-foot">Yeh shabd apne-aap bhar jaate hain: {name} {city} {reason} {myName} {myPhone} {link}</p>
+      <div class="chat" aria-label="Message preview">
+        <div class="chat-cap">Preview · Sharma Dhaba</div>
+        <div class="bubble" id="preview"></div>
+      </div>
+      <div class="group mt8">
+        <button class="row row-btn tint" id="resetMsg" type="button">Default message wapas lao</button>
+      </div>
+
+      <div class="group-label">Data</div>
+      <div class="group">
+        <button class="row row-btn tint" id="exportCsv" type="button"><span data-icon="download"></span>CSV export karo</button>
+        <button class="row row-btn danger" id="clearAll" type="button"><span data-icon="trash"></span>Saare leads mitao</button>
+      </div>
+      <p class="group-foot">Saara data sirf is browser mein rehta hai. Kahin upload nahi hota.</p>
     </section>
   </main>
 
-  <!-- SETTINGS -->
-  <dialog id="settings">
-    <form method="dialog" class="settings">
-      <h2>Settings</h2>
-      <label>Aapka naam <input id="sName" type="text" placeholder="Aniket"></label>
-      <label>Aapka contact number <input id="sPhone" type="tel" placeholder="98XXXXXXXX"></label>
-      <label>Portfolio / demo link <small>(optional)</small> <input id="sLink" type="url" placeholder="https://..."></label>
-      <label>Google Maps API key <small>(Places API (New) on hona chahiye)</small>
-        <input id="sKey" type="password" autocomplete="off" placeholder="AIza...">
-      </label>
-      <details>
-        <summary>API key kaise milegi?</summary>
-        <ol>
-          <li><a href="https://console.cloud.google.com/" target="_blank" rel="noopener">console.cloud.google.com</a> kholo, naya project banao.</li>
-          <li>Billing account jodo (card lagta hai; har mahine kuch free quota milta hai).</li>
-          <li>"APIs &amp; Services → Library" mein <b>Places API (New)</b> enable karo.</li>
-          <li>"Credentials → Create credentials → API key". Key ko sirf Places API (New) tak restrict karo.</li>
-          <li>Billing → Budgets mein ₹500 ka budget alert lagao, taaki galti se kharcha na ho.</li>
-        </ol>
-      </details>
-      <label>Ek din mein kitne message <small>(WhatsApp ban se bachne ke liye)</small>
-        <input id="sLimit" type="number" min="1" max="200" value="30">
-      </label>
-      <label>Message <small>{name} {city} {reason} {myName} {myPhone} {link}</small>
-        <textarea id="sMsg" rows="11"></textarea>
-      </label>
-      <div class="row">
-        <button class="ghost" id="resetMsg" type="button">Default message</button>
-        <span class="grow"></span>
-        <button class="primary" value="save">Save</button>
-      </div>
-    </form>
-  </dialog>
+  <!-- Neeche wala floating tab bar -->
+  <nav class="tabbar" role="tablist" aria-label="Sections">
+    <span class="tab-indicator" aria-hidden="true"></span>
+    <button class="tab" role="tab" data-view="search" aria-selected="true"><span data-icon="search"></span><span>Dhoondho</span></button>
+    <button class="tab" role="tab" data-view="leads" aria-selected="false"><span data-icon="list"></span><span>Leads</span><span class="badge" id="tabBadge" hidden></span></button>
+    <button class="tab" role="tab" data-view="settings" aria-selected="false"><span data-icon="gear"></span><span>Settings</span></button>
+  </nav>
 
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="island" id="toast" role="status" aria-live="polite"></div>
 
   <script src="data.js"></script>
   <script src="app.js"></script>
