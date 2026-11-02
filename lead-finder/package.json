@@ -1,0 +1,25 @@
+{
+  "name": "lead-finder",
+  "productName": "Lead Finder",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Find local businesses without a website and message them on WhatsApp.",
+  "author": "Aniket",
+  "scripts": {
+    "build": "node scripts/build-www.js",
+    "android:sync": "npm run build && cap sync android",
+    "serve": "python3 -m http.server 8000"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.3",
+    "@capacitor/app": "8.1.2",
+    "@capacitor/app-launcher": "8.0.1",
+    "@capacitor/core": "8.5.3",
+    "@capacitor/filesystem": "8.1.4",
+    "@capacitor/haptics": "8.0.2",
+    "@capacitor/share": "8.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.3"
+  }
+}

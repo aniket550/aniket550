@@ -1,0 +1,139 @@
+name: Lead Finder
+
+# Builds the Android APK for lead-finder/, puts it on the "leadfinder-latest" release page,
+# and copies the web version to the gh-pages branch (https://aniket550.github.io/aniket550/lead-finder/).
+on:
+  push:
+    paths:
+      - "lead-finder/**"
+      - ".github/workflows/lead-finder.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: lead-finder-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: lead-finder
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: lead-finder/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Check the scripts parse
+        run: node --check app.js && node --check data.js
+      - run: npm ci
+      - run: npm run android:sync
+      # Without a signing secret the APK is a debug build. Its key is made once and kept in
+      # the cache, so new builds install as updates while the cache lives (7 days unused).
+      - uses: actions/cache@v4
+        with:
+          path: ~/.lf/debug.keystore
+          key: lf-debug-keystore-v1
+      - name: Make the debug key once
+        run: |
+          if [ ! -f ~/.lf/debug.keystore ]; then
+            mkdir -p ~/.lf
+            keytool -genkeypair -keystore ~/.lf/debug.keystore -storepass android -alias androiddebugkey \
+              -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          fi
+      - name: Build APK
+        working-directory: lead-finder/android
+        env:
+          LF_VERSION_CODE: ${{ github.run_number }}
+          KEYSTORE_B64: ${{ secrets.LF_KEYSTORE_B64 }}
+          LF_KEYSTORE_PASSWORD: ${{ secrets.LF_KEYSTORE_PASSWORD }}
+          LF_KEY_ALIAS: ${{ secrets.LF_KEY_ALIAS }}
+          LF_KEY_PASSWORD: ${{ secrets.LF_KEY_PASSWORD }}
+        run: |
+          chmod +x gradlew
+          mkdir -p ../dist
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/lf.keystore"
+            export LF_KEYSTORE="$RUNNER_TEMP/lf.keystore"
+            ./gradlew assembleRelease --no-daemon
+            cp app/build/outputs/apk/release/app-release.apk ../dist/LeadFinder.apk
+          else
+            echo "::notice::No LF_KEYSTORE_B64 secret, so this is a debug APK. It installs and works normally."
+            export LF_DEBUG_KEYSTORE="$HOME/.lf/debug.keystore"
+            ./gradlew assembleDebug --no-daemon
+            cp app/build/outputs/apk/debug/app-debug.apk ../dist/LeadFinder.apk
+          fi
+          ls -la ../dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LeadFinder-android
+          path: lead-finder/dist/LeadFinder.apk
+          if-no-files-found: error
+
+  release:
+    needs: android
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: LeadFinder-android
+          path: out
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: lead-finder/package.json
+          sparse-checkout-cone-mode: false
+          path: src
+      - name: Publish the leadfinder-latest release
+        working-directory: out
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          VERSION=$(node -p "require('../src/lead-finder/package.json').version")
+          gh release delete leadfinder-latest --cleanup-tag --yes || true
+          gh release create leadfinder-latest LeadFinder.apk \
+            --target "${{ github.sha }}" \
+            --prerelease \
+            --title "Lead Finder $VERSION" \
+            --notes "Version $VERSION, build ${{ github.run_number }} from ${{ github.ref_name }}.
+
+          On your Android phone, download LeadFinder.apk and open it. If Android asks, allow installs from your browser, then tap Install.
+
+          Web version: https://aniket550.github.io/aniket550/lead-finder/"
+
+  pages:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: src
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: site
+      - name: Copy the web app to gh-pages
+        working-directory: .
+        run: |
+          rm -rf site/lead-finder
+          mkdir -p site/lead-finder/fonts
+          cd src/lead-finder
+          cp index.html styles.css app.js data.js version.js icon.svg icon-180.png icon-512.png manifest.webmanifest ../../site/lead-finder/
+          cp fonts/inter-latin.woff2 ../../site/lead-finder/fonts/
+          cd ../../site
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then echo "Web version unchanged"; exit 0; fi
+          git commit -m "Lead Finder web version from ${GITHUB_SHA::7}"
+          git push origin gh-pages

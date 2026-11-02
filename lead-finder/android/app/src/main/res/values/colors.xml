@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The page background (light), shown behind the page and on the launch screen -->
+    <color name="lf_background">#F2F2F7</color>
+    <!-- The middle of the icon's green-to-blue gradient, behind the launch screen icon -->
+    <color name="lf_icon_bg">#1E9FAC</color>
+</resources>

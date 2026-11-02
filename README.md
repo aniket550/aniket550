@@ -50,6 +50,6 @@ App apne aap pehla adhoora din "aaj ka task" banata hai. Ek din poora hote hi ag
 
 ---
 
-## Lead Finder (alag tool)
+## Lead Finder (separate tool)
 
-Web development ke clients dhoondhne ke liye: state choose karo, bina website wale restaurants milte hain, aur ek tap mein WhatsApp pe offer bhejo. Dekho [`lead-finder/README.md`](lead-finder/README.md).
+Find restaurants, gyms and other local businesses without a website, message them on WhatsApp, follow up and track earnings. Web and Android app. See [`lead-finder/README.md`](lead-finder/README.md).

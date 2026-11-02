@@ -1,0 +1,11 @@
+{
+  "appId": "com.aniket.leadfinder",
+  "appName": "Lead Finder",
+  "webDir": "www",
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "disable",
+      "initialViewportFitValueHint": "cover"
+    }
+  }
+}

@@ -1,84 +1,82 @@
 # Lead Finder
 
-**State choose karo → restaurants mil jaate hain → jinki website nahi hai unhe ek tap mein WhatsApp pe apna offer bhejo.**
+Find local businesses that don't have a website, message them on WhatsApp in one tap, follow up, and track what you earn. Built for a freelance web developer looking for clients.
 
-Web developer ke liye client dhoondhne ka tool. Koi install nahi, koi server nahi. Saara data sirf aapke browser mein rehta hai.
+- **Web:** https://aniket550.github.io/aniket550/lead-finder/
+- **Android app:** https://github.com/aniket550/aniket550/releases/download/leadfinder-latest/LeadFinder.apk
 
-## Kaise kaam karta hai
+## How it works
 
 ```
- State + shehar          Google Maps / OpenStreetMap          Har jagah check
- ┌──────────────┐  ───▶  ┌──────────────────────────┐  ───▶  ┌─────────────────────────────┐
- │ Bihar        │        │ "restaurants in Patna"   │        │ website hai?                │
- │ Patna, Gaya  │        │  naam, phone, website,   │        │  ✗ nahi        → 🔥 HOT lead │
- └──────────────┘        │  rating, reviews         │        │  ~ sirf Zomato → 🟡 WARM     │
-                         └──────────────────────────┘        │  ✓ hai         → skip        │
-                                                             └──────────────┬──────────────┘
-                                                                            ▼
-          Aap ek-ek karke  ◀───  WhatsApp button (message pehle se likha hua, naam ke saath)
-          "Send" dabate ho        Status: Naya → Message gaya → Reply → Interested → Deal pakki
+ Find            Qualify              Message            Follow up           Close
+ ┌──────────┐    ┌───────────────┐    ┌─────────────┐    ┌──────────────┐    ┌──────────┐
+ │ Gyms in  │──▶ │ No website?   │──▶ │ WhatsApp,   │──▶ │ No reply in  │──▶ │ Won:     │
+ │ Patna    │    │ Score 0–100   │    │ ready pitch │    │ 3 days? Nudge│    │ ₹ earned │
+ └──────────┘    └───────────────┘    └─────────────┘    └──────────────┘    └──────────┘
+                                 Today tab shows what to do next
 ```
 
-## Test kaise karein
+| Tab | What it's for |
+|---|---|
+| **Today** | Messages sent today against your daily limit, money earned, reply rate, follow-ups due, the 5 best leads to message next, and your pipeline (found → messaged → replied → interested → won). |
+| **Find** | Pick a business type (Restaurants, Gyms, or your own words like "salon"), the kinds to include, a state and cities, then search Google Maps or OpenStreetMap. |
+| **Leads** | Every business found, best first. Filter by website, business type, status or phone. Tap a card for details, status, notes, deal amount and history. |
+| **Settings** | Your name, number and portfolio link; message language (English or Hinglish); the pitch for each business type; follow-up timing; daily limit; Google API key; CSV export. |
 
-1. **Bina API key (demo):** app kholo → "Pehle demo data se try karo". 10 sample restaurants aate hain. Demo lead ka WhatsApp button **aapke apne number** pe message kholta hai, taaki aap dekh sako restaurant ko kya jaayega.
-2. **Asli data:** Settings mein Google API key daalo → 1 shehar, sirf "Restaurant" → dhoondho (max 3 Google request). Pehla asli message apne kisi dost ke restaurant ya apne number pe bhej ke dekho.
+### Business types and their pitch
 
-## Chalao
+Each type has its own message, because owners care about different things:
 
-1. `lead-finder/index.html` ko Chrome mein kholo. (Phone pe chahiye to GitHub Pages on karo: repo **Settings → Pages → Branch** choose karo, phir `.../lead-finder/` kholo.)
-2. **Settings** mein apna naam, number, (optional) portfolio link daalo.
-3. State choose karo, "Restaurants dhoondho" dabao.
-4. List mein **WhatsApp** dabao → WhatsApp khulega, message tayyar hoga → **Send** dabao.
+- **Restaurants:** menu, photos, timings and direct orders without Zomato/Swiggy commission.
+- **Gyms:** showing up for "gym near me", membership plans, trainers, transformation photos and free-trial bookings.
+- **Other:** found on Google, services, prices and contact on WhatsApp.
 
-## Data kahan se
+Messages come in English or Hinglish and can be edited in Settings, with a WhatsApp-style preview.
 
-| | Google Maps (Places API) | OpenStreetMap |
+### Lead score (0–100)
+
+| Signal | Points | Why |
 |---|---|---|
-| Kitne restaurants | Bahut zyada | India mein kam |
-| Phone number | Zyadatar milta hai | Kabhi kabhi |
-| Key / kharcha | API key chahiye, har mahine free quota, uske baad paise | Free |
-| Ek search mein | Max 60 jagah (isliye har shehar alag search) | Poora state ek baar mein |
+| No website | 50 | They need one most |
+| Only an Instagram / Zomato / Facebook page | 35 | Online already, but no site of their own |
+| WhatsApp mobile number | 30 (landline 10) | You can reach the owner directly |
+| Number of reviews | up to 15 | A busy business can afford a website |
+| Rating 4 or more | 5 | A good business wants to show itself off |
 
-**Google API key:** console.cloud.google.com → naya project → billing jodo → **Places API (New)** enable → Credentials → API key. Key ko sirf Places API (New) tak restrict karo aur Billing → Budgets mein budget alert lagao.
+## Try it
 
-## Lead score (0-100)
+1. **Demo (no API key):** open the app and choose "Try with demo data". 12 made-up restaurants and gyms appear. Their WhatsApp button opens a chat with **your own number**, so you see exactly what a business would get.
+2. **Real businesses:** add a Google API key in Settings (the "How to get an API key" steps are in the app), search one city first, and send your first real message to 10–15 businesses.
 
-| Cheez | Points | Kyun |
-|---|---|---|
-| Website bilkul nahi | 50 | Sabse zyada zaroorat |
-| Sirf Zomato / Instagram / FB page | 35 | Online hain par apni site nahi; commission bachane ki baat samajhte hain |
-| WhatsApp wala mobile number | 30 | Seedha owner tak pahunch |
-| Zyada reviews | 0-15 | Chalti dukaan = paisa de sakti hai |
-| Rating 4+ | 5 | Achhi dukaan, apna naam dikhana chahegi |
+## Keep your WhatsApp number safe
 
-## WhatsApp ban se bacho (zaroori)
+The app never sends messages by itself; you tap Send in WhatsApp each time. WhatsApp bans numbers that message many strangers, so:
 
-Tool jaan-boojh kar **auto-send nahi** karta. Har message aap khud Send dabate ho. Wajah:
+- The daily limit is 30 by default (start with 10–15 on a new number).
+- Every message uses the business's name and ends with "If you're not interested, just tell me and I won't message again." Mark those businesses **Not interested** and don't message them again.
+- At most 2 follow-ups per business.
 
-- WhatsApp anjaan logon ko ek saath bahut message (bulk) bhejne wale number **ban** kar deta hai. Kai log "Block / Report" dabayenge to bhi ban.
-- Isliye default limit **30 message/din** hai (Settings mein badal sakte ho). Naya number ho to 10-15 se shuru karo.
-- Message mein restaurant ka naam aata hai (copy-paste spam nahi lagta) aur "interest na ho to bata dijiye, dobara message nahi karunga" likha hai. Jo mana kare use **🚫 Mana kiya** mark karo aur dobara mat bhejo.
-- SMS se bulk promotion ke liye TRAI ke DLT rules lagte hain; WhatsApp/call ek-ek karke karna sabse safe hai.
+## Google Maps API key
 
-## Design (iOS jaisa)
+Turn on **Places API (New)**, create an API key, restrict it to that API, cap Text Search at about 200 requests a day, and add a budget alert. Leave Application restrictions on None so one key works in the app and on the website. The key is stored only on your device.
 
-- **3 tab, floating glass tab bar** (Dhoondho · Leads · Settings). Chuna hua tab ek sliding pill se dikhta hai, jo halka sa uchhal ke (spring) chalta hai.
-- **Large title**: scroll karne pe bada title chhota ho jaata hai aur upar blur wali bar aa jaati hai.
-- **Grouped list**: form iOS Settings jaisa dikhta hai, aur Settings apne-aap save hoti hai (Save button nahi).
-- **Segmented control**: Google/OpenStreetMap aur Leads filter ka thumb slide hota hai.
-- **Search button** ke andar hi progress bharti hai, chamak (shimmer) ke saath.
-- **Leads**: Apple Fitness jaisa ring "aaj ke message / limit" dikhata hai. Numbers gin-te hue badhte hain. Har card par naam ke initials wala rangeen avatar hota hai, aur cards ek-ek karke upar aate hain.
-- **Dynamic Island jaisa toast**, **bottom sheet** (note, API key help, welcome), **iOS alert** aur **action sheet** (⋯ menu).
-- Light aur dark mode dono hain. Agar phone mein "Reduce motion" on hai to saari animation band ho jaati hai.
+## Development
 
-## Files
+The web app is plain HTML, CSS and JavaScript with no build step: open `index.html` or run `python3 -m http.server`.
 
 ```
 lead-finder/
-  index.html   page
-  styles.css   iOS design tokens, light + dark, animations
-  data.js      states, shehar, categories, social domains ki list
-  app.js       search (Google / OpenStreetMap), lead score, WhatsApp message, status, CSV export,
-               tabs, sheets, alerts, toast, count-up animations
+  index.html, styles.css    page and iOS-style design (light + dark)
+  app.js                    screens, search, scoring, messages, follow-ups, Android glue
+  data.js                   states and cities, business types, messages, demo leads
+  version.js                version shown in Settings
+  fonts/, icon*.png/svg     bundled Inter font and app icon
+  package.json              Capacitor (Android) dependencies; the version lives here too
+  capacitor.config.json     app id com.aniket.leadfinder
+  scripts/build-www.js      copies the web app into www/ with the Capacitor bundle
+  android/                  Android project (edge to edge, splash, icons, signing)
 ```
+
+**Android build:** GitHub Actions (`.github/workflows/lead-finder.yml`) runs on every push that changes `lead-finder/`. It builds the APK, publishes it on the `leadfinder-latest` release, and copies the web version to the `gh-pages` branch. To change the version, edit it in both `package.json` and `version.js`.
+
+**Signing:** without secrets, CI builds a debug APK signed with a key it keeps in its cache, so new builds install as updates while the cache lives (7 days unused). For a permanent key, add four repository secrets: `LF_KEYSTORE_B64` (the keystore, base64), `LF_KEYSTORE_PASSWORD`, `LF_KEY_ALIAS`, `LF_KEY_PASSWORD`. Never commit a keystore.
