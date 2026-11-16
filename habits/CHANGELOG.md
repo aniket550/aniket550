@@ -3,6 +3,10 @@
 Har update ke saath version badhta hai (`npm run bump`) aur yahan ek line judti hai.
 Version ka matlab: **1.2.3** → 1 = bada badlav, 2 = naya feature ya design, 3 = chhota sudhaar.
 
+## 1.9.1
+- Android ki signing ab pakki key se ho sakti hai: GitHub Secrets mein sirf 2 cheezein (ROZ_KEYSTORE_B64, ROZ_KEYSTORE_PASSWORD). Uske baad har APK hamesha purane ke upar seedha update hoga, chahe kitne bhi din baad build ho
+- Secret galat paste hua ho to build saaf bata deta hai ki kya galat hai
+
 ## 1.9.0
 - **Reminders:** har habit ka apna time (Edit habit → When → Remind me). Sirf usi din aata hai jab habit due ho aur abhi hui na ho. Android pe notification se hi **Done**, Mac pe bhi notification. Settings mein "Reminders on this phone/Mac" se is device pe band kar sakte ho
 - **Cue:** "After morning chai" jaisa if-then plan. Research mein habit banane ka sabse asardaar tareeka. Habit ke neeche aur reminder mein dikhta hai

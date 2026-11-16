@@ -1,7 +1,7 @@
 {
   "name": "habits",
   "productName": "Roj Habit",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "private": true,
   "description": "Roj Habit: a habit tracker for Android and Mac (iOS later)",
   "author": "Aniket",

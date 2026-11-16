@@ -34,11 +34,13 @@ android {
             }
         }
         if (keystore) {
+            // Two secrets are enough: the alias defaults to "rojhabit" and the key's password to the
+            // keystore's (how the key in the README is made).
             roz {
                 storeFile file(keystore)
                 storePassword System.getenv("ROZ_KEYSTORE_PASSWORD")
-                keyAlias System.getenv("ROZ_KEY_ALIAS")
-                keyPassword System.getenv("ROZ_KEY_PASSWORD")
+                keyAlias System.getenv("ROZ_KEY_ALIAS") ?: "rojhabit"
+                keyPassword System.getenv("ROZ_KEY_PASSWORD") ?: System.getenv("ROZ_KEYSTORE_PASSWORD")
             }
         }
     }

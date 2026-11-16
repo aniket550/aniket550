@@ -153,9 +153,14 @@ npm run android:sync  # phir Android Studio mein android/ kholo
 
 ### Android signing
 
-Har naya APK purane ke upar tabhi update hota hai jab dono **ek hi key** se sign hon. Key ek password jaisi cheez hai, isliye ye repo mein nahi rakhi jaati (repo public hai). Key GitHub Secrets mein rehti hai:
+Har naya APK purane ke upar tabhi update hota hai jab dono **ek hi key** se sign hon. Key password jaisi cheez hai, isliye repo mein kabhi nahi rakhi jaati (repo public hai). Ye **GitHub Secrets** mein rehti hai, aur sirf **2 secrets** chahiye:
 
-1. GitHub pe repo kholo → **Settings → Secrets and variables → Actions → New repository secret**
-2. Ye 4 secrets banao: `ROZ_KEYSTORE_B64` (keystore file, base64 mein), `ROZ_KEYSTORE_PASSWORD`, `ROZ_KEY_ALIAS`, `ROZ_KEY_PASSWORD`
+1. GitHub pe repo kholo → **Settings → Secrets and variables → Actions → New repository secret**.
+2. `ROZ_KEYSTORE_B64`: keystore file, base64 mein, ek hi line mein.
+3. `ROZ_KEYSTORE_PASSWORD`: keystore ka password.
 
-Jab tak secrets nahi hain, CI ek **debug APK** banata hai. Wo bhi theek se install aur kaam karta hai. Uski key CI pehli baar khud banata hai aur cache mein rakhta hai (`~/.roz/debug.keystore`), isliye updates tab tak chalte hain jab tak har 7 din mein kam se kam ek build hota rahe. Key badli to Android "App not installed" bolega. Tab pehle **backup export** karo, purana app hatao, naya install karo, aur backup import kar lo.
+(Chaaho to `ROZ_KEY_ALIAS` aur `ROZ_KEY_PASSWORD` bhi de sakte ho. Na do to alias `rojhabit` aur key ka password keystore wala hi maana jaata hai.)
+
+Nayi key aise banti hai: `keytool -genkeypair -keystore rojhabit-release.jks -storetype PKCS12 -alias rojhabit -keyalg RSA -keysize 2048 -validity 36500`, phir `base64 -w0 rojhabit-release.jks`. **Key ki ek copy kahin surakshit rakho.** Kho gayi to aage ke APK purane app ke upar install nahi honge.
+
+Jab tak secrets nahi hain, CI ek **debug APK** banata hai. Uski key CI ke cache mein rehti hai, aur GitHub 7 din bina build ke cache mita deta hai. Tab key badal jaati hai aur Android "App not installed" bolta hai. Aisa ho to pehle **backup export** karo (ya sync chalu rakho), purana app hatao, naya install karo, aur backup import karo.

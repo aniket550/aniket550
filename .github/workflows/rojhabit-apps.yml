@@ -76,8 +76,12 @@ jobs:
           chmod +x gradlew
           mkdir -p ../dist
           if [ -n "$KEYSTORE_B64" ]; then
-            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/roz.keystore"
+            # tolerate spaces or line breaks picked up when the secret was pasted
+            echo "$KEYSTORE_B64" | tr -d ' \n\r' | base64 -d > "$RUNNER_TEMP/roz.keystore"
             export ROZ_KEYSTORE="$RUNNER_TEMP/roz.keystore"
+            # a wrong password or a broken paste fails here, with a clear message
+            keytool -list -keystore "$ROZ_KEYSTORE" -storepass "$ROZ_KEYSTORE_PASSWORD" | grep -i -m1 "entry" \
+              || { echo "::error::ROZ_KEYSTORE_B64 or ROZ_KEYSTORE_PASSWORD is wrong. See habits/README.md, Android signing."; exit 1; }
             ./gradlew assembleRelease --no-daemon
             cp app/build/outputs/apk/release/app-release.apk ../dist/RojHabit-android.apk
           else
