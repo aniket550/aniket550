@@ -1265,8 +1265,12 @@
   }
 
   let toastTimer;
+  // The message shortens with "…" when it is long (a long habit name), so a button such as Undo
+  // always stays whole and inside the toast.
   function toast(html, ms) {
-    ui.toast = { html: html, fresh: true };
+    const at = html.indexOf("<button");
+    const text = at < 0 ? html : html.slice(0, at), button = at < 0 ? "" : html.slice(at);
+    ui.toast = { html: '<span class="toast-text">' + text + "</span>" + button, fresh: true };
     render();
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => { ui.toast = null; ui.undo = null; render(); }, ms || 2200);
@@ -1361,7 +1365,7 @@
     if (!data.habits.length) ui.editMode = false;
     Store.save(data);
     haptic("medium");
-    toast("Deleted " + esc(h.name) + '<button class="toast-btn" data-action="undo">Undo</button>', 5000);
+    toast("Deleted “" + esc(h.name) + "”" + '<button class="toast-btn" data-action="undo">Undo</button>', 5000);
   }
   function undoDelete() {
     const u = ui.undo;

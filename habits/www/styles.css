@@ -774,7 +774,9 @@ html.scrolled .brand-row {
 .toast:has(.toast-btn) { padding-right: 7px; }
 .toast.enter { animation: toast-in 0.4s var(--spring); }
 @keyframes toast-in { from { opacity: 0; transform: translate(-50%, 16px) scale(0.95); } }
-.toast-btn { height: 32px; padding: 0 14px; margin-left: 6px; border-radius: 16px; background: color-mix(in srgb, var(--on-ink) 16%, transparent); color: var(--marigold); font-size: 14px; font-weight: 700; }
+.toast-text { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.toast-text svg { vertical-align: -3px; margin-right: 4px; }
+.toast-btn { flex-shrink: 0; height: 32px; padding: 0 14px; margin-left: 6px; border-radius: 16px; background: color-mix(in srgb, var(--on-ink) 16%, transparent); color: var(--marigold); font-size: 14px; font-weight: 700; }
 html.wide .toast { bottom: 28px; }
 
 .celebrate {

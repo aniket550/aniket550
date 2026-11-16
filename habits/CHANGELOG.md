@@ -3,6 +3,9 @@
 Har update ke saath version badhta hai (`npm run bump`) aur yahan ek line judti hai.
 Version ka matlab: **1.2.3** → 1 = bada badlav, 2 = naya feature ya design, 3 = chhota sudhaar.
 
+## 1.8.1
+- Lamba habit naam delete karne pe "Undo" button toast se bahar nikal ke kat jaata tha. Ab naam "…" se chhota hota hai aur Undo hamesha poora dikhta hai. Baaki saare toast (Added, Saved, Synced) bhi aise hi
+
 ## 1.8.0
 - Habit ko dabaa ke rakhne pe ab uska text select nahi hota (Copy / Select all wala menu band). Likhne wale box mein text pehle jaisa select hota hai
 - Dark mode naya: background aur gehra kaala, cards thode upar uthe hue aur kinaron pe halki roshni ki line, grey text zyada saaf
