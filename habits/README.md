@@ -12,10 +12,17 @@ Roz ki habits tick karo. Home page pe aaj ka ring batata hai ki din kahan khada 
 | Tick karna | Habit ke right wala gola dabao, ya habit ko **right swipe** karo |
 | Undo | Habit ko **left swipe** karo |
 | Ginti wali habit (jaise 8 glass paani) | Right wala gola dabane par +1 hota hai, aur moti (●●●○○) bharte jaate hain |
-| Edit / Delete | Habit ko **dabaa ke rakho** (Mac: right-click). Ya **Habits** tab → **Edit** → lal ⊖ dabao |
+| Edit / Skip / Archive / Delete | Habit ko **dabaa ke rakho** (Mac: right-click). Ya **Habits** tab → **Edit** → lal ⊖ dabao |
 | Galti se delete ho gaya | Neeche aane wale **Undo** button ko dabao (5 second tak rehta hai) |
 | Sirf aaj ya kal ka kaam | Nayi habit → **Repeat** mein **Today** ya **Tomorrow**. Ye ek hi din dikhta hai, dobara nahi aata |
 | Kuch hi din (jaise Weekdays) | **Repeat → Every day**, phir neeche jo din nahi chahiye un pe tap karke band karo |
+| Reminder | **Edit habit → When → Remind me**, time chuno. Usi din aata hai jab habit due ho aur abhi hui na ho. Notification pe **Done** dabao to wahin tick |
+| Cue (kis ke baad) | **Edit habit → When**: "After morning chai". Habit ke neeche aur reminder mein dikhta hai |
+| Skip (beemar / safar) | Habit dabaa ke rakho → **Skip today**. Streak nahi tootti, aaj ki ginti se bahar |
+| Ek din chhoot gaya? | Streak nahi tootti ("never miss twice"). Do din lagatar chhootne pe tootti hai. Us din habit pe likha aata hai "don't miss twice" |
+| Buri aadat chhodna | Nayi habit → **Quit a habit**, jaise "No smoking". Today pe "11 days clean" dikhta hai. Slip ho jaye to **I slipped**: ginti phir se, best record bacha rehta hai |
+| Archive (rok do) | Habit dabaa ke rakho → **Archive**. Today se hat jaati hai, history bachi rehti hai. **Habits** ke neeche "Archived and finished" se **Bring back** |
+| Order badalna | **Habits → Edit**, phir card ko ⋮⋮ se kheencho (Mac pe poora card) |
 | Pichhla din theek karna | Upar hafte ki strip se din chuno, ya habit ke calendar mein us din pe tap karo |
 
 ## Widgets
@@ -139,6 +146,8 @@ npm run android:sync  # phir Android Studio mein android/ kholo
 - Schedule ke 4 tarah: roz (`daily`), kuch din (`days`), hafte mein X baar (`weekly`, ab sirf purani habits mein), aur ek din ka kaam (`once`, Today/Tomorrow).
 - Streak mein **schedule se bahar ke din skip** hote hain. Som/Budh/Shukra wali habit Mangalwar ko nahi tootti.
 - **Adhoora aaj streak nahi todta**, kyunki din abhi khatam nahi hua.
+- **Never miss twice:** ek chhoota din streak nahi todta (bas ginti nahi badhti), lagatar doosra chhoota din todta hai. Skip kiya din aise gina jaata hai jaise us din habit thi hi nahi.
+- Quit habit kabhi "due" nahi hoti. Clean din = aakhri slip (ya shuruaat) ke baad ke poore din.
 - "Hafte mein X baar" wali habit ki streak **hafton** mein ginti hai.
 - % mein habit banne se pehle ke din nahi gine jaate.
 

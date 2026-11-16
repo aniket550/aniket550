@@ -6,6 +6,10 @@
     "SystemBars": {
       "insetsHandling": "disable",
       "initialViewportFitValueHint": "cover"
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_roj",
+      "iconColor": "#E8962E"
     }
   }
 }

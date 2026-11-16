@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld("rozDesktop", {
   setSync: (on) => ipcRenderer.invoke("sync-set", on),
   newSyncCode: () => ipcRenderer.invoke("sync-newcode"),
   widgetSnapshot: (snap) => ipcRenderer.send("widget-snapshot", snap),
+  setReminders: (plan) => ipcRenderer.send("set-reminders", plan),
   macVersion: process.platform === "darwin" && process.getSystemVersion ? process.getSystemVersion() : ""
 });
 

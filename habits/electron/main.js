@@ -1,6 +1,6 @@
 // Roj Habit for Mac: the main window, the menu bar panel, the desktop widget, sync with the
 // phone and the app menu.
-const { app, BrowserWindow, Menu, Tray, ipcMain, dialog, nativeImage, nativeTheme, protocol, net, screen, shell } = require("electron");
+const { app, BrowserWindow, Menu, Notification, Tray, ipcMain, dialog, nativeImage, nativeTheme, protocol, net, screen, shell } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const http = require("http");
@@ -387,6 +387,25 @@ ipcMain.on("set-theme", (ev, theme) => {
 ipcMain.on("open-main", () => {
   if (trayWin) trayWin.hide();
   showMain();
+});
+
+// Reminders: the app sends the next week's plan (www/app.js reminderPlan) after every change; the
+// main process keeps a timer for each and shows a notification. Clicking it opens the app.
+let reminderTimers = [];
+ipcMain.on("set-reminders", (ev, plan) => {
+  reminderTimers.forEach(clearTimeout);
+  reminderTimers = [];
+  if (!Array.isArray(plan) || !Notification.isSupported()) return;
+  const now = Date.now();
+  plan.slice(0, 60).forEach((r) => {
+    const wait = Number(r.at) - now;
+    if (!(wait > 0) || wait > 8 * 24 * 3600 * 1000) return;
+    reminderTimers.push(setTimeout(() => {
+      const n = new Notification({ title: String(r.title || "Roj Habit").slice(0, 80), body: String(r.body || "").slice(0, 160) });
+      n.on("click", showMain);
+      n.show();
+    }, wait));
+  });
 });
 
 ipcMain.on("widget-snapshot", (ev, snap) => {

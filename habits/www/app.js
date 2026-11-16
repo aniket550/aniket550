@@ -44,6 +44,13 @@
     { name: "No phone in bed", icon: "phone-off", color: "rose", time: "evening", target: 1, unit: "" },
     { name: "Journal", icon: "notebook-pen", color: "sage", time: "evening", target: 1, unit: "" }
   ];
+  const QUIT_SUGGESTIONS = [
+    { name: "No smoking", icon: "cigarette-off", color: "slate" },
+    { name: "No alcohol", icon: "wine-off", color: "rose" },
+    { name: "No phone in bed", icon: "phone-off", color: "iris" },
+    { name: "No junk food", icon: "salad", color: "sage" },
+    { name: "No sugar", icon: "apple", color: "clay" }
+  ];
   const DOW_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0]; // Monday first
 
@@ -76,6 +83,11 @@
     sparkle: (s) => svg('<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.7 1.8 1.8.7-1.8.7L19 21l-.7-1.8-1.8-.7 1.8-.7z"/>', s),
     clock: (s) => svg('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>', s),
     target: (s) => svg('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/>', s),
+    skip: (s) => svg('<path d="M5 12h9M11 7l5 5-5 5M19 5v14"/>', s),
+    archive: (s) => svg('<rect x="3.5" y="4" width="17" height="5" rx="1.6"/><path d="M5.5 9v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V9M10 13h4"/>', s),
+    bell: (s) => svg('<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>', s),
+    shield: (s) => svg('<path d="M12 3.5l7 3v5c0 4.5-3 8-7 9.5-4-1.5-7-5-7-9.5v-5z"/><path d="M9 12l2.2 2.2L15.5 10"/>', s),
+    drag: (s) => svg('<path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01"/>', s, ' stroke-width="3.2"'),
     sync: (s) => svg('<path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4"/>', s),
     widget: (s) => svg('<rect x="3.5" y="3.5" width="17" height="10" rx="3"/><rect x="3.5" y="16" width="7.5" height="4.5" rx="2"/><rect x="13" y="16" width="7.5" height="4.5" rx="2"/>', s),
     open: (s) => svg('<path d="M14 4h6v6M20 4l-8.5 8.5M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/>', s)
@@ -101,6 +113,10 @@
   // How full the day's ring is: count habits add their share, so 1 of 13 glasses already shows.
   const ringFill = (st) => (st.total ? Math.round((st.items.reduce((a, it) => a + it.frac, 0) / st.total) * 100) : 0);
   const habitById = (id) => data.habits.find((h) => h.id === id);
+  // Finished with: archived, or a one-off whose day has passed. They keep their history.
+  const retired = (h) => !!h.archivedOn || (h.schedule.type === "once" && h.schedule.date < todayKey());
+  const building = () => data.habits.filter((h) => h.kind !== "quit" && !retired(h));
+  const quitting = () => data.habits.filter((h) => h.kind === "quit" && !h.archivedOn);
   const colorOf = (h) => (COLORS.find((c) => c.id === h.color) || COLORS[0]).hex;
   const uid = () => "h" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   const wideQuery = window.matchMedia("(min-width: 900px)");
@@ -155,6 +171,7 @@
       const raw = JSON.stringify(state);
       if (!quiet) queueSync();
       pushWidgetSnapshot();
+      scheduleReminders();
       if (native) capacitorPreferences.Preferences.set({ key: STORE_KEY, value: raw }).then(() => homeWidget && homeWidget.refresh()).catch(() => {});
       else try { localStorage.setItem(STORE_KEY, raw); } catch (e) { /* private mode: keep going in memory */ }
     }
@@ -212,9 +229,11 @@
       return it;
     });
   }
+  // Skipped habits stay in the list (to take the skip back) but out of the day's count and ring.
   function dayStats(key) {
-    const items = itemsFor(key);
-    return { items: items, done: items.filter((i) => i.satisfied).length, total: items.length };
+    const all = itemsFor(key);
+    const items = all.filter((i) => !i.skipped);
+    return { items: items, skipped: all.filter((i) => i.skipped), done: items.filter((i) => i.satisfied).length, total: items.length };
   }
   function rangeStats(from, to) {
     let done = 0, due = 0;
@@ -270,10 +289,14 @@
 
   function rowSub(it) {
     const h = it.habit, s = h.schedule;
+    if (it.skipped) return "Skipped" + (ui.day === todayKey() ? " today" : "") + " · streak kept";
     if (h.target > 1) return beads(it.count, h.target) + '<span class="num">' + it.count + "/" + h.target + "</span> " + esc(h.unit || "times");
     if (s.type === "weekly") return (it.weekDone >= s.times ? "Week done · " : "") + it.weekDone + " of " + s.times + " this week";
     const st = C.streak(data, h, todayKey());
+    // One missed day keeps the streak; say so before it becomes two.
+    if (st.atRisk && !it.done && ui.day === todayKey()) return '<span class="at-risk">' + ICON.flame(12) + plural(st.current, "day") + " · don't miss twice</span>";
     if (st.current >= 2) return '<span class="flame">' + ICON.flame(12) + "</span>" + plural(st.current, "day");
+    if (h.cue) return esc(h.cue);
     return scheduleText(h);
   }
 
@@ -284,10 +307,12 @@
     const cls = ["habit-row"];
     if (it.done) cls.push("done");
     else if (it.satisfied) cls.push("met");
+    if (it.skipped) cls.push("skipped");
     if (ui.flash === h.id) cls.push("pop");
     if (n === 0 && ui.tipRow && !isWide()) cls.push("demo");
     const label = counter ? "Add one to " + h.name : (it.done ? "Mark " + h.name + " not done" : "Mark " + h.name + " done");
-    const check = '<button class="check' + (counter && !it.done ? " counter" : "") + '" data-action="toggle" data-id="' + h.id + '" aria-label="' + esc(label) + '"' + (future ? " disabled" : "") + ">" +
+    const check = it.skipped ? '<button class="check skip" data-action="unskip" data-id="' + h.id + '" aria-label="' + esc("Undo skip: " + h.name) + '">' + ICON.skip(15) + "</button>" :
+      '<button class="check' + (counter && !it.done ? " counter" : "") + '" data-action="toggle" data-id="' + h.id + '" aria-label="' + esc(label) + '"' + (future ? " disabled" : "") + ">" +
       (counter && !it.done ? miniRing(it.frac, 32, "var(--c)", 3) + '<b class="num">' + it.count + "</b>" : ICON.check(15)) + "</button>";
     return '<div class="' + cls.join(" ") + '" style="--c:' + colorOf(h) + ";--i:" + (n || 0) + '" data-id="' + h.id + '">' +
       '<div class="swipe-hint left">' + ICON.check(18) + '</div><div class="swipe-hint right">' + ICON.minus(18) + "</div>" +
@@ -298,19 +323,36 @@
 
   function listView(st) {
     if (!data.habits.length) return emptyState();
-    if (!st.total) return '<div class="empty-note">Nothing planned for this day.</div>';
+    if (!st.total && !st.skipped.length) return quitting().length ? "" : '<div class="empty-note">Nothing planned for this day.</div>';
     // First visit: explain the gestures and act them out on the first row.
     ui.tipRow = !data.settings.swipeTip && ui.day === todayKey() && !compact;
     let n = 0;
     const groups = TIMES.map((t) => {
       const items = st.items.filter((i) => i.habit.time === t.id);
-      if (!items.length) return "";
+      const skipped = st.skipped.filter((i) => i.habit.time === t.id);
+      if (!items.length && !skipped.length) return "";
       const done = items.filter((i) => i.satisfied).length;
       return '<section class="time-group"><header class="group-head"><span class="gh-title">' + ICON[t.icon](14) + t.label + "</span>" +
-        '<span class="gh-count num' + (done === items.length ? " all" : "") + '">' + done + "/" + items.length + "</span></header>" +
-        '<div class="rows">' + items.map((it) => habitRow(it, n++)).join("") + "</div></section>";
+        (items.length ? '<span class="gh-count num' + (done === items.length ? " all" : "") + '">' + done + "/" + items.length + "</span>" : "") + "</header>" +
+        '<div class="rows">' + items.concat(skipped).map((it) => habitRow(it, n++)).join("") + "</div></section>";
     }).join("");
     return (ui.tipRow ? swipeTip() : "") + '<div class="habit-list' + (ui.enter ? " stagger" : "") + '">' + groups + "</div>";
+  }
+
+  // Habits being quit: days clean, best run, and "I slipped" to start the count again.
+  function quitSection() {
+    const list = quitting();
+    if (!list.length || ui.day !== todayKey()) return "";
+    const today = todayKey();
+    return '<section class="time-group quit-group"><header class="group-head"><span class="gh-title">' + ICON.shield(14) + "Quitting</span></header><div class=\"rows\">" +
+      list.map((h) => {
+        const c = C.cleanDays(data, h, today);
+        return '<div class="quit-card" style="--c:' + colorOf(h) + '" data-id="' + h.id + '"><span class="row-icon" aria-hidden="true">' + habitIcon(h, 21) + "</span>" +
+          '<button class="row-main" data-action="open" data-id="' + h.id + '"><span class="row-title">' + esc(h.name) + '</span><span class="row-sub">' +
+          (c.lastSlip === today ? "Slipped today. Tomorrow is day one." : c.best > c.current ? "Best " + plural(c.best, "day") : c.current ? "Your best run yet" : "Day one starts now") + "</span></button>" +
+          '<span class="quit-count"><b class="num">' + c.current + "</b><small>" + (c.current === 1 ? "day" : "days") + " clean</small></span>" +
+          '<button class="quit-slip" data-action="slip" data-id="' + h.id + '">I slipped</button></div>';
+      }).join("") + "</div></section>";
   }
 
   function swipeTip() {
@@ -384,7 +426,7 @@
     return st.done / st.total >= 0.5 ? "More than halfway. Keep it rolling." : "Good start. One more?";
   }
   function bestStreak() {
-    return data.habits.map((h) => ({ h: h, s: C.streak(data, h, todayKey()) })).filter((x) => x.s.current >= 2).sort((a, b) => b.s.current - a.s.current)[0];
+    return building().map((h) => ({ h: h, s: C.streak(data, h, todayKey()) })).filter((x) => x.s.current >= 2).sort((a, b) => b.s.current - a.s.current)[0];
   }
   function momentumCard(st, isToday) {
     const best = bestStreak();
@@ -413,7 +455,7 @@
       html += '<div class="sec-head"><h2 class="sec-title">Your habits</h2><span class="sec-tools"><span class="kicker">' + plural(st.total, "habit") + "</span>" + viewToggle(18) + "</span></div>";
     }
     html += ui.view === "grid" ? gridView() : listView(st);
-    return html;
+    return html + quitSection();
   }
 
   // Mac Today: greeting and ring side by side, the week, then the habits with widget cards beside them.
@@ -427,7 +469,7 @@
     html += weekStrip();
     if (!data.habits.length) return html + listView(st);
     html += '<div class="desk-cols"><div class="desk-main"><div class="sec-head"><h2 class="sec-title">Your habits</h2><span class="sec-tools"><span class="kicker">' + plural(st.total, "habit") + "</span>" + viewToggle(18) + "</span></div>" +
-      (ui.view === "grid" ? gridView() : listView(st)) + "</div>" +
+      (ui.view === "grid" ? gridView() : listView(st)) + quitSection() + "</div>" +
       '<aside class="desk-side" aria-label="Widgets">' + (isToday ? nextCard(st) : "") + streakCard() + weekCard() + "</aside></div>";
     return html;
   }
@@ -452,7 +494,7 @@
   }
   function streakCard() {
     const today = todayKey();
-    const top = data.habits.map((h) => ({ h: h, s: C.streak(data, h, today) })).filter((x) => x.s.current > 0).sort((a, b) => b.s.current - a.s.current).slice(0, 4);
+    const top = building().map((h) => ({ h: h, s: C.streak(data, h, today) })).filter((x) => x.s.current > 0).sort((a, b) => b.s.current - a.s.current).slice(0, 4);
     return '<section class="widget"><p class="w-cap"><span class="flame">' + ICON.flame(13) + "</span>Streaks</p>" + (top.length ? '<div class="w-streaks">' + top.map((x) =>
       '<button class="w-streak" data-action="open" data-id="' + x.h.id + '" style="--c:' + colorOf(x.h) + '"><span class="w-ico">' + habitIcon(x.h, 16) + '</span><span class="w-name">' + esc(x.h.name) + '</span><b class="num">' + x.s.current + "</b><small>" + (x.s.unit === "week" ? "wk" : "d") + "</small></button>").join("") + "</div>" :
       '<p class="w-sub">Check off a habit two days running to start a streak.</p>') + "</section>";
@@ -551,7 +593,7 @@
     const out = [];
     const from = C.addDays(today, -29);
     // Longest running streak
-    const st = data.habits.map((h) => ({ h: h, s: C.streak(data, h, today) })).sort((a, b) => b.s.current - a.s.current)[0];
+    const st = building().map((h) => ({ h: h, s: C.streak(data, h, today) })).sort((a, b) => b.s.current - a.s.current)[0];
     if (st && st.s.current >= 3) {
       out.push({ icon: ICON.flame(18), tint: colorOf(st.h), title: "On a roll",
         text: "<b>" + esc(st.h.name) + "</b> is on a " + plural(st.s.current, st.s.unit) + " streak" + (st.s.current >= st.s.best ? ", your best yet." : ". Your best is " + st.s.best + ".") });
@@ -585,7 +627,7 @@
         viz: '<span class="tod">' + times.map((x) => '<span><i style="width:' + x.v + '%"></i><em>' + x.t.label[0] + "</em></span>").join("") + "</span>" });
     }
     // Needs attention
-    const weak = data.habits.map((h) => ({ h: h, r: C.rate(data, h, from, today) })).filter((x) => x.r.pct != null && x.r.due >= 4 && x.r.pct < 60).sort((a, b) => a.r.pct - b.r.pct)[0];
+    const weak = building().map((h) => ({ h: h, r: C.rate(data, h, from, today) })).filter((x) => x.r.pct != null && x.r.due >= 4 && x.r.pct < 60).sort((a, b) => a.r.pct - b.r.pct)[0];
     if (weak) {
       out.push({ icon: ICON.target(18), tint: colorOf(weak.h), title: "Needs a little care",
         text: "<b>" + esc(weak.h.name) + "</b> happened " + weak.r.pct + "% of the time this month. Try a smaller version of it, or fewer days a week." });
@@ -632,7 +674,7 @@
     html += '<section class="card month-dots-card"><div class="card-head"><h2>' + fmt(today, { month: "long" }) + '</h2><span class="caption">Each day, all habits</span></div><div class="md-grid">' + monthDots(today) + "</div></section>";
 
     const from = ui.period === "week" ? C.weekStart(today) : ui.period === "month" ? C.addDays(today, -29) : C.addDays(today, -364);
-    const rows = data.habits.map((h) => ({ h: h, r: C.rate(data, h, from, today), s: C.streak(data, h, today) }))
+    const rows = building().map((h) => ({ h: h, r: C.rate(data, h, from, today), s: C.streak(data, h, today) }))
       .sort((a, b) => (b.r.pct == null ? -1 : b.r.pct) - (a.r.pct == null ? -1 : a.r.pct));
     html += '<section class="card by-card"><div class="card-head"><h2>By habit</h2><span class="caption">This ' + P.name + '</span></div><div class="by-habit">' + rows.map(byHabitRow).join("") + "</div></section>";
     return html;
@@ -663,6 +705,7 @@
   // ---------- Habits ----------
   function habitCard(h) {
     const today = todayKey();
+    if (h.kind === "quit") return quitCard(h);
     const st = C.streak(data, h, today);
     const start = C.weekStart(today);
     let dots = "";
@@ -672,23 +715,48 @@
       const done = C.countOn(data, h.id, k) >= h.target;
       dots += '<i class="' + (done ? "on" : sched && k <= today ? "due" : k > today ? "later" : "off") + '"></i>';
     }
-    return '<div class="habit-card' + (ui.editMode ? " wiggle" : "") + '" style="--c:' + colorOf(h) + '" data-id="' + h.id + '">' +
-      (ui.editMode ? '<button class="del-badge" data-action="delete" data-id="' + h.id + '" aria-label="Delete ' + esc(h.name) + '">' + ICON.minus(14) + "</button>" : "") +
+    return '<div class="habit-card' + (ui.editMode ? " wiggle" : "") + (ui.dragId === h.id ? " lifted" : "") + '" style="--c:' + colorOf(h) + '" data-id="' + h.id + '">' +
+      (ui.editMode ? '<button class="del-badge" data-action="delete" data-id="' + h.id + '" aria-label="Delete ' + esc(h.name) + '">' + ICON.minus(14) + '</button><span class="drag-handle" aria-hidden="true">' + ICON.drag(16) + "</span>" : "") +
       '<button class="hc-main" data-action="' + (ui.editMode ? "edit" : "open") + '" data-id="' + h.id + '">' +
       '<span class="hc-top"><span class="hc-icon">' + habitIcon(h, 23) + "</span>" + (st.current ? '<span class="hc-streak num"><span class="flame">' + ICON.flame(12) + "</span>" + st.current + "</span>" : "") + "</span>" +
       '<span class="hc-name">' + esc(h.name) + '</span><span class="hc-sched">' + scheduleText(h) + (goalText(h) ? " · " + esc(goalText(h)) : "") + "</span>" +
       '<span class="hc-week">' + dots + "</span></button></div>";
   }
 
+  function quitCard(h) {
+    const today = todayKey(), c = C.cleanDays(data, h, today), start = C.weekStart(today);
+    let dots = "";
+    for (let i = 0; i < 7; i++) {
+      const k = C.addDays(start, i);
+      dots += '<i class="' + (k > today || k < h.created ? "later" : C.countOn(data, h.id, k) ? "slip" : "on") + '"></i>';
+    }
+    return '<div class="habit-card quit' + (ui.editMode ? " wiggle" : "") + (ui.dragId === h.id ? " lifted" : "") + '" style="--c:' + colorOf(h) + '" data-id="' + h.id + '">' +
+      (ui.editMode ? '<button class="del-badge" data-action="delete" data-id="' + h.id + '" aria-label="Delete ' + esc(h.name) + '">' + ICON.minus(14) + '</button><span class="drag-handle" aria-hidden="true">' + ICON.drag(16) + "</span>" : "") +
+      '<button class="hc-main" data-action="' + (ui.editMode ? "edit" : "open") + '" data-id="' + h.id + '">' +
+      '<span class="hc-top"><span class="hc-icon">' + habitIcon(h, 23) + '</span><span class="hc-streak num">' + ICON.shield(12) + c.current + "</span></span>" +
+      '<span class="hc-name">' + esc(h.name) + '</span><span class="hc-sched">Quitting · ' + plural(c.current, "day") + " clean</span>" +
+      '<span class="hc-week">' + dots + "</span></button></div>";
+  }
+
   function habitsScreen() {
     const today = todayKey();
     const st = dayStats(today);
-    let html = '<header class="screen-head"><div><p class="eyebrow">' + plural(data.habits.length, "habit") + (st.total ? " · " + st.done + " done today" : "") + '</p><h1 class="large-title">Habits</h1></div>' +
-      (data.habits.length ? '<div class="head-tools"><button class="text-btn' + (ui.editMode ? " strong" : "") + '" data-action="edit-mode">' + (ui.editMode ? "Done" : "Edit") + "</button></div>" : "") + "</header>";
+    const active = data.habits.filter((h) => !retired(h));
+    const past = data.habits.filter(retired);
+    let html = '<header class="screen-head"><div><p class="eyebrow">' + plural(active.length, "habit") + (st.total ? " · " + st.done + " done today" : "") + '</p><h1 class="large-title">Habits</h1></div>' +
+      (active.length ? '<div class="head-tools"><button class="text-btn' + (ui.editMode ? " strong" : "") + '" data-action="edit-mode">' + (ui.editMode ? "Done" : "Edit") + "</button></div>" : "") + "</header>";
     if (!data.habits.length) return html + emptyState();
-    if (ui.editMode) html += '<p class="edit-note">Tap ⊖ to delete a habit, or tap a card to change it.</p>';
-    html += '<div class="habit-grid">' + data.habits.map(habitCard).join("") +
+    if (ui.editMode) html += '<p class="edit-note">Drag a card to change the order. Tap ⊖ to delete, or tap a card to change it.</p>';
+    html += '<div class="habit-grid' + (ui.editMode ? " sorting" : "") + '">' + active.map(habitCard).join("") +
       '<button class="habit-card add-card" data-action="add">' + ICON.plus(22) + "<span>New habit</span></button></div>";
+    if (past.length) {
+      html += '<section class="archive"><button class="archive-head" data-action="archive-open" aria-expanded="' + !!ui.archiveOpen + '">' + ICON.archive(17) +
+        "<span>Archived and finished</span><b class=\"num\">" + past.length + "</b>" + (ui.archiveOpen ? ICON.down(15) : ICON.right(15)) + "</button>" +
+        (ui.archiveOpen ? '<div class="list card">' + past.map((h) => '<div class="list-row archived" style="--c:' + colorOf(h) + '"><span class="tile soft">' + habitIcon(h, 18) + "</span>" +
+          '<button class="lr-text" data-action="open" data-id="' + h.id + '"><span class="lr-title">' + esc(h.name) + '</span><span class="lr-sub">' +
+          (h.archivedOn ? "Archived " + fmt(h.archivedOn, { day: "numeric", month: "short" }) : (C.isDone(data, h, h.schedule.date) ? "Done " : "Was due ") + fmt(h.schedule.date, { day: "numeric", month: "short" })) + "</span></button>" +
+          (h.archivedOn ? '<button class="text-btn" data-action="unarchive" data-id="' + h.id + '">Bring back</button>' : "") + "</div>").join("") + "</div>" : "") + "</section>";
+    }
     return html;
   }
 
@@ -699,7 +767,7 @@
     const where = desktop ? "this Mac" : native ? "this phone" : "this browser";
     return '<header class="screen-head"><div><h1 class="large-title">Settings</h1></div></header>' +
       '<section class="settings-group"><p class="caption">Appearance</p><div class="segmented" role="group" aria-label="Theme">' + seg("system", "System") + seg("light", "Light") + seg("dark", "Dark") + "</div></section>" +
-      widgetSettings() + syncSettings() +
+      widgetSettings() + reminderSettings() + syncSettings() +
       '<section class="settings-group"><p class="caption">Your data</p><div class="list card">' +
       '<button class="list-row" data-action="export"><span class="tile" style="--c:#3F82CC">' + ICON.upload(18) + '</span><span class="lr-text"><span class="lr-title">Export backup</span><span class="lr-sub">Save all habits and history as a file</span></span></button>' +
       '<button class="list-row" data-action="import"><span class="tile" style="--c:#4F8C63">' + ICON.download(18) + '</span><span class="lr-text"><span class="lr-title">Import backup</span><span class="lr-sub">Replace everything with a backup file</span></span></button>' +
@@ -708,6 +776,17 @@
       '<button class="list-row danger" data-action="reset"><span class="tile" style="--c:#C2413B">' + ICON.trash(18) + '</span><span class="lr-text"><span class="lr-title">Erase everything</span><span class="lr-sub">Delete all habits and history</span></span></button>' +
       '</div><p class="footnote">Your habits are stored only on ' + where + (pair || (ui.syncInfo && ui.syncInfo.on) ? " and the devices it syncs with." : ". Export a backup to move them to another device.") + "</p></section>" +
       '<section class="about">' + brandMark(40) + "<p><b>" + APP_NAME + '</b> · version ' + esc(window.ROJ_VERSION || "") + '</p><p class="muted small">Small habits, every single day.</p></section>';
+  }
+
+  // Reminders are set per habit (Edit habit → When). This switch is for this device only, so a
+  // phone and a Mac that sync need not both ring.
+  function reminderSettings() {
+    if (!notify && !(desktop && desktop.setReminders)) return "";
+    const n = building().filter((h) => h.reminder).length;
+    return '<section class="settings-group"><p class="caption">Reminders</p><div class="list card"><button class="list-row" data-action="remind-here" role="switch" aria-checked="' + remindHere() + '">' +
+      '<span class="tile" style="--c:#E8962E">' + ICON.bell(18) + '</span><span class="lr-text"><span class="lr-title">Reminders on this ' + (desktop ? "Mac" : "phone") + '</span><span class="lr-sub">' +
+      (n ? plural(n, "habit") + " with a reminder. Set one in Edit habit → When" : "None yet. Add one in Edit habit → When") + "</span></span>" +
+      '<span class="switch' + (remindHere() ? " on" : "") + '"><i></i></span></button></div></section>';
   }
 
   // Android: put the widget on the home screen. Mac: how to add the widget, and the floating card.
@@ -755,6 +834,78 @@
       }
     }
     return body ? '<section class="settings-group"><p class="caption">Sync</p>' + body + "</section>" : "";
+  }
+
+  // ---------- reminders ----------
+  // Each habit with a reminder gets one notification per due day for the next week, at its time,
+  // skipping days already done or skipped, so a reminder never nags about something finished.
+  // Android: the LocalNotifications plugin. Mac: the main process (electron/main.js) shows them.
+  // Recomputed after every save, on opening and when the day turns. "Reminders on this device"
+  // in Settings can turn them off here without touching the other devices.
+  const notify = native && window.capacitorLocalNotifications ? capacitorLocalNotifications.LocalNotifications : null;
+  let remindTimer = null, notifyReady = false;
+  const remindHere = () => data.settings.remind !== false;
+  function reminderPlan() {
+    const out = [], now = Date.now(), today = todayKey();
+    if (!remindHere()) return out;
+    building().forEach((h, hi) => {
+      if (!/^\d\d:\d\d$/.test(h.reminder || "")) return;
+      const [hh, mm] = h.reminder.split(":").map(Number);
+      for (let i = 0; i < 7; i++) {
+        const k = C.addDays(today, i);
+        if (!C.isScheduled(h, k) || C.isDone(data, h, k) || C.isSkipped(data, h.id, k)) continue;
+        if (h.schedule.type === "weekly" && C.weekDoneDays(data, h, C.weekStart(k)) >= h.schedule.times) continue;
+        const at = C.parseKey(k);
+        at.setHours(hh, mm, 0, 0);
+        if (at.getTime() <= now) continue;
+        // ids: a day number and the habit's place, stable within the week
+        out.push({ id: (C.daysBetween("2026-01-01", k) % 1000) * 1000 + (hi % 1000), at: at.getTime(), habit: h.id, day: k,
+          title: h.name, body: h.cue ? h.cue + (h.target > 1 ? " · " + h.target + " " + (h.unit || "times") : "") : h.target > 1 ? "Goal: " + h.target + " " + (h.unit || "times") : "Time for this one" });
+      }
+    });
+    return out.sort((a, b) => a.at - b.at).slice(0, 60);
+  }
+  function scheduleReminders() {
+    if (!notify && !(desktop && desktop.setReminders)) return;
+    clearTimeout(remindTimer);
+    remindTimer = setTimeout(async () => {
+      const plan = reminderPlan();
+      if (desktop && desktop.setReminders) { if (!trayMode && !widgetMode) desktop.setReminders(plan); return; }
+      try {
+        await notifySetup();
+        const pending = await notify.getPending();
+        if (pending.notifications.length) await notify.cancel({ notifications: pending.notifications.map((n) => ({ id: n.id })) });
+        if (!plan.length) return;
+        const perm = await notify.checkPermissions();
+        if (perm.display !== "granted") return;
+        await notify.schedule({ notifications: plan.map((r) => ({ id: r.id, title: r.title, body: r.body, schedule: { at: new Date(r.at), allowWhileIdle: true },
+          actionTypeId: "HABIT", extra: { habit: r.habit, day: r.day } })) });
+      } catch (e) { /* a reminder is a nicety: never let it break the app */ }
+    }, 800);
+  }
+  // A "Done" button on the notification, and opening the app on a tap.
+  async function notifySetup() {
+    if (!notify || notifyReady) return;
+    notifyReady = true;
+    await notify.registerActionTypes({ types: [{ id: "HABIT", actions: [{ id: "done", title: "Done" }] }] }).catch(() => {});
+    notify.addListener("localNotificationActionPerformed", (ev) => {
+      const extra = (ev.notification && ev.notification.extra) || {};
+      const h = habitById(extra.habit);
+      ui.tab = "today"; ui.day = todayKey(); ui.detail = null; ui.sheet = null;
+      if (ev.actionId === "done" && h && extra.day === todayKey() && !C.isDone(data, h, extra.day)) {
+        bump(h, extra.day, h.target > 1 ? 1 : 1 - C.countOn(data, h.id, extra.day));
+      } else render();
+    });
+  }
+  async function askNotifyPermission() {
+    if (!notify) return;
+    try {
+      const p = await notify.checkPermissions();
+      if (p.display !== "granted") {
+        const r = await notify.requestPermissions();
+        if (r.display !== "granted") toast("Allow notifications for " + APP_NAME + " in Android settings to get reminders", 4200);
+      }
+    } catch (e) { /* ignore */ }
   }
 
   // ---------- sync (same Wi-Fi) ----------
@@ -826,6 +977,7 @@
 
   // ---------- detail ----------
   function detailView(h) {
+    if (h.kind === "quit") return quitDetail(h);
     const today = todayKey();
     const st = C.streak(data, h, today);
     const r30 = C.rate(data, h, C.addDays(today, -29), today);
@@ -836,7 +988,9 @@
       '<button class="nav-btn" data-action="edit" data-id="' + h.id + '">' + ICON.pencil(17) + "Edit</button></div>";
     html += '<section class="detail-hero"><div class="hero-top"><span class="hero-icon">' + habitIcon(h, 26) + '</span><span class="hero-sched">' + scheduleText(h) + (goalText(h) ? " · " + esc(goalText(h)) : "") + "</span></div>" +
       "<h2>" + esc(h.name) + '</h2><p class="hero-since">Since ' + fmt(h.created, { day: "numeric", month: "long", year: "numeric" }) + "</p>" +
+      (h.reminder || h.cue ? '<p class="hero-when">' + (h.reminder ? ICON.bell(14) + esc(h.reminder) : "") + (h.reminder && h.cue ? " · " : "") + esc(h.cue || "") + "</p>" : "") +
       '<p class="hero-streak"><b class="num">' + st.current + "</b><span>" + (st.unit === "week" ? (st.current === 1 ? "week" : "weeks") : (st.current === 1 ? "day" : "days")) + " in a row</span></p></section>";
+    if (retired(h)) html += archivedNote(h);
     if (h.target > 1 && C.isScheduled(h, ui.day) && ui.day <= today) {
       html += '<section class="card counter-card"><button class="round-btn" data-action="dec" data-id="' + h.id + '" aria-label="Remove one"' + (count ? "" : " disabled") + ">" + ICON.minus(20) + "</button>" +
         '<div class="counter-mid"><b class="num">' + count + "<span> / " + h.target + "</span></b>" + beads(count, h.target) + "<span>" + esc(h.unit || "times") + " · " + (ui.day === today ? "today" : fmt(ui.day, { day: "numeric", month: "short" })) + "</span></div>" +
@@ -847,6 +1001,33 @@
     html += ui.mode === "month" ? monthCard(h) : yearCard(h);
     html += '<button class="btn ghost-danger" data-action="delete" data-id="' + h.id + '">' + ICON.trash(18) + "Delete habit</button>";
     html += "</div>";
+    return html;
+  }
+
+  function archivedNote(h) {
+    return '<div class="archived-note">' + ICON.archive(18) + "<p>" + (h.archivedOn ? "Archived on " + fmt(h.archivedOn, { day: "numeric", month: "long" }) + ". It is not on Today, and its history stays here." :
+      "A one-off for " + fmt(h.schedule.date, { day: "numeric", month: "long" }) + ". That day has passed.") + "</p>" +
+      (h.archivedOn ? '<button class="text-btn" data-action="unarchive" data-id="' + h.id + '">Bring back</button>' : "") + "</div>";
+  }
+
+  // A habit being quit: clean days, the best run, and the slips so far.
+  function quitDetail(h) {
+    const today = todayKey(), c = C.cleanDays(data, h, today);
+    const slips = Object.keys(data.log).filter((k) => C.countOn(data, h.id, k) > 0).sort().reverse();
+    let html = '<div class="detail" style="--c:' + colorOf(h) + '">';
+    html += '<div class="detail-bar"><button class="nav-btn" data-action="close-detail">' + ICON.left(20) + (isWide() ? "Close" : "Back") + "</button>" +
+      '<button class="nav-btn" data-action="edit" data-id="' + h.id + '">' + ICON.pencil(17) + "Edit</button></div>";
+    html += '<section class="detail-hero"><div class="hero-top"><span class="hero-icon">' + habitIcon(h, 26) + '</span><span class="hero-sched">Quitting</span></div>' +
+      "<h2>" + esc(h.name) + '</h2><p class="hero-since">Since ' + fmt(h.created, { day: "numeric", month: "long", year: "numeric" }) + "</p>" +
+      '<p class="hero-streak"><b class="num">' + c.current + "</b><span>" + (c.current === 1 ? "day" : "days") + " clean</span></p></section>";
+    if (h.archivedOn) html += archivedNote(h);
+    html += '<div class="stat-tiles"><div class="card"><b class="num">' + c.best + '</b><span>Best run</span></div><div class="card"><b class="num">' + c.slips +
+      '</b><span>Slips</span></div><div class="card"><b class="num">' + (C.daysBetween(h.created, today) + 1) + "</b><span>Days tracked</span></div></div>";
+    if (!h.archivedOn) html += '<button class="btn secondary" data-action="slip" data-id="' + h.id + '">I slipped today</button>';
+    html += '<section class="card slip-card"><div class="card-head"><h2>Slips</h2><span class="caption">' + (slips.length ? "Most recent first" : "None so far") + "</span></div>" +
+      (slips.length ? '<div class="slip-list">' + slips.slice(0, 12).map((k) => "<span>" + fmt(k, { weekday: "short", day: "numeric", month: "short" }) + "</span>").join("") + "</div>" :
+        '<p class="muted small">Every day here is a clean day. Keep going.</p>') + "</section>";
+    html += '<button class="btn ghost-danger" data-action="delete" data-id="' + h.id + '">' + ICON.trash(18) + "Delete habit</button></div>";
     return html;
   }
 
@@ -911,11 +1092,12 @@
   function newDraft() {
     const used = data.habits.map((h) => h.color);
     const color = (COLORS.find((c) => used.indexOf(c.id) === -1) || COLORS[data.habits.length % COLORS.length]).id;
-    return { name: "", icon: "sprout", color: color, time: "anytime", schedule: { type: "daily", days: [1, 2, 3, 4, 5], times: 3, date: todayKey() }, target: 1, unit: "" };
+    return { name: "", icon: "sprout", color: color, time: "anytime", schedule: { type: "daily", days: [1, 2, 3, 4, 5], times: 3, date: todayKey() }, target: 1, unit: "", kind: "build", reminder: "", cue: "" };
   }
   function draftFrom(h) {
     const s = h.schedule;
     return { id: h.id, name: h.name, icon: h.icon, emoji: h.emoji, color: h.color, time: h.time, unit: h.unit, target: h.target,
+      kind: h.kind || "build", reminder: h.reminder || "", cue: h.cue || "",
       // a schedule the editor no longer offers (a weekly goal, a one-off on another day) keeps a button of its own
       kept: s.type === "weekly" || (s.type === "once" && s.date !== todayKey() && s.date !== C.addDays(todayKey(), 1)) ? JSON.parse(JSON.stringify(s)) : null,
       schedule: { type: s.type === "days" && s.days.length === 7 ? "daily" : s.type, days: (s.days || [1, 2, 3, 4, 5]).slice(), times: s.times || 3, date: s.date || todayKey() } };
@@ -938,17 +1120,33 @@
   function editorSheet(d) {
     const c = (COLORS.find((x) => x.id === d.color) || COLORS[0]).hex;
     const s = d.schedule;
+    const quit = d.kind === "quit";
     let html = '<div class="sheet-bar"><button class="nav-btn" data-action="close-sheet">Cancel</button><h2>' + (d.id ? "Edit habit" : "New habit") + '</h2><button class="nav-btn strong" data-action="save" id="save-btn"' + (d.name.trim() ? "" : " disabled") + ">" + (d.id ? "Save" : "Add") + "</button></div>";
     html += '<div class="sheet-body" data-scroll="sheet" style="--c:' + c + '">';
-    html += '<div class="editor-hero"><span class="hero-tile">' + habitIcon(d, 28) + '</span><input id="habit-name" class="name-input" type="text" maxlength="40" placeholder="What will you do?" value="' + esc(d.name) + '" autocomplete="off" aria-label="Habit name"></div>';
+    // Build something, or quit something: decides everything below.
+    html += '<div class="segmented kind" role="group" aria-label="Kind of habit">' +
+      '<button class="seg-btn' + (quit ? "" : " on") + '" data-action="kind" data-v="build" aria-pressed="' + !quit + '">' + ICON.sparkle(15) + "Build a habit</button>" +
+      '<button class="seg-btn' + (quit ? " on" : "") + '" data-action="kind" data-v="quit" aria-pressed="' + quit + '">' + ICON.shield(15) + "Quit a habit</button></div>";
+    html += '<div class="editor-hero"><span class="hero-tile">' + habitIcon(d, 28) + '</span><input id="habit-name" class="name-input" type="text" maxlength="40" placeholder="' + (quit ? "What will you stop?" : "What will you do?") + '" value="' + esc(d.name) + '" autocomplete="off" aria-label="Habit name"></div>';
     if (!d.id) {
       const have = data.habits.map((h) => h.name.toLowerCase());
-      const sugg = SUGGESTIONS.filter((x) => have.indexOf(x.name.toLowerCase()) === -1);
-      if (sugg.length) html += '<div class="suggest" role="group" aria-label="Suggestions">' + sugg.map((x, i) => '<button class="chip" data-action="suggest" data-v="' + SUGGESTIONS.indexOf(x) + '">' + iconSvg(x.icon, 16) + esc(x.name) + "</button>").join("") + "</div>";
+      const list = quit ? QUIT_SUGGESTIONS : SUGGESTIONS;
+      const sugg = list.filter((x) => have.indexOf(x.name.toLowerCase()) === -1);
+      if (sugg.length) html += '<div class="suggest" role="group" aria-label="Suggestions">' + sugg.map((x) => '<button class="chip" data-action="suggest" data-v="' + list.indexOf(x) + '">' + iconSvg(x.icon, 16) + esc(x.name) + "</button>").join("") + "</div>";
     }
+    if (quit) html += '<div class="once-note">' + ICON.shield(18) + "<p><b>Count the days you stay clear of it.</b> If you slip, tap <b>I slipped</b> on Today: the count starts again and your best run stays.</p></div>";
     html += '<p class="caption">Icon</p><div class="icon-grid">' + ICONS.map((n) => '<button class="icon-pick' + (n === d.icon ? " on" : "") + '" data-action="icon" data-v="' + n + '" aria-label="Icon ' + n.replace(/-/g, " ") + '">' + iconSvg(n, 22) + "</button>").join("") + "</div>";
     html += '<p class="caption">Colour</p><div class="color-row">' + COLORS.map((x) => '<button class="swatch' + (x.id === d.color ? " on" : "") + '" style="--s:' + x.hex + '" data-action="color" data-v="' + x.id + '" aria-label="Colour ' + x.id + '"></button>').join("") + "</div>";
-    html += '<p class="caption">Time of day</p><div class="segmented four">' + TIMES.map((t) => '<button class="seg-btn' + (d.time === t.id ? " on" : "") + '" data-action="time" data-v="' + t.id + '">' + ICON[t.icon](16) + "<span>" + t.label + "</span></button>").join("") + "</div>";
+    if (!quit) html += '<p class="caption">Time of day</p><div class="segmented four">' + TIMES.map((t) => '<button class="seg-btn' + (d.time === t.id ? " on" : "") + '" data-action="time" data-v="' + t.id + '">' + ICON[t.icon](16) + "<span>" + t.label + "</span></button>").join("") + "</div>";
+    if (!quit) html += repeatAndGoal(d) + reminderSection(d);
+    if (d.id) html += '<button class="btn ghost-danger" data-action="delete" data-id="' + d.id + '">' + ICON.trash(18) + "Delete habit</button>";
+    html += "</div>";
+    return html;
+  }
+  // Repeat (Every day / Today / Tomorrow, or a kept older schedule) and the daily goal.
+  function repeatAndGoal(d) {
+    const s = d.schedule;
+    let html = "";
     const choice = repeatChoice(s);
     const choices = [["repeat", repeatLabel(s.type === "daily" || s.type === "days" ? s : { type: "daily" })], ["today", "Today"], ["tomorrow", "Tomorrow"]];
     if (d.kept) choices.push(["kept", d.kept.type === "weekly" ? d.kept.times + "× a week" : fmt(d.kept.date, { day: "numeric", month: "short" })]);
@@ -965,9 +1163,17 @@
     }
     html += '<p class="caption">' + (s.type === "once" ? "Goal" : "Daily goal") + '</p><div class="stepper-row card"><span>' + (d.target > 1 ? "Count up to" : s.type === "once" ? "Do it once" : "Once a day") + "</span>" + stepper("target", d.target) + "</div>";
     if (d.target > 1) html += '<input id="habit-unit" class="unit-input" type="text" maxlength="16" placeholder="Unit, like glasses or pages" value="' + esc(d.unit) + '" aria-label="Unit">';
-    if (d.id) html += '<button class="btn ghost-danger" data-action="delete" data-id="' + d.id + '">' + ICON.trash(18) + "Delete habit</button>";
-    html += "</div>";
     return html;
+  }
+  // When: a cue tied to something already done (an if-then plan, the best-supported way to make a
+  // habit stick), and a reminder at a set time on the days it is due.
+  function reminderSection(d) {
+    return '<p class="caption">When</p><input id="habit-cue" class="unit-input" type="text" maxlength="40" placeholder="Cue, like: After morning chai" value="' + esc(d.cue) + '" aria-label="Cue">' +
+      '<p class="repeat-note">Tie it to something you already do every day. It helps more than willpower.</p>' +
+      '<div class="stepper-row card reminder-row"><span class="rem-label">' + ICON.bell(18) + "Remind me</span>" +
+      (d.reminder ? '<input id="habit-remind" class="time-input" type="time" value="' + esc(d.reminder) + '" aria-label="Reminder time">' : "") +
+      '<button class="switch-btn" data-action="rem-toggle" role="switch" aria-checked="' + !!d.reminder + '" aria-label="Reminder"><span class="switch' + (d.reminder ? " on" : "") + '"><i></i></span></button></div>' +
+      (d.reminder ? '<p class="repeat-note">On the days it is due, unless it is already done.</p>' : "");
   }
   function stepper(field, v) {
     return '<span class="stepper"><button data-action="step" data-f="' + field + '" data-d="-1" aria-label="Less"' + (v <= 1 ? " disabled" : "") + ">" + ICON.minus(16) + '</button><b class="num">' + v + '</b><button data-action="step" data-f="' + field + '" data-d="1" aria-label="More"' + (v >= (field === "times" ? 7 : 99) ? " disabled" : "") + ">" + ICON.plus(16) + "</button></span>";
@@ -977,11 +1183,16 @@
   function menuView(m) {
     const h = habitById(m.id);
     if (!h) return "";
+    const day = ui.tab === "today" ? ui.day : todayKey();
+    const canSkip = h.kind !== "quit" && C.isScheduled(h, day) && !C.isDone(data, h, day) && day <= todayKey();
+    const skipped = C.isSkipped(data, h.id, day);
     const items = '<button class="menu-item" data-action="menu-edit">' + ICON.pencil(18) + "Edit habit</button>" +
+      (canSkip ? '<button class="menu-item" data-action="menu-skip">' + ICON.skip(18) + (skipped ? "Undo skip" : day === todayKey() ? "Skip today" : "Skip this day") + "</button>" : "") +
       '<button class="menu-item" data-action="menu-open">' + ICON.history(18) + "See history</button>" +
+      '<button class="menu-item" data-action="menu-archive">' + ICON.archive(18) + (h.archivedOn ? "Bring back" : "Archive") + "</button>" +
       '<button class="menu-item danger" data-action="menu-delete">' + ICON.trash(18) + "Delete habit</button>";
     if (isWide()) {
-      const x = Math.min(m.x, window.innerWidth - 240), y = Math.min(m.y, window.innerHeight - 170);
+      const x = Math.min(m.x, window.innerWidth - 240), y = Math.min(m.y, window.innerHeight - (canSkip ? 260 : 220));
       return '<div class="scrim clear" data-action="menu-close"></div><div class="popover" role="menu" style="left:' + x + "px;top:" + y + 'px">' + items + "</div>";
     }
     return '<div class="scrim enter" data-action="menu-close"></div><div class="action-sheet" role="menu" style="--c:' + colorOf(h) + '">' +
@@ -1023,7 +1234,7 @@
     const today = todayKey();
     return '<nav class="sidebar" aria-label="Sections"><div class="side-brand">' + brandMark(24) + "<b>" + APP_NAME + "</b></div>" +
       TABS.map((t) => '<button class="side-item' + (ui.tab === t[0] ? " on" : "") + '" data-action="tab" data-v="' + t[0] + '">' + ICON[t[0]](18) + "<span>" + t[1] + "</span></button>").join("") +
-      '<p class="side-caption">Today</p><div class="side-habits">' + data.habits.map((h) => {
+      '<p class="side-caption">Today</p><div class="side-habits">' + building().map((h) => {
         const st = C.streak(data, h, today);
         const due = C.isScheduled(h, today);
         const done = due && C.isDone(data, h, today);
@@ -1337,7 +1548,11 @@
       d.schedule.type === "weekly" ? { type: "weekly", times: d.schedule.times } :
       d.schedule.type === "once" ? { type: "once", date: d.schedule.date } : { type: "daily" };
     if (schedule.type === "days" && !schedule.days.length) { toast("Pick at least one day"); return; }
-    const fields = { name: name, icon: d.icon, color: d.color, time: d.time, schedule: schedule, target: d.target, unit: d.target > 1 ? d.unit.trim() : "", updated: Date.now() };
+    const quit = d.kind === "quit";
+    const fields = quit ? { name: name, icon: d.icon, color: d.color, time: "anytime", schedule: { type: "daily" }, target: 1, unit: "", kind: "quit", reminder: "", cue: "", updated: Date.now() } :
+      { name: name, icon: d.icon, color: d.color, time: d.time, schedule: schedule, target: d.target, unit: d.target > 1 ? d.unit.trim() : "", kind: "build",
+        reminder: /^\d\d:\d\d$/.test(d.reminder) ? d.reminder : "", cue: d.cue.trim(), updated: Date.now() };
+    if (fields.reminder) askNotifyPermission();
     const isNew = !d.id;
     if (d.id) Object.assign(habitById(d.id), fields);
     else {
@@ -1381,6 +1596,16 @@
   }
 
   function askConfirm(cf) { ui.confirm = cf; render(); }
+
+  // Archive: the habit stops being due from today and moves to the archive, history kept.
+  function setArchived(h, on) {
+    if (on) h.archivedOn = todayKey(); else delete h.archivedOn;
+    h.updated = Date.now();
+    if (ui.detail === h.id && on && !isWide()) ui.detail = null;
+    haptic("light");
+    commit();
+    toast(on ? "Archived “" + esc(h.name) + "”" + '<button class="toast-btn" data-action="unarchive" data-id="' + h.id + '">Undo</button>' : "“" + esc(h.name) + "” is back", on ? 4000 : 2200);
+  }
 
   // Replace everything (import, examples, erase) so that sync carries it to the other devices:
   // habits that go away get deletion notes, and the new ones count as just edited.
@@ -1478,15 +1703,32 @@
       case "close-sheet": ui.sheet = null; render(); break;
       case "save": saveDraft(); break;
       case "suggest": {
-        const s = SUGGESTIONS[+el.dataset.v], d = ui.sheet.draft;
+        const d = ui.sheet.draft;
+        if (d.kind === "quit") {
+          const q = QUIT_SUGGESTIONS[+el.dataset.v];
+          Object.assign(d, { name: q.name, icon: q.icon, color: q.color });
+          haptic("light"); render(); break;
+        }
+        const s = SUGGESTIONS[+el.dataset.v];
         Object.assign(d, { name: s.name, icon: s.icon, color: s.color, time: s.time, target: s.target, unit: s.unit });
-        d.schedule.type = s.weekly ? "weekly" : "daily";
-        if (s.weekly) d.schedule.times = s.weekly;
+        // "3 times a week" is Mon, Wed and Fri now that Repeat has no Weekly
+        d.schedule.type = s.weekly ? "days" : "daily";
+        if (s.weekly) d.schedule.days = [1, 3, 5];
         haptic("light"); render(); break;
       }
       case "icon": ui.sheet.draft.icon = el.dataset.v; render(); break;
       case "color": ui.sheet.draft.color = el.dataset.v; render(); break;
       case "time": ui.sheet.draft.time = el.dataset.v; render(); break;
+      case "kind": {
+        const d = ui.sheet.draft;
+        d.kind = el.dataset.v === "quit" ? "quit" : "build";
+        haptic("light"); render(); break;
+      }
+      case "rem-toggle": {
+        const d = ui.sheet.draft;
+        d.reminder = d.reminder ? "" : ({ morning: "08:00", afternoon: "13:00", evening: "19:30" }[d.time] || "10:00");
+        render(); break;
+      }
       case "rtype": {
         const d = ui.sheet.draft, sc = d.schedule, v = el.dataset.v;
         if (v === "repeat") { if (sc.type !== "days") sc.type = "daily"; }
@@ -1516,6 +1758,26 @@
       case "menu-close": ui.menu = null; render(); break;
       case "menu-edit": { const m = habitById(ui.menu.id); ui.menu = null; if (m) { ui.sheet = { draft: draftFrom(m), fresh: true }; } render(); break; }
       case "menu-open": openDetail(ui.menu.id); break;
+      case "menu-skip": {
+        const m = habitById(ui.menu.id), day = ui.tab === "today" ? ui.day : todayKey();
+        ui.menu = null;
+        if (m) { const on = !C.isSkipped(data, m.id, day); C.setSkip(data, m.id, day, on); haptic("light"); commit(); if (on) toast("Skipped. Your streak is safe"); }
+        else render();
+        break;
+      }
+      case "menu-archive": {
+        const m = habitById(ui.menu.id);
+        ui.menu = null;
+        if (m) setArchived(m, !m.archivedOn); else render();
+        break;
+      }
+      case "unarchive": if (h) setArchived(h, false); break;
+      case "archive-open": ui.archiveOpen = !ui.archiveOpen; render(); break;
+      case "unskip": if (h) { C.setSkip(data, h.id, ui.day, false); haptic("light"); commit(); } break;
+      case "slip":
+        if (h) askConfirm({ title: "Slipped today?", yes: "Start again", text: "That's okay. The clean count starts again from tomorrow. Your best, " + plural(C.cleanDays(data, h, todayKey()).best, "day") + ", stays.",
+          run: () => { C.setCount(data, h.id, todayKey(), C.countOn(data, h.id, todayKey()) + 1); haptic("medium"); commit(); toast("Logged. Tomorrow is day one"); } });
+        break;
       case "menu-delete": deleteHabit(ui.menu.id); break;
       case "confirm-yes": { const run = ui.confirm.run; ui.confirm = null; run(); break; }
       case "confirm-no": ui.confirm = null; render(); break;
@@ -1541,6 +1803,7 @@
           run: () => desktop.newSyncCode().then((info) => { ui.syncInfo = info; render(); }) });
         break;
       case "sync-now": syncNow(true); break;
+      case "remind-here": data.settings.remind = !remindHere(); if (data.settings.remind) askNotifyPermission(); commit(); break;
       case "unpair": pair = null; savePair(); ui.syncError = null; render(); toast("Sync stopped"); break;
       case "pair-manual": {
         const host = (document.getElementById("pair-host").value || "").trim().replace(/^https?:\/\//, "");
@@ -1575,6 +1838,8 @@
       if (save) save.disabled = !ev.target.value.trim();
     }
     if (ev.target.id === "habit-unit") ui.sheet.draft.unit = ev.target.value;
+    if (ev.target.id === "habit-cue") ui.sheet.draft.cue = ev.target.value;
+    if (ev.target.id === "habit-remind" && ev.target.value) ui.sheet.draft.reminder = ev.target.value;
   });
   app.addEventListener("keydown", (ev) => {
     if (ev.key === "Enter" && ev.target.id === "habit-name") saveDraft();
@@ -1583,7 +1848,7 @@
   // Rows: swipe right to check, left to undo. Rows and cards: press and hold for a menu.
   app.addEventListener("pointerdown", (ev) => {
     if (ev.button !== 0 || ui.editMode) return;
-    const row = ev.target.closest(".habit-row, .habit-card:not(.add-card), .side-habit");
+    const row = ev.target.closest(".habit-row, .habit-card:not(.add-card), .side-habit, .quit-card");
     if (!row || !row.dataset.id) return;
     const swipeable = row.classList.contains("habit-row") && ui.day <= todayKey();
     gesture = { row: row, x: ev.clientX, y: ev.clientY, dx: 0, moved: false, id: ev.pointerId, swipeable: swipeable };
@@ -1632,9 +1897,50 @@
   }
   window.addEventListener("pointerup", endGesture);
   window.addEventListener("pointercancel", endGesture);
+  // Edit mode on Habits: drag a card to a new place (on a phone, by its handle, so the page still
+  // scrolls). The order is the order of each part of the day on Today.
+  let sorting = null;
+  app.addEventListener("pointerdown", (ev) => {
+    if (!ui.editMode || ev.button !== 0) return;
+    const card = ev.target.closest(".habit-grid.sorting .habit-card:not(.add-card)");
+    if (!card || ev.target.closest(".del-badge")) return;
+    if (ev.pointerType !== "mouse" && !ev.target.closest(".drag-handle")) return;
+    sorting = { id: card.dataset.id, x: ev.clientX, y: ev.clientY, pid: ev.pointerId, moved: false };
+  });
+  window.addEventListener("pointermove", (ev) => {
+    const g = sorting;
+    if (!g || ev.pointerId !== g.pid) return;
+    if (!g.moved) {
+      if (Math.hypot(ev.clientX - g.x, ev.clientY - g.y) < 8) return;
+      g.moved = true;
+      ui.dragId = g.id;
+      haptic("light");
+      render();
+    }
+    const under = document.elementFromPoint(ev.clientX, ev.clientY);
+    const target = under && under.closest(".habit-card:not(.add-card)");
+    if (!target || target.dataset.id === g.id) return;
+    const from = data.habits.findIndex((x) => x.id === g.id), to = data.habits.findIndex((x) => x.id === target.dataset.id);
+    if (from < 0 || to < 0) return;
+    data.habits.splice(to, 0, data.habits.splice(from, 1)[0]);
+    render();
+  });
+  function endSort() {
+    const g = sorting;
+    sorting = null;
+    if (!g || !g.moved) return;
+    suppressClick = true;
+    setTimeout(() => { suppressClick = false; }, 0);
+    ui.dragId = null;
+    Store.save(data);
+    render();
+  }
+  window.addEventListener("pointerup", endSort);
+  window.addEventListener("pointercancel", endSort);
+
   // Right-click on the Mac opens the same menu.
   app.addEventListener("contextmenu", (ev) => {
-    const row = ev.target.closest(".habit-row, .habit-card:not(.add-card), .side-habit");
+    const row = ev.target.closest(".habit-row, .habit-card:not(.add-card), .side-habit, .quit-card");
     if (widgetMode) { ev.preventDefault(); desktop.widgetMenu(); return; }
     if (!row || !row.dataset.id || trayMode) return;
     ev.preventDefault();
@@ -1673,7 +1979,7 @@
   // Roll over to the new day at midnight, and keep the sun moving.
   function checkDay() {
     const t = todayKey();
-    if (checkDay.last && checkDay.last !== t) pushWidgetSnapshot();
+    if (checkDay.last && checkDay.last !== t) { pushWidgetSnapshot(); scheduleReminders(); }
     if (checkDay.last && checkDay.last !== t && ui.day === checkDay.last) ui.day = t;
     checkDay.last = t;
   }
@@ -1685,6 +1991,7 @@
     if (document.hidden) return;
     checkDay();
     render();
+    scheduleReminders();
     // Habits may have been checked off on the home screen widget while the app was away;
     // then the Mac gets a turn to sync.
     if (homeWidget && !ui.sheet) {
@@ -1796,6 +2103,12 @@
     ["s1", "s2"].forEach((id) => { if (C.isScheduled(list.find((h) => h.id === id), today)) C.setCount(s, id, today, 1); });
     C.setCount(s, "s7", today, 5);
     s.habits = list.map((h) => { const c = Object.assign({}, h); delete c.p; return c; });
+    // a cue and a reminder, and a habit being quit with two slips, so those screens show too
+    Object.assign(s.habits.find((h) => h.id === "s5"), { cue: "After dinner", reminder: "21:00" });
+    Object.assign(s.habits.find((h) => h.id === "s1"), { cue: "Phone away at 10:30" });
+    s.habits.push({ id: "s8", name: "No smoking", icon: "cigarette-off", color: "slate", time: "anytime", schedule: { type: "daily" }, target: 1, unit: "", kind: "quit", created: start });
+    C.setCount(s, "s8", C.addDays(today, -40), 1);
+    C.setCount(s, "s8", C.addDays(today, -12), 1);
     return normalize(s);
   }
 
@@ -1816,6 +2129,7 @@
     document.documentElement.classList.add("ready");
     markReady();
     pushWidgetSnapshot();
+    scheduleReminders();
     if (native) {
       const launch = await capacitorApp.App.getLaunchUrl().catch(() => null);
       if (launch && launch.url) pairFromUrl(launch.url);

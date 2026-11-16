@@ -151,6 +151,10 @@ public class RojWidget extends AppWidgetProvider {
             if (h == null) continue;
             String created = h.optString("created", "");
             if (today.compareTo(created) < 0) continue;
+            // habits being quit are never due, and archived ones stop on the day they were archived
+            if ("quit".equals(h.optString("kind"))) continue;
+            String archived = h.optString("archivedOn", "");
+            if (!archived.isEmpty() && today.compareTo(archived) >= 0) continue;
             JSONObject s = h.optJSONObject("schedule");
             String type = s == null ? "daily" : s.optString("type", "daily");
             if ("once".equals(type) && !today.equals(s.optString("date"))) continue; // a one-off, due on its day only
@@ -167,6 +171,10 @@ public class RojWidget extends AppWidgetProvider {
             it.color = colorOf(h.optString("color"));
             it.target = Math.max(1, h.optInt("target", 1));
             it.count = countOn(log, today, it.id);
+            // a day skipped (ill, travelling) is left out, like in the app's count
+            JSONObject skips = state.optJSONObject("skips");
+            JSONObject skipDay = skips == null ? null : skips.optJSONObject(today);
+            if (skipDay != null && skipDay.optInt(it.id, 0) > 0 && it.count < it.target) continue;
             it.satisfied = it.count >= it.target;
             if ("weekly".equals(type)) {
                 int times = Math.max(1, s.optInt("times", 1));

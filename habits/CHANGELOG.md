@@ -3,6 +3,16 @@
 Har update ke saath version badhta hai (`npm run bump`) aur yahan ek line judti hai.
 Version ka matlab: **1.2.3** → 1 = bada badlav, 2 = naya feature ya design, 3 = chhota sudhaar.
 
+## 1.9.0
+- **Reminders:** har habit ka apna time (Edit habit → When → Remind me). Sirf usi din aata hai jab habit due ho aur abhi hui na ho. Android pe notification se hi **Done**, Mac pe bhi notification. Settings mein "Reminders on this phone/Mac" se is device pe band kar sakte ho
+- **Cue:** "After morning chai" jaisa if-then plan. Research mein habit banane ka sabse asardaar tareeka. Habit ke neeche aur reminder mein dikhta hai
+- **Skip today:** beemar ho ya safar mein, habit dabaa ke rakho → Skip today. Streak nahi tootti aur aaj ki ginti se bahar
+- **Never miss twice:** ek din chhootne pe streak 0 nahi hoti, bas aage nahi badhti. Lagatar do din chhootne pe hi tootti hai. Us din likha aata hai "don't miss twice"
+- **Buri aadat chhodo:** nayi habit → Quit a habit (No smoking, No alcohol…). Today pe "11 days clean", best record, aur "I slipped" se nayi shuruaat
+- **Archive:** habit ko delete kiye bina rok do, history bachi rehti hai. Habits ke neeche "Archived and finished" mein, wahin se Bring back. Beete hue Today/Tomorrow wale kaam bhi wahin chale jaate hain
+- **Order badlo:** Habits → Edit, card ko kheencho
+- Sync, Android widget aur Mac widget naye skip, quit aur archive samajhte hain
+
 ## 1.8.1
 - Lamba habit naam delete karne pe "Undo" button toast se bahar nikal ke kat jaata tha. Ab naam "…" se chhota hota hai aur Undo hamesha poora dikhta hai. Baaki saare toast (Added, Saved, Synced) bhi aise hi
 

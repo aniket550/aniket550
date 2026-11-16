@@ -19,13 +19,17 @@ test("date keys are local and weeks start on Monday", () => {
   assert.equal(C.weekStart("2026-10-26"), "2026-10-26");
 });
 
-test("daily streak: unfinished today keeps the streak, a missed day breaks it", () => {
+test("daily streak: unfinished today keeps it, one miss is forgiven, two in a row end it", () => {
   const s = state([daily], [["2026-10-20", "d"], ["2026-10-22", "d"], ["2026-10-23", "d"], ["2026-10-24", "d"]]);
-  assert.deepEqual(C.streak(s, daily, "2026-10-25"), { current: 3, best: 3, unit: "day" });
+  // the 21st was missed once: the run goes on (20, 22, 23, 24)
+  assert.deepEqual(C.streak(s, daily, "2026-10-25"), { current: 4, best: 4, unit: "day", atRisk: false });
   C.setCount(s, "d", "2026-10-25", 1);
-  assert.equal(C.streak(s, daily, "2026-10-26").current, 4); // today not done yet
-  assert.equal(C.streak(s, daily, "2026-10-27").current, 0); // 26th was missed
-  assert.equal(C.streak(s, daily, "2026-10-27").best, 4);
+  assert.equal(C.streak(s, daily, "2026-10-26").current, 5); // today not done yet
+  const after = C.streak(s, daily, "2026-10-27"); // the 26th was missed: still 5, but at risk
+  assert.equal(after.current, 5);
+  assert.equal(after.atRisk, true);
+  assert.equal(C.streak(s, daily, "2026-10-28").current, 0); // the 27th missed too: two in a row
+  assert.equal(C.streak(s, daily, "2026-10-28").best, 5);
 });
 
 test("specific-day streak skips days that are not on the schedule", () => {
@@ -99,6 +103,39 @@ test("once: due on its one day only, and kept by validate", () => {
   assert.equal(C.validate({ habits: [Object.assign({}, once, { schedule: { type: "once" } })], log: {} }).habits.length, 0);
 });
 
+test("skip: a skipped day neither breaks the streak nor counts as missed", () => {
+  const s = state([daily], [["2026-10-20", "d"], ["2026-10-23", "d"]]);
+  C.setSkip(s, "d", "2026-10-21", true);
+  C.setSkip(s, "d", "2026-10-22", true);
+  assert.equal(C.streak(s, daily, "2026-10-24").current, 2);
+  assert.equal(C.rate(s, daily, "2026-10-20", "2026-10-23").pct, 100);
+  assert.equal(C.dayItems(s, "2026-10-21")[0].skipped, true);
+  C.setCount(s, "d", "2026-10-21", 1); // checking it off takes the skip away
+  assert.equal(C.isSkipped(s, "d", "2026-10-21"), false);
+  C.setSkip(s, "d", "2026-10-22", false);
+  assert.equal(C.isSkipped(s, "d", "2026-10-22"), false);
+});
+
+test("archive: not due from its day on, history kept", () => {
+  const h = Object.assign({}, daily, { archivedOn: "2026-10-25" });
+  assert.equal(C.isScheduled(h, "2026-10-24"), true);
+  assert.equal(C.isScheduled(h, "2026-10-25"), false);
+  assert.equal(C.validate({ habits: [h], log: {} }).habits[0].archivedOn, "2026-10-25");
+});
+
+test("quit: never due, counts clean days since the last slip", () => {
+  const quit = { id: "q", name: "No smoking", kind: "quit", target: 1, created: "2026-10-01", schedule: { type: "daily" } };
+  const s = state([quit]);
+  assert.equal(C.isScheduled(quit, "2026-10-05"), false);
+  assert.deepEqual(C.dayItems(s, "2026-10-05"), []);
+  assert.equal(C.cleanDays(s, quit, "2026-10-01").current, 0);
+  assert.equal(C.cleanDays(s, quit, "2026-10-11").current, 10);
+  C.setCount(s, "q", "2026-10-11", 1); // slipped on the 11th
+  assert.deepEqual(C.cleanDays(s, quit, "2026-10-11"), { current: 0, best: 10, slips: 1, lastSlip: "2026-10-11" });
+  assert.equal(C.cleanDays(s, quit, "2026-10-15").current, 3); // the 12th, 13th and 14th; the 15th is not over
+  assert.equal(C.validate({ habits: [quit], log: {} }).habits.length, 1);
+});
+
 // ---------- sync ----------
 const copy = (x) => JSON.parse(JSON.stringify(x));
 const walk = { id: "w", name: "Walk", target: 1, created: "2026-10-01", schedule: { type: "daily" } };
@@ -146,6 +183,19 @@ test("merge: old data without stamps keeps every check-in from both sides", () =
   assert.equal(C.countOn(out, "d", "2026-10-26"), 1);
   assert.equal(C.countOn(out, "d", "2026-10-27"), 1);
   assert.equal(out.settings.theme, "dark"); // settings stay with this device
+});
+
+test("merge: a skip travels like a count, the later change wins", () => {
+  const phone = state([daily]);
+  const mac = copy(phone);
+  C.setSkip(phone, "d", "2026-10-26", true, 100);
+  C.setCount(mac, "d", "2026-10-27", 1, 50);
+  let out = C.merge(mac, phone);
+  assert.equal(C.isSkipped(out, "d", "2026-10-26"), true);
+  C.setCount(mac, "d", "2026-10-26", 1, 200); // later, done on the Mac
+  out = C.merge(phone, mac);
+  assert.equal(C.isSkipped(out, "d", "2026-10-26"), false);
+  assert.equal(C.countOn(out, "d", "2026-10-26"), 1);
 });
 
 test("validate keeps sync stamps and deletion notes, and drops bad ones", () => {

@@ -12,7 +12,8 @@ const parts = [
   mod("@capacitor/haptics/dist/plugin.js"),
   mod("@capacitor/app/dist/plugin.js"),
   mod("@capacitor/share/dist/plugin.js"),
-  mod("@capacitor/filesystem/dist/plugin.js")
+  mod("@capacitor/filesystem/dist/plugin.js"),
+  mod("@capacitor/local-notifications/dist/plugin.js")
 ];
 
 const out = parts

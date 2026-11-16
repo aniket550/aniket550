@@ -28,8 +28,11 @@
   // ---------- schedule ----------
   // schedule.type: "daily" | "days" (days: [0..6], 0 = Sunday) | "weekly" (times: N per week)
   //   | "once" (date: "2026-11-02", a one-off for that day only)
+  // A habit to quit (kind "quit") is never due: it counts clean days instead (cleanDays).
+  // An archived habit (archivedOn: day) stops being due from that day; its history stays.
   function isScheduled(habit, key) {
-    if (key < habit.created) return false;
+    if (key < habit.created || habit.kind === "quit") return false;
+    if (habit.archivedOn && key >= habit.archivedOn) return false;
     const s = habit.schedule;
     if (s.type === "once") return key === s.date;
     if (s.type === "days") return s.days.indexOf(dayOfWeek(key)) !== -1;
@@ -41,6 +44,11 @@
     return (day && day[habitId]) || 0;
   }
   function isDone(state, habit, key) { return countOn(state, habit.id, key) >= habit.target; }
+  // A skipped day (ill, travelling, a day off) is neither done nor missed.
+  function isSkipped(state, habitId, key) {
+    const day = state.skips && state.skips[key];
+    return !!(day && day[habitId]);
+  }
 
   function weekDoneDays(state, habit, start) {
     let n = 0;
@@ -52,17 +60,22 @@
   }
 
   // ---------- streaks ----------
-  // Counts only scheduled days (or weeks for weekly habits). An unfinished today
-  // does not break the streak, because the day is not over yet.
+  // Counts only scheduled days (or weeks for weekly habits). An unfinished today does not break
+  // the streak, because the day is not over yet. "Never miss twice": one missed day keeps the
+  // streak (it just does not add to it); a second miss in a row ends it. Skipped days are as if
+  // they were not scheduled. atRisk: the last day due before today was missed.
   function streak(state, habit, today) {
     if (habit.schedule.type === "weekly") return weeklyStreak(state, habit, today);
-    let best = 0, run = 0;
+    let best = 0, run = 0, missed = false;
     for (let k = habit.created; k <= today; k = addDays(k, 1)) {
-      if (!isScheduled(habit, k)) continue;
-      if (isDone(state, habit, k)) { run++; if (run > best) best = run; }
-      else if (k !== today) run = 0;
+      if (!isScheduled(habit, k) || isSkipped(state, habit.id, k)) continue;
+      if (isDone(state, habit, k)) { run++; missed = false; if (run > best) best = run; }
+      else if (k !== today) {
+        if (missed) run = 0;
+        missed = true;
+      }
     }
-    return { current: run, best: best, unit: "day" };
+    return { current: run, best: best, unit: "day", atRisk: missed && run > 0 };
   }
 
   function weeklyStreak(state, habit, today) {
@@ -94,6 +107,7 @@
       for (let k = maxKey(from, habit.created); k <= to; k = addDays(k, 1)) {
         if (!isScheduled(habit, k)) continue;
         const ok = isDone(state, habit, k);
+        if (!ok && isSkipped(state, habit.id, k)) continue;
         if (ok) done++;
         if (ok || k !== today) due++;
       }
@@ -124,10 +138,23 @@
   function dayItems(state, key) {
     return state.habits.filter(function (h) { return isScheduled(h, key); }).map(function (h) {
       const count = countOn(state, h.id, key);
-      const item = { habit: h, count: count, done: count >= h.target };
+      const item = { habit: h, count: count, done: count >= h.target, skipped: count < h.target && isSkipped(state, h.id, key) };
       if (h.schedule.type === "weekly") item.weekDone = weekDoneDays(state, h, weekStart(key));
       return item;
     });
+  }
+
+  // ---------- quitting ----------
+  // A quit habit logs slips (as counts on their day). Clean days: whole days since the last
+  // slip, or since the habit was added. best: the longest such run so far.
+  function daysBetween(a, b) { return Math.round((parseKey(b) - parseKey(a)) / 86400000); }
+  function cleanDays(state, habit, today) {
+    const slips = Object.keys(state.log).filter(function (k) { return k >= habit.created && k <= today && countOn(state, habit.id, k) > 0; }).sort();
+    let start = habit.created, best = 0;
+    slips.forEach(function (k) { best = Math.max(best, daysBetween(start, k)); start = addDays(k, 1); });
+    const last = slips[slips.length - 1] || null;
+    const current = last === today ? 0 : Math.max(0, daysBetween(start, today));
+    return { current: current, best: Math.max(best, current), slips: slips.length, lastSlip: last };
   }
 
   // 0 = nothing, 1..4 = how much of the day's target got done (heatmap shade).
@@ -145,6 +172,24 @@
     if (count > 0) day[habitId] = count;
     else delete day[habitId];
     if (!Object.keys(day).length) delete state.log[key];
+    if (count > 0) clearSkip(state, habitId, key);
+    (state.stamps || (state.stamps = {}))[key + "|" + habitId] = at || Date.now();
+  }
+  function clearSkip(state, habitId, key) {
+    const day = state.skips && state.skips[key];
+    if (!day) return;
+    delete day[habitId];
+    if (!Object.keys(day).length) delete state.skips[key];
+  }
+  // Skip a day, or take the skip back. Shares the day's stamp with its count, so sync keeps
+  // whichever of the two changed last.
+  function setSkip(state, habitId, key, on, at) {
+    if (on) {
+      const skips = state.skips || (state.skips = {});
+      (skips[key] || (skips[key] = {}))[habitId] = 1;
+      const day = state.log[key];
+      if (day) { delete day[habitId]; if (!Object.keys(day).length) delete state.log[key]; }
+    } else clearSkip(state, habitId, key);
     (state.stamps || (state.stamps = {}))[key + "|" + habitId] = at || Date.now();
   }
 
@@ -156,12 +201,13 @@
       delete day[habitId];
       if (!Object.keys(day).length) delete state.log[k];
     });
+    Object.keys(state.skips || {}).forEach(function (k) { clearSkip(state, habitId, k); });
     const stamps = state.stamps || {};
     Object.keys(stamps).forEach(function (k) { if (k.slice(11) === habitId) delete stamps[k]; });
     (state.deleted || (state.deleted = {}))[habitId] = at || Date.now();
   }
 
-  function emptyState() { return { version: 1, habits: [], log: {}, stamps: {}, deleted: {}, settings: { theme: "system" } }; }
+  function emptyState() { return { version: 1, habits: [], log: {}, skips: {}, stamps: {}, deleted: {}, settings: { theme: "system" } }; }
 
   // ---------- sync ----------
   // Joins two copies of the data (this device's and another's) into one, the same whichever side
@@ -192,17 +238,22 @@
     out.habits.forEach(function (h) { keep[h.id] = true; });
     const ls = local.stamps || {}, rs = remote.stamps || {};
     const count = (st, k, id) => (st.log[k] && st.log[k][id]) || 0;
+    const skipped = (st, k, id) => !!(st.skips && st.skips[k] && st.skips[k][id]);
     const pairs = {};
     [local, remote].forEach(function (st) {
       Object.keys(st.log).forEach(function (k) { Object.keys(st.log[k]).forEach(function (id) { pairs[k + "|" + id] = true; }); });
+      Object.keys(st.skips || {}).forEach(function (k) { Object.keys(st.skips[k]).forEach(function (id) { pairs[k + "|" + id] = true; }); });
     });
     Object.keys(ls).concat(Object.keys(rs)).forEach(function (p) { pairs[p] = true; });
     Object.keys(pairs).forEach(function (p) {
       const k = p.slice(0, 10), id = p.slice(11);
       if (!keep[id]) return;
       const a = ls[p] || 0, b = rs[p] || 0;
-      const n = a || b ? (b > a ? count(remote, k, id) : count(local, k, id)) : Math.max(count(local, k, id), count(remote, k, id));
+      const side = b > a ? remote : local;
+      const n = a || b ? count(side, k, id) : Math.max(count(local, k, id), count(remote, k, id));
+      const sk = a || b ? skipped(side, k, id) : skipped(local, k, id) || skipped(remote, k, id);
       if (n > 0) (out.log[k] || (out.log[k] = {}))[id] = n;
+      else if (sk) (out.skips[k] || (out.skips[k] = {}))[id] = 1;
       if (a || b) out.stamps[p] = Math.max(a, b);
     });
     return out;
@@ -216,6 +267,7 @@
       return h && typeof h.id === "string" && typeof h.name === "string" && keyRe.test(h.created) &&
         h.target >= 1 && h.schedule && ["daily", "days", "weekly", "once"].indexOf(h.schedule.type) !== -1 &&
         (h.schedule.type !== "once" || keyRe.test(h.schedule.date)) &&
+        (!h.archivedOn || keyRe.test(h.archivedOn)) && (!h.kind || h.kind === "build" || h.kind === "quit") &&
         (h.schedule.type !== "days" || (Array.isArray(h.schedule.days) && h.schedule.days.length > 0)) &&
         (h.schedule.type !== "weekly" || h.schedule.times >= 1);
     });
@@ -235,18 +287,26 @@
     if (data.stamps && typeof data.stamps === "object") {
       Object.keys(data.stamps).forEach(function (k) { const t = Number(data.stamps[k]); if (stampRe.test(k) && t > 0) out.stamps[k] = t; });
     }
+    if (data.skips && typeof data.skips === "object") {
+      Object.keys(data.skips).forEach(function (k) {
+        const day = data.skips[k];
+        if (!keyRe.test(k) || !day || typeof day !== "object") return;
+        Object.keys(day).forEach(function (id) { if (day[id]) (out.skips[k] || (out.skips[k] = {}))[id] = 1; });
+      });
+    }
     if (data.deleted && typeof data.deleted === "object") {
       Object.keys(data.deleted).forEach(function (id) { const t = Number(data.deleted[id]); if (t > 0) out.deleted[id] = t; });
     }
     if (data.settings && ["system", "light", "dark"].indexOf(data.settings.theme) !== -1) out.settings.theme = data.settings.theme;
     if (data.settings && data.settings.swipeTip === true) out.settings.swipeTip = true;
+    if (data.settings && data.settings.remind === false) out.settings.remind = false;
     return out;
   }
 
   return {
     dateKey, parseKey, addDays, dayOfWeek, weekStart,
-    isScheduled, countOn, isDone, weekDoneDays,
+    isScheduled, countOn, isDone, isSkipped, weekDoneDays, cleanDays, daysBetween,
     streak, rate, weeklyOverall, dayItems, heatLevel,
-    setCount, removeHabit, emptyState, validate, merge
+    setCount, setSkip, removeHabit, emptyState, validate, merge
   };
 });
